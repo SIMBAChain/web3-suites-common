@@ -44,7 +44,7 @@ class KeycloakDeviceLoginHandler {
         this.realm = realm;
     }
 
-    private async getVerificationInfo(): Promise<KeycloakDeviceVerificationInfo> {
+    private async getVerificationInfo(): Promise<KeycloakDeviceVerificationInfo | Error> {
         log.debug(`:: ENTER :`);
         const url = `${this.clientURL}/auth/realms/${this.realm}/protocol/openid-connect/auth/device`;
         const params = new URLSearchParams();
@@ -55,16 +55,21 @@ class KeycloakDeviceLoginHandler {
         const config = {
             headers: headers,
         }
-        const res = await axios.post(url, params, config);
-        const verificationInfo: KeycloakDeviceVerificationInfo = res.data;
-        log.debug(`:: EXIT : ${JSON.stringify(verificationInfo)}`);
-        return verificationInfo;
+        try {
+            const res = await axios.post(url, params, config);
+            const verificationInfo: KeycloakDeviceVerificationInfo = res.data;
+            log.debug(`:: EXIT : ${JSON.stringify(verificationInfo)}`);
+            return verificationInfo;
+        } catch (error) {
+            log.error(`:: EXIT : ERROR : ${JSON.stringify(error)}`);
+            return error as Error;
+        }
     }
 
     public async loginUser(): Promise<void> {
         log.debug(`:: ENTER :`);
         if (!this.verificationInfo) {
-            this.verificationInfo = await this.getVerificationInfo();
+            this.verificationInfo = await this.getVerificationInfo() as KeycloakDeviceVerificationInfo;
         }
         const verificationURI = this.verificationInfo.verification_uri;
         const userCode = this.verificationInfo.user_code;
@@ -72,11 +77,12 @@ class KeycloakDeviceLoginHandler {
         log.debug(`:: EXIT :`);
     }
 
-    public async getAccessToken(): Promise<KeycloakAccessToken> {
+    public async getAccessToken(): Promise<KeycloakAccessToken | Error> {
         log.debug(`:: ENTER :`);
         if (!this.verificationInfo) {
-            this.verificationInfo = await this.getVerificationInfo();
+            this.verificationInfo = await this.getVerificationInfo() as KeycloakDeviceVerificationInfo;
         }
+        setTimeout(() => {}, 5000);
         const deviceCode = this.verificationInfo.device_code;
         const params = new URLSearchParams();
         const url = `${this.clientURL}/auth/realms/${this.realm}/protocol/openid-connect/token`;
@@ -89,11 +95,25 @@ class KeycloakDeviceLoginHandler {
         params.append("grant_type", "urn:ietf:params:oauth:grant-type:device_code");
         params.append("client_id", this.clientID);
         params.append("device_code", deviceCode);
-        const accessToken: KeycloakAccessToken = await axios.post(url, params, config);
-        log.debug(`:: EXIT : ${accessToken}`);
-        return accessToken;
+        try {
+            const accessToken: KeycloakAccessToken = await axios.post(url, params, config);
+            log.debug(`:: EXIT : ${accessToken}`);
+            return accessToken;
+        } catch (error) {
+            log.error(`:: EXIT : ERROR : ${JSON.stringify(error)}`);
+            return error as Error;
+        }
     }
 }
+
+async function main() {
+    const kcdlh = new KeycloakDeviceLoginHandler();
+    await kcdlh.loginUser();
+    // keep getting 'authorization_pending' error with following line:
+    await kcdlh.getAccessToken();
+}
+
+main();
 
 export {
     KeycloakDeviceLoginHandler,
