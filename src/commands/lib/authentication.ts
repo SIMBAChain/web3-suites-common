@@ -94,3 +94,7 @@ class KeycloakDeviceLoginHandler {
         return accessToken;
     }
 }
+
+export {
+    KeycloakDeviceLoginHandler,
+}
