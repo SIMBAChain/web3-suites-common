@@ -4,8 +4,6 @@ import {
 } from "tslog";
 import { URLSearchParams } from "url";
 const log: Logger = new Logger();
-// import * as dotenv from "dotenv";
-// dotenv.config({ path: __dirname+'/.env' });
 
 const CLIENT_ID = "simba-pkce";
 const CLIENT_URL = "https://simba-dev-sso.platform.simbachain.com";
@@ -96,11 +94,3 @@ class KeycloakDeviceLoginHandler {
         return accessToken;
     }
 }
-
-async function main() {
-    const kcdh = new KeycloakDeviceLoginHandler();
-    await kcdh.loginUser();
-    // await kcdh.getAccessToken();
-}
-
-main();
