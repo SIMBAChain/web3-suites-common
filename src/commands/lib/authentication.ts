@@ -82,6 +82,7 @@ class KeycloakDeviceLoginHandler {
         if (!this.verificationInfo) {
             this.verificationInfo = await this.getVerificationInfo() as KeycloakDeviceVerificationInfo;
         }
+        await new Promise(resolve => setTimeout(resolve, 10000));
         const deviceCode = this.verificationInfo.device_code;
         const params = new URLSearchParams();
         const url = `${this.clientURL}/auth/realms/${this.realm}/protocol/openid-connect/token`;
@@ -95,8 +96,9 @@ class KeycloakDeviceLoginHandler {
         params.append("client_id", this.clientID);
         params.append("device_code", deviceCode);
         try {
-            const accessToken: KeycloakAccessToken = await axios.post(url, params, config);
-            log.debug(`:: EXIT : ${accessToken}`);
+            let response = await axios.post(url, params, config);
+            const accessToken: KeycloakAccessToken = response.data
+            log.debug(`:: EXIT : ${JSON.stringify(accessToken)}`);
             return accessToken;
         } catch (error) {
             log.error(`:: EXIT : ERROR : ${JSON.stringify(error)}`);
