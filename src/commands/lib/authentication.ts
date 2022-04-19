@@ -82,7 +82,6 @@ class KeycloakDeviceLoginHandler {
         if (!this.verificationInfo) {
             this.verificationInfo = await this.getVerificationInfo() as KeycloakDeviceVerificationInfo;
         }
-        setTimeout(() => {}, 5000);
         const deviceCode = this.verificationInfo.device_code;
         const params = new URLSearchParams();
         const url = `${this.clientURL}/auth/realms/${this.realm}/protocol/openid-connect/token`;
