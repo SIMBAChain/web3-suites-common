@@ -9,6 +9,11 @@ const CLIENT_ID = "simba-pkce";
 const CLIENT_URL = "https://simba-dev-sso.platform.simbachain.com";
 const REALM = "simbachain";
 
+interface PollingConfig {
+    maxAttempts: number;
+    interval: number;
+}
+
 interface KeycloakDeviceVerificationInfo {
     device_code: string;
     user_code: string;
@@ -77,12 +82,18 @@ class KeycloakDeviceLoginHandler {
         log.debug(`:: EXIT :`);
     }
 
-    public async getAccessToken(): Promise<KeycloakAccessToken | Error> {
+    public async getAccessToken(
+        pollingConfig: PollingConfig = {
+            maxAttempts: 60,
+            interval: 3000,
+        }
+    ): Promise<KeycloakAccessToken | Error> {
         log.debug(`:: ENTER :`);
+        const maxAttempts = pollingConfig.maxAttempts;
+        const interval = pollingConfig.interval;
         if (!this.verificationInfo) {
             this.verificationInfo = await this.getVerificationInfo() as KeycloakDeviceVerificationInfo;
         }
-        await new Promise(resolve => setTimeout(resolve, 10000));
         const deviceCode = this.verificationInfo.device_code;
         const params = new URLSearchParams();
         const url = `${this.clientURL}/auth/realms/${this.realm}/protocol/openid-connect/token`;
@@ -95,26 +106,46 @@ class KeycloakDeviceLoginHandler {
         params.append("grant_type", "urn:ietf:params:oauth:grant-type:device_code");
         params.append("client_id", this.clientID);
         params.append("device_code", deviceCode);
-        try {
-            let response = await axios.post(url, params, config);
-            const accessToken: KeycloakAccessToken = response.data
-            log.debug(`:: EXIT : ${JSON.stringify(accessToken)}`);
-            return accessToken;
-        } catch (error) {
-            log.error(`:: EXIT : ERROR : ${JSON.stringify(error)}`);
-            return error as Error;
+        let attempts = 0;
+        let attemptSuccessful = false;
+        while (attempts < maxAttempts && !attemptSuccessful) {
+            await new Promise(resolve => setTimeout(resolve, interval));
+            try {
+                let response = await axios.post(url, params, config);
+                const accessToken: KeycloakAccessToken = response.data
+                log.debug(`:: EXIT : ${JSON.stringify(accessToken)}`);
+                attemptSuccessful = true;
+                return accessToken;
+            } catch (error) {
+                if (attempts%5 == 0) {
+                    log.info(`still waiting for user to login`)
+                }
+                attempts += 1;
+            }
         }
+        log.debug(`:: EXIT : attempts exceeded, timedout`);
+        return new Error("attempts exceeded, timedout");
+    }
+
+    public async loginUserAndGetAccessToken(): Promise<KeycloakAccessToken> {
+        log.debug(`:: ENTER :`);
+        await this.loginUser();
+        const accessToken = await this.getAccessToken() as KeycloakAccessToken;
+        log.debug(`:: EXIT : accessToken : ${JSON.stringify(accessToken)}`);
+        return accessToken
+    }
+
+    public async accessTokenHeader(): Promise<Record<any, any>> {
+        log.debug(`:: ENTER :`);
+        const accessToken = await this.loginUserAndGetAccessToken();
+        const accessTokenValue = accessToken.access_token;
+        const headers = {
+            Authorization: `Bearer ${accessTokenValue}`,
+        };
+        log.debug(`:: EXIT : accessToken value: ${accessTokenValue}`);
+        return headers;
     }
 }
-
-async function main() {
-    const kcdlh = new KeycloakDeviceLoginHandler();
-    await kcdlh.loginUser();
-    // keep getting 'authorization_pending' error with following line:
-    await kcdlh.getAccessToken();
-}
-
-main();
 
 export {
     KeycloakDeviceLoginHandler,
