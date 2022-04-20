@@ -39,6 +39,7 @@ class KeycloakDeviceLoginHandler {
     clientURL: string;
     realm: string;
     verificationInfo: KeycloakDeviceVerificationInfo;
+    accessToken: KeycloakAccessToken;
     constructor(
         clientID: string = CLIENT_ID,
         clientURL: string = CLIENT_URL,
@@ -107,14 +108,13 @@ class KeycloakDeviceLoginHandler {
         params.append("client_id", this.clientID);
         params.append("device_code", deviceCode);
         let attempts = 0;
-        let attemptSuccessful = false;
-        while (attempts < maxAttempts && !attemptSuccessful) {
+        while (attempts < maxAttempts) {
             await new Promise(resolve => setTimeout(resolve, interval));
             try {
                 let response = await axios.post(url, params, config);
                 const accessToken: KeycloakAccessToken = response.data
                 log.debug(`:: EXIT : ${JSON.stringify(accessToken)}`);
-                attemptSuccessful = true;
+                this.accessToken = accessToken;
                 return accessToken;
             } catch (error) {
                 if (attempts%5 == 0) {
@@ -142,7 +142,7 @@ class KeycloakDeviceLoginHandler {
         const headers = {
             Authorization: `Bearer ${accessTokenValue}`,
         };
-        log.debug(`:: EXIT : accessToken value: ${accessTokenValue}`);
+        log.debug(`:: EXIT : headers: ${headers}`);
         return headers;
     }
 }
