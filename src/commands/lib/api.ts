@@ -16,6 +16,7 @@ import * as fs from "fs";
 interface Dictionary<T> {
     [Key: string]: T;
 }
+import {default as chalk} from 'chalk';
 
 interface Choice {
     title: string;
@@ -34,7 +35,7 @@ interface ASTSourceAndCompiler {
     compiler: string;
 }
 
-const getList = async (config: SimbaConfig, url?: string): Promise<any> => {
+const getList = async (config: SimbaConfig, url?: string): Promise<Record<any, any> | void> => {
     log.debug(`:: ENTER :`);
     if (!url) {
         url = 'v2/organisations/';
@@ -46,7 +47,7 @@ const getList = async (config: SimbaConfig, url?: string): Promise<any> => {
     } catch (e) {
         const err = e as any;
         if (err.message === "Request failed with status code 500") {
-            log.info(`:: Auth token expired, please log in again`);
+            log.info(`${chalk.cyanBright('\nsimba: Auth token expired, please log in again')}`);
             SimbaConfig.authStore.logout();
             await SimbaConfig.authStore.loginAndGetAuthToken();
         }
@@ -59,6 +60,11 @@ export const chooseOrganisationFromList = async (config: SimbaConfig, url?: stri
         url = 'organisations/';
     }
     const orgResponse = await getList(config, url);
+
+    if (!orgResponse) {
+        log.error(`${chalk.redBright('\nsimba: EXIT : no organizations returned. You probably need to log in again')}`);
+        return;
+    }
 
     const orgs: Response = {
         next: orgResponse.next,
@@ -101,7 +107,7 @@ export const chooseOrganisationFromList = async (config: SimbaConfig, url?: stri
     }
 
     if (!response.organisation) {
-        log.error(`:: EXIT : ERROR : No Organisation Selected!`);
+        log.error(`${chalk.redBright('\nsimba: EXIT : No Organisation Selected!')}`);
         throw new Error('No Organisation Selected!');
     }
     
@@ -144,7 +150,7 @@ async function buildInfoJsonName(
     } catch (e) {
         const err = e as any;
         if (err.code === 'ENOENT') {
-            log.error(`:: EXIT : ERROR : Simba was not able to find any build info artifacts.\nDid you forget to run: "npx hardhat compile" ?\n`);
+            log.error(`${chalk.redBright('\nsimba: EXIT : Simba was not able to find any build info artifacts.\nDid you forget to run: "npx hardhat compile" ?\n')}`);
             return "";
         }
         log.error(`:: EXIT : ERROR : ${JSON.stringify(err)}`);
@@ -162,7 +168,7 @@ async function buildInfoJsonName(
             return jsonName;
         }
     }
-    log.error(`:: EXIT : ERROR : no info found for contract`);
+    log.error(`${chalk.redBright('\nsimba: EXIT : no info found for contract')}`);
     return "";
 }
 
@@ -191,10 +197,10 @@ async function astSourceAndCompiler(
     } catch (e) {
         const err = e as any;
         if (err.code === 'ENOENT') {
-            log.error(`:: EXIT : ERROR : Simba was not able to find any build info artifacts.\nDid you forget to run: "npx hardhat compile" ?\n`);
+            log.error(`${chalk.redBright('\nsimba: EXIT : Simba was not able to find any build info artifacts.\nDid you forget to run: "npx hardhat compile" ?\n')}`);
             return astAndSourceAndCompiler;
         }
-        log.error(`:: EXIT : ERROR : ${JSON.stringify(err)}`);
+        log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(err)}`)}`);
         return astAndSourceAndCompiler;
     }
 
@@ -202,7 +208,6 @@ async function astSourceAndCompiler(
         if (!(file.endsWith(_buildInfoJsonName))) {
             continue;
         } else {
-            log.debug(`:: file : ${JSON.stringify(file)}`);
             const buf = await promisifiedReadFile(file, {flag: 'r'});
             const parsed = JSON.parse(buf.toString());
             const output = parsed.output;
@@ -245,7 +250,7 @@ async function getASTSourceAndCompiler(
     );
     if (_astAndSourceAndCompiler.ast === {}) {
         const message = `no ast found for ${contractName}`;
-        log.error(`:: EXIT : ERROR : ${message}`);
+        log.error(`${chalk.redBright(`\nsimba: EXIT : ${message}`)}`);
         return new Error(`${message}`);
     }
     log.debug(`:: EXIT : ${JSON.stringify(_astAndSourceAndCompiler)}`);
@@ -270,7 +275,6 @@ export async function writeAndReturnASTSourceAndCompiler(
     const filePath = `${buildDir}/${sourceFileName}/${contractName}.json`;
     const files = await walkDirForContracts(buildDir, ".json");
     for (const file of files) {
-        log.info(`:: file : ${JSON.stringify(file)}`);
         if (!(file.endsWith(`${contractName}.json`))) {
             continue;
         }
@@ -311,6 +315,11 @@ export async function chooseApplicationFromList(
     }
 
     const appResponse = await getList(config, url);
+
+    if (!appResponse) {
+        log.error(`${chalk.redBright('\nsimba: EXIT : no applications in list. You probably need to login again.')}`);
+        return;
+    }
 
     const apps: Response = {
         next: appResponse.next,
@@ -353,7 +362,7 @@ export async function chooseApplicationFromList(
     }
 
     if (!response.application) {
-        log.error(`:: EXIT : ERROR : No Application Selected!`);
+        log.error(`${chalk.redBright('\nsimba: EXIT : No Application Selected!')}`);
         throw new Error('No Application Selected!');
     }
     config.application = response.application;
@@ -415,12 +424,13 @@ export async function getStorages(
     return choices;
 };
 
+// the following code is for merging AST for a contract into build artifact for that contract
 async function getABIForPrimaryContract(
 ) {
     log.debug(`:: ENTER :`);
     const contractName = SimbaConfig.ProjectConfigStore.get("primary");
     if (!contractName) {
-        log.error(`:: EXIT : ERROR : no primary contract in simba.json`);
+        log.error(`${chalk.redBright('\nsimba: EXIT : no primary contract in simba.json')}`);
         return "";
     }
     const buildDir = SimbaConfig.buildDirectory;

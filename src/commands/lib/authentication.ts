@@ -34,6 +34,28 @@ interface KeycloakDeviceVerificationInfo {
     interval: number;
 }
 
+interface AuthErrors {
+    headersError: string;
+    keycloakCertsError: string;
+    verificationInfoError: string;
+    authTokenError: string;
+    noClientIDError: string;
+    noBaseURLError: string;
+    noAuthURLError: string;
+    noRealmError: string;
+}
+
+const KeycloakAuthErrors: AuthErrors = {
+    headersError: `${chalk.red('simba: Error acquiring auth headers. Please make sure keycloak certs are not expired.')}`,
+    keycloakCertsError: `${chalk.red('simba: Error obtaining certs from keycloak. Please make sure keycloak certs are not expired.')}`,
+    verificationInfoError: `${chalk.red('simba: Error acquiring verification info. Please make sure keycloak certs are not expired.')}`,
+    authTokenError: `${chalk.red('simba: Error acquiring auth token. Please make sure keycloak certs are not expired')}`,
+    noClientIDError: `${chalk.red('simba: Error acquiring clientID. Please make sure "clientID" is configured in simba.json')}`,
+    noBaseURLError: `${chalk.red('simba: Error acquiring baseURL. Please make sure "baseURL" is configured in simba.json')}`,
+    noAuthURLError: `${chalk.red('simba: Error acquiring authURL. Please make sure "authURLID" is configured in simba.json')}`,
+    noRealmError: `${chalk.red('simba: Error acquiring realm. Please make sure "realm" is configured in simba.json')}`,
+}
+
 interface KeycloakAccessToken {
     access_token: string;
     expires_in: number;
@@ -57,20 +79,35 @@ class KeycloakHandler {
     private verificationInfo: KeycloakDeviceVerificationInfo;
     private tokenExpirationPad: number;
     private configBase: string;
+    private authErrors: AuthErrors;
     private _loggedIn: boolean;
     constructor(
         config?: Configstore,
         projectConfig?: Configstore,
         tokenExpirationPad: number = 60,
     ) {
+        this.authErrors = KeycloakAuthErrors;
         this.config = SimbaConfig.ConfigStore;
         this.projectConfig = SimbaConfig.ProjectConfigStore;
-        this.clientID = this.projectConfig.get('clientID');
+        this.clientID = this.projectConfig.get('clientID') ? this.projectConfig.get('clientID') : this.projectConfig.get('clientId');
+        if (!this.clientID) {
+            log.error(`:: ${this.authErrors.noClientIDError}`);
+        }
         this.baseURL = this.projectConfig.get('baseURL') ? this.projectConfig.get('baseURL') : this.projectConfig.get('baseUrl');
+        if (!this.baseURL) {
+            log.error(`:: ${this.authErrors.noBaseURLError}`);
+        }
         this.authURL = this.projectConfig.get('authURL') ? this.projectConfig.get('authURL') : this.projectConfig.get('authUrl');
+        if (!this.authURL) {
+            log.error(`:: ${this.authErrors.noAuthURLError}`);
+        }
         this.realm = this.projectConfig.get('realm');
+        if (!this.realm) {
+            log.error(`:: ${this.authErrors.noRealmError}`);
+        }
         this.configBase = this.baseURL.split(".").join("_");
         this.tokenExpirationPad = tokenExpirationPad;
+        
     }
 
     protected getConfigBase(): string {
@@ -138,7 +175,6 @@ class KeycloakHandler {
         if (!this.config.has(this.configBase)) {
             this.config.set(this.configBase, {});
         }
-        console.log(`this.configBase: ${this.configBase}`);
         const dict = this.config.get(this.configBase);
         dict[key] = value;
         this.config.set(this.configBase, dict);
@@ -176,19 +212,25 @@ class KeycloakHandler {
             log.debug(`:: EXIT : ${JSON.stringify(this.verificationInfo)}`);
             return verificationInfo;
         } catch (error) {
-            log.error(`:: EXIT : ERROR : ${JSON.stringify(error)}`);
+            log.error(`${chalk.redBright(`simba: EXIT : ${JSON.stringify(error)}`)}`);
             return error as Error;
         }
     }
 
-    public async loginUser(): Promise<void> {
+    public async loginUser(): Promise<void | string> {
         log.debug(`:: ENTER :`);
         if (!this.isLoggedIn()) {
             this.verificationInfo = await this.getVerificationInfo() as KeycloakDeviceVerificationInfo;
         }
         const verificationCompleteURI = this.verificationInfo.verification_uri_complete;
-        log.info(`\n${chalk.red('simba: ')}Please navigate to the following URI to log in: ${verificationCompleteURI}`);
+        // the following line is where we begin the flow of handling not acquiring verification info
+        if (!verificationCompleteURI) {
+            log.error(`${chalk.redBright(`\nsimba: EXIT : ${this.authErrors.keycloakCertsError}`)}`);
+            return
+        }
+        log.info(`\n${chalk.cyanBright('\nsimba: Please navigate to the following URI to log in: ')} ${chalk.greenBright(verificationCompleteURI)}`);
         log.debug(`:: EXIT :`);
+        return verificationCompleteURI;
     }
 
     public async getAuthToken(
@@ -197,12 +239,16 @@ class KeycloakHandler {
             interval: 3000,
         },
         refreshing: boolean = false,
-    ): Promise<KeycloakAccessToken | Error> {
+    ): Promise<KeycloakAccessToken | void> {
         log.debug(`:: ENTER :`);
         const maxAttempts = pollingConfig.maxAttempts;
         const interval = pollingConfig.interval;
         if (!this.isLoggedIn()) {
             this.verificationInfo = await this.getVerificationInfo() as KeycloakDeviceVerificationInfo;
+        }
+        if (!this.verificationInfo) {
+            log.error(`${chalk.redBright(`\nsimba: EXIT : ${this.authErrors.verificationInfoError}`)}`);
+            return;
         }
         const deviceCode = this.verificationInfo.device_code;
         const params = new URLSearchParams();
@@ -230,13 +276,13 @@ class KeycloakHandler {
                     return authToken;
                 } catch (error) {
                     if (attempts%5 == 0) {
-                        log.info(`still waiting for user to login`)
+                        log.info(`${chalk.cyanBright(`\nsimba: still waiting for user to login...`)}`);
                     }
                     attempts += 1;
                 }
             }
             log.debug(`:: EXIT : attempts exceeded, timedout`);
-            return new Error("attempts exceeded, timedout");
+            return
         } else {
             log.debug(`:: entering refresh logic`);
             const authToken = this.getConfig("authToken");
@@ -255,8 +301,8 @@ class KeycloakHandler {
                 log.debug(`:: EXIT : ${JSON.stringify(newAuthToken)}`);
                 return newAuthToken;
             } catch (error) {
-                log.error(`:: refresh error : ${JSON.stringify(error)}`)
-                return error as Error;
+                log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error)}`)}`)
+                return;
             }
         }
     }
@@ -301,17 +347,22 @@ class KeycloakHandler {
         return false;
     }
 
-    public async refreshToken(): Promise<any> {
+    public async refreshToken(): Promise<KeycloakAccessToken | void> {
         log.debug(`:: ENTER :`);
-        log.debug(`:: this.configBase : ${this.configBase}`);
         if (!this.tokenExpired()) {
             log.debug(`:: EXIT : authToken still valid`);
             return;
         }
         if (this.refreshTokenExpired()) {
             this.deleteAuthInfo();
-            await this.loginAndGetAuthToken();
-            return;
+            const authToken = await this.loginAndGetAuthToken();
+            if (authToken) {
+                log.debug(`:: EXIT : ${JSON.stringify(authToken)}`);
+                return authToken;
+            } else {
+                log.error(`${chalk.redBright(`\nsimba: EXIT : ${this.authErrors.authTokenError}`)}`);
+                return;
+            }
         }
         log.debug(`:: entering logic to refresh token`);
         const pollingConfig: PollingConfig = {
@@ -323,41 +374,56 @@ class KeycloakHandler {
             pollingConfig,
             refreshing,
         );
-        log.debug(`:: EXIT : ${JSON.stringify(newAuthToken)}`);
+        if (newAuthToken) {
+            log.debug(`:: EXIT : ${JSON.stringify(newAuthToken)}`);
+            return newAuthToken;
+        } else {
+            log.error(`${chalk.redBright(`\nsimba: EXIT : ${this.authErrors.authTokenError}`)}`);
+            return;
+        }
     }
 
     public async loginAndGetAuthToken(
         refreshing: boolean = false,
-    ): Promise<KeycloakAccessToken> {
+    ): Promise<KeycloakAccessToken | void> {
         log.debug(`:: ENTER :`);
+        let verificationCompleteURI;
         if (!refreshing) {
             this.logout();
-            await this.loginUser();
+            verificationCompleteURI = await this.loginUser();
         }
-        // let authToken = this.getConfig("authToken");
-        const pollingConfig: PollingConfig = {
-            maxAttempts: 60,
-            interval: 3000,
-        };
-        const authToken = await this.getAuthToken(pollingConfig, refreshing) as KeycloakAccessToken;
-        log.debug(`:: EXIT : authToken : ${JSON.stringify(authToken)}`);
-        this.setLoggedInStatus(true);
-        return authToken;
+        if (verificationCompleteURI) {
+            const pollingConfig: PollingConfig = {
+                maxAttempts: 60,
+                interval: 3000,
+            };
+            const authToken = await this.getAuthToken(pollingConfig, refreshing) as KeycloakAccessToken;
+            log.debug(`:: EXIT : authToken : ${JSON.stringify(authToken)}`);
+            this.setLoggedInStatus(true);
+            return authToken;
+        } else {
+            log.debug(`:: EXIT : ${this.authErrors.verificationInfoError}`);
+            return;
+        }
     }
 
-    public async accessTokenHeader(): Promise<Record<any, any>> {
+    public async accessTokenHeader(): Promise<Record<any, any> | void> {
         log.debug(`:: ENTER :`);
-        console.log(`config for object: ${JSON.stringify(this.config)}`);
-        const authToken = this.getConfig("authToken");
+        let authToken = this.getConfig("authToken");
         if (!authToken) {
-            await this.loginAndGetAuthToken(false);
+            authToken = await this.loginAndGetAuthToken(false);
         }
-        const accessToken = authToken.access_token;
-        const headers = {
-            Authorization: `Bearer ${accessToken}`,
-        };
-        log.debug(`:: EXIT : headers: ${JSON.stringify(headers)}`);
-        return headers;
+        if (authToken) {
+            const accessToken = authToken.access_token;
+            const headers = {
+                Authorization: `Bearer ${accessToken}`,
+            };
+            log.debug(`:: EXIT : headers: ${JSON.stringify(headers)}`);
+            return headers;
+        } else {
+            log.error(`${chalk.redBright(`\nsimba: EXIT : ${this.authErrors.authTokenError}`)}`);
+            return;
+        }
     }
 
     public buildURL(
@@ -385,43 +451,53 @@ class KeycloakHandler {
         log.debug(`:: ENTER : ${JSON.stringify(funcParams)}`);
         if (this.tokenExpired()) {
             if (this.refreshTokenExpired()) {
-                // this.logout();
                 log.info(`:: INFO : token expired, please log in again`);
-                await this.loginAndGetAuthToken();
+                const authToken = await this.loginAndGetAuthToken();
+                if (!authToken) {
+                    log.error(`${chalk.red(`\nsimba: EXIT : ${this.authErrors.authTokenError}`)}`);
+                    return new Error(`${this.authErrors.authTokenError}`);
+                }
             } else {
                 log.info(`:: INFO : refreshing token`);
-                await this.refreshToken();
+                const newAuthToken = await this.refreshToken();
+                if (!newAuthToken) {
+                    log.error(`${chalk.redBright(`\nsimba: EXIT : ${this.authErrors.authTokenError}`)}`)
+                    return new Error(`${this.authErrors.authTokenError}`);
+                }
             }
         }
         const queryParams = _queryParams ? _queryParams : {};
         const headers = await this.accessTokenHeader();
-        if (!contentType) {
-            headers["accept"] = "application/json";
-        } else {
-            headers["content-type"] = contentType;
-        }
-        const params = new URLSearchParams();
-        params.append('client_id', this.clientID);
-        for (const [key, value] of Object.entries(queryParams)) {
-            params.append(key, value);
-        }
-        const config = {
-            headers: headers,
-        }
-        try {
-            if (_buildURL) {
-                url = this.buildURL(url);
+        if (headers) {
+            if (!contentType) {
+                headers["accept"] = "application/json";
+            } else {
+                headers["content-type"] = contentType;
             }
-            const res = await axios.get(url, config);
-            const resData: Record<any, any> = res.data;
-            log.debug(`:: EXIT : ${JSON.stringify(resData)}`);
-            return resData;
-        } catch (error) {
-            log.error(`:: EXIT : ERROR : ${JSON.stringify(error)}`);
-            return error as Error;
+            const params = new URLSearchParams();
+            params.append('client_id', this.clientID);
+            for (const [key, value] of Object.entries(queryParams)) {
+                params.append(key, value);
+            }
+            const config = {
+                headers: headers,
+            }
+            try {
+                if (_buildURL) {
+                    url = this.buildURL(url);
+                }
+                const res = await axios.get(url, config);
+                const resData: Record<any, any> = res.data;
+                log.debug(`:: EXIT : ${JSON.stringify(resData)}`);
+                return resData;
+            } catch (error) {
+                log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error)}`)}`);
+                return error as Error;
+            }
+        } else {
+            log.error(`${chalk.redBright(`\nsimba: EXIT : ${this.authErrors.authTokenError}`)}`);
+            return new Error(`${this.authErrors.authTokenError}`);
         }
-
-
     }
 
     public async doKeycloakGetRequest(
@@ -436,7 +512,7 @@ class KeycloakHandler {
         const contentType = 'application/x-www-form-urlencoded;charset=utf-8';
         const resData = await this.doGetRequest(url, contentType, _queryParams, false);
         if (resData instanceof Error) {
-            log.error(`:: EXIT : ERROR : ${JSON.stringify(resData)}`);
+            log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(resData)}`)}`);
             return resData;
         }
         log.debug(`:: EXIT : result data : ${JSON.stringify(resData)}`);
@@ -458,32 +534,46 @@ class KeycloakHandler {
         if (this.tokenExpired()) {
             if (this.refreshTokenExpired()) {
                 log.info(`:: INFO : token expired, please log in again`);
-                await this.loginAndGetAuthToken();
+                const authToken = await this.loginAndGetAuthToken();
+                if (!authToken) {
+                    log.error(`${chalk.redBright(`\nsimba: EXIT : ${this.authErrors.authTokenError}`)}`);
+                    return new Error(`${this.authErrors.authTokenError}`);
+                }
             } else {
-                await this.refreshToken();
+                log.info(`:: INFO : refreshing token`);
+                const newAuthToken = await this.refreshToken();
+                if (!newAuthToken) {
+                    log.error(`${chalk.redBright(`\nsimba: EXIT : ${this.authErrors.authTokenError}`)}`)
+                    return new Error(`${this.authErrors.authTokenError}`);
+                }
             }
         }
         const postData = _postData ? _postData : {};
         const headers = await this.accessTokenHeader();
-        if (!contentType) {
-            headers["content-type"] = "application/json";
-        } else {
-            headers["content-type"] = contentType;
-        }
-        const config = {
-            headers: headers,
-        }
-        try {
-            if (_buildURL) {
-                url = this.buildURL(url);
+        if (headers) {
+            if (!contentType) {
+                headers["content-type"] = "application/json";
+            } else {
+                headers["content-type"] = contentType;
             }
-            const res = await axios.post(url, postData, config);
-            const resData: Record<any, any> = res.data;
-            log.debug(`:: EXIT : ${JSON.stringify(resData)}`);
-            return resData;
-        } catch (error) {
-            log.error(`:: EXIT : ERROR : ${JSON.stringify(error)}`);
-            return error as Error;
+            const config = {
+                headers: headers,
+            }
+            try {
+                if (_buildURL) {
+                    url = this.buildURL(url);
+                }
+                const res = await axios.post(url, postData, config);
+                const resData: Record<any, any> = res.data;
+                log.debug(`:: EXIT : ${JSON.stringify(resData)}`);
+                return resData;
+            } catch (error) {
+                log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error)}`)}`);
+                return error as Error;
+            }
+        } else {
+            log.error(`${chalk.redBright(`\nsimba: EXIT : ${this.authErrors.headersError}`)}`);
+            return new Error(`${this.authErrors.headersError}`);
         }
     }
 
@@ -499,7 +589,7 @@ class KeycloakHandler {
         const contentType = 'application/x-www-form-urlencoded;charset=utf-8';
         const resData = await this.doPostRequest(url, _postData, contentType, false);
         if (resData instanceof Error) {
-            log.error(`:: EXIT : ERROR : ${JSON.stringify(resData)}`);
+            log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(resData)}`)}`);
             return resData;
         }
         log.debug(`:: EXIT : result data : ${JSON.stringify(resData)}`);
