@@ -1,8 +1,3 @@
-/*
-NOTE:
-this file will actually come from the standalone web3 repo
-it is just included here for now for testing purposes
-*/
 import {default as prompt} from 'prompts';
 import {
     SimbaConfig,
