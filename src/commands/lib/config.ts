@@ -81,7 +81,9 @@ export class SimbaConfig {
     }
 
     public static get artifactDirectory(): string {
-        return this.ProjectConfigStore.get('artifact_directory');
+        const artifactPath =  path.join(cwd(), 'artifacts')
+        // return this.ProjectConfigStore.get('artifact_directory');
+        return artifactPath;
     }
 
     public get artifactDirectory(): string {
