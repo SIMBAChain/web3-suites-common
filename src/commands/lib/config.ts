@@ -5,6 +5,7 @@ import {cwd} from 'process';
 import * as path from 'path';
 import Configstore from 'configstore';
 import {KeycloakHandler} from './authentication';
+import {default as chalk} from 'chalk';
 // const fsPromises = require("fs").promises;
 
 export class SimbaConfig {
@@ -81,8 +82,24 @@ export class SimbaConfig {
     }
 
     public static get artifactDirectory(): string {
-        const artifactPath =  path.join(cwd(), 'artifacts')
-        // return this.ProjectConfigStore.get('artifact_directory');
+        let artifactPath = "";
+        const web3Suite = this.ProjectConfigStore.get("web3Suite") ?
+            this.ProjectConfigStore.get("web3Suite").toLowerCase() :
+            this.ProjectConfigStore.get("web3suite").toLowerCase();
+        switch(web3Suite) {
+            case "hardhat": { 
+               artifactPath =  path.join(cwd(), 'artifacts')
+               break; 
+            }
+            case "truffle": {
+                artifactPath =  path.join(cwd(), 'build/contracts')
+                break;
+            }
+            default: { 
+               log.error(`${chalk.redBright(`simba: ERROR : "web3Suite" not defined in simba.json. Please specify as "hardhat", "truffle", etc.`)}`)
+               break; 
+            } 
+         } 
         return artifactPath;
     }
 
