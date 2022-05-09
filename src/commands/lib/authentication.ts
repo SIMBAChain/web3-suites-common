@@ -9,11 +9,6 @@ import {
     URLSearchParams,
 } from "url";
 
-const CLIENT_ID = "simba-pkce";
-const AUTH_URL = "https://simba-dev-sso.platform.simbachain.com";
-const REALM = "simbachain";
-// export const AUTHKEY = "SIMBAAUTH";
-
 interface PollingConfig {
     maxAttempts: number;
     interval: number;
@@ -594,7 +589,4 @@ class KeycloakHandler {
 
 export {
     KeycloakHandler,
-    CLIENT_ID,
-    AUTH_URL,
-    REALM,
 }
