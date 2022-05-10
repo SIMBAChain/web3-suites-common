@@ -13,4 +13,5 @@ export {
     primaryConstructorRequiresArgs,
     primaryConstructorInputs,
     writeAndReturnASTSourceAndCompiler,
+    isLibrary,
 } from './api';
