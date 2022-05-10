@@ -227,6 +227,35 @@ async function astSourceAndCompiler(
     return astAndSourceAndCompiler;
 }
 
+function getASTNodes(
+    _astSourceAndCompiler: ASTSourceAndCompiler,
+): Array<Record<any, any>> {
+    const ast = _astSourceAndCompiler.ast;
+    const astNodes = ast.nodes ? ast.nodes : [];
+    return astNodes;
+}
+
+function getContractKind(
+    _astSourceAndCompiler: ASTSourceAndCompiler,
+): string {
+    const astNodes = getASTNodes(_astSourceAndCompiler);
+    for (let i = 0; i < astNodes.length; i++) {
+        const node = astNodes[i];
+        if (node.contractKind) {
+            const contractKind = node.contractKind;
+            return contractKind;
+        }
+    }
+    return "";
+}
+
+export function isLibrary(
+    _astSourceAndCompiler: ASTSourceAndCompiler,
+): boolean {
+    const contractKind = getContractKind(_astSourceAndCompiler);
+    const _isLibrary = (contractKind === "library") ? true : false;
+    return _isLibrary;
+}
 
 async function getASTSourceAndCompiler(
     contractName: string,
