@@ -87,20 +87,20 @@ export class SimbaConfig {
             this.ProjectConfigStore.get("web3Suite").toLowerCase() :
             this.ProjectConfigStore.get("web3suite").toLowerCase();
         switch(web3Suite) {
-            case "hardhat": { 
-               artifactPath =  path.join(cwd(), 'artifacts')
-               break; 
+            case "hardhat": {
+                artifactPath =  path.join(cwd(), 'artifacts')
+                break; 
             }
             case "truffle": {
-                artifactPath =  path.join(cwd(), 'build/contracts')
+                artifactPath =  path.join(cwd(), 'build')
                 break;
             }
             default: { 
                log.error(`${chalk.redBright(`simba: ERROR : "web3Suite" not defined in simba.json. Please specify as "hardhat", "truffle", etc.`)}`)
                break; 
             } 
-         } 
-        return artifactPath;
+         }
+         return artifactPath;
     }
 
     public get artifactDirectory(): string {
