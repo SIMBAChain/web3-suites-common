@@ -1,4 +1,4 @@
-export {log} from './commands/lib';
+export {LogLevel} from './commands/lib';
 export {SimbaConfig} from './commands/lib';
 export {
     promisifiedReadFile,

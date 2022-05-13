@@ -1,6 +1,12 @@
+// import {
+//     log,
+// } from "../lib";
 import {
-    log,
-} from "../lib";
+    LogLevel,
+} from "./logger";
+import {
+    Logger,
+} from "tslog";
 import {cwd} from 'process';
 import * as path from 'path';
 import Configstore from 'configstore';
@@ -8,7 +14,10 @@ import {KeycloakHandler} from './authentication';
 import {default as chalk} from 'chalk';
 // const fsPromises = require("fs").promises;
 
+
 export class SimbaConfig {
+    // these instance properties are not actually uses
+    // they're just defined here for debugging/logging purposes
     public static _web3Suite: string;
     // Common config, such as auth
     public static _configStore: Configstore;
@@ -19,8 +28,11 @@ export class SimbaConfig {
     public static _application: any;
     public static _organisation: any;
     public static _build_directory: string;
+    public static _log: Logger;
 
     public constructor() {
+        // these instance properties are not actually uses
+        // they're just defined here for debugging/logging purposes
         const confstore = this.ConfigStore;
         const projconfstore = this.ProjectConfigStore;
         const w3Suite = this.web3Suite;
@@ -28,6 +40,8 @@ export class SimbaConfig {
         const org = this.organisation;
         const authStr = this.authStore;
         const buildDir = this.buildDirectory;
+        const logLevel = this.logLevel;
+        const log: Logger = new Logger({minLevel:logLevel});
         const constructorParams = {
             confstore,
             projconfstore,
@@ -36,6 +50,7 @@ export class SimbaConfig {
             authStr,
             w3Suite,
             buildDir,
+            logLevel,
         }
         log.debug(`:: ENTER : SimbaConfig constructor params : ${JSON.stringify(constructorParams)}`)
 
@@ -68,12 +83,12 @@ export class SimbaConfig {
     }
 
     public static get authStore(): KeycloakHandler {
-        log.debug(`:: ENTER :`)
+        SimbaConfig.log.debug(`:: ENTER :`)
         if (!this._authStore) {
-            log.debug(`:: instantiating new authStore`);
+            SimbaConfig.log.debug(`:: instantiating new authStore`);
             this._authStore = new KeycloakHandler(this._configStore, this._projectConfigStore);
         }
-        log.debug(`:: EXIT :`);
+        SimbaConfig.log.debug(`:: EXIT :`);
         return this._authStore;
     }
 
@@ -96,7 +111,7 @@ export class SimbaConfig {
                 break;
             }
             default: { 
-               log.error(`${chalk.redBright(`simba: ERROR : "web3Suite" not defined in simba.json. Please specify as "hardhat", "truffle", etc.`)}`)
+               SimbaConfig.log.error(`${chalk.redBright(`simba: ERROR : "web3Suite" not defined in simba.json. Please specify as "hardhat", "truffle", etc.`)}`)
                break; 
             } 
          }
@@ -132,11 +147,48 @@ export class SimbaConfig {
     }
 
     public static set web3Suite(_w3Suite: string) {
-        this._projectConfigStore.set('web3Suite', _w3Suite);
+        this.ProjectConfigStore.set('web3Suite', _w3Suite);
     }
     
     public set web3Suite(_w3Suite: string) {
         SimbaConfig.web3Suite = _w3Suite;
+    }
+
+    public static get log(): Logger {
+        const logLevel = SimbaConfig.logLevel;
+        const logger: Logger = new Logger({minLevel:logLevel});
+        return logger;
+    }
+
+    public get log(): Logger {
+        return SimbaConfig.log;
+    }
+
+    public static get logLevel(): LogLevel {
+        let logLevel = this.ProjectConfigStore.get('logLevel') ? 
+        this.ProjectConfigStore.get('logLevel').toLowerCase() :
+        LogLevel.INFO;
+        if (!Object.values(LogLevel).includes(logLevel)) {
+            logLevel = LogLevel.INFO;
+        }
+        return logLevel;
+    }
+
+    public get logLevel(): LogLevel {
+        return SimbaConfig.logLevel;
+    }
+
+    public static set logLevel(level: LogLevel) {
+        const lowerLevel = level.toLocaleLowerCase() as any;
+        if (!Object.values(LogLevel).includes(lowerLevel)) {
+            this.log.error(`${chalk.redBright(`simba: log level can only be one of: 'error', 'debug', 'info', 'warn', 'fatal', 'silly', 'trace'`)}`);
+            return
+        }
+        this.ProjectConfigStore.set("logLevel", lowerLevel);
+    }
+
+    public set logLevel(level: LogLevel) {
+        SimbaConfig.logLevel = level;
     }
 
     public static get organisation(): any {

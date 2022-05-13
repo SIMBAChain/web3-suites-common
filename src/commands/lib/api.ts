@@ -1,7 +1,6 @@
 import {default as prompt} from 'prompts';
 import {
     SimbaConfig,
-    log,
 } from "../lib";
 import {
     promisifiedReadFile,
@@ -35,18 +34,18 @@ interface ASTAndOtherInfo {
 }
 
 const getList = async (config: SimbaConfig, url?: string): Promise<Record<any, any> | void> => {
-    log.debug(`:: ENTER :`);
+    SimbaConfig.log.debug(`:: ENTER :`);
     if (!url) {
         url = 'v2/organisations/';
     }
     try {
         const res = config.authStore.doGetRequest(url);
-        log.debug(`:: EXIT : ${JSON.stringify(res)}`);
+        SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(res)}`);
         return res;
     } catch (e) {
         const err = e as any;
         if (err.message === "Request failed with status code 500") {
-            log.info(`${chalk.cyanBright('\nsimba: Auth token expired, please log in again')}`);
+            SimbaConfig.log.info(`${chalk.cyanBright('\nsimba: Auth token expired, please log in again')}`);
             SimbaConfig.authStore.logout();
             await SimbaConfig.authStore.loginAndGetAuthToken();
         }
@@ -54,14 +53,14 @@ const getList = async (config: SimbaConfig, url?: string): Promise<Record<any, a
 };
 
 export const chooseOrganisationFromList = async (config: SimbaConfig, url?: string): Promise<any> => {
-    log.debug(`:: ENTER : ${JSON.stringify(config)}`);
+    SimbaConfig.log.debug(`:: ENTER : ${JSON.stringify(config)}`);
     if (!url) {
         url = 'organisations/';
     }
     const orgResponse = await getList(config, url);
 
     if (!orgResponse) {
-        log.error(`${chalk.redBright('\nsimba: EXIT : no organizations returned. You probably need to log in again')}`);
+        SimbaConfig.log.error(`${chalk.redBright('\nsimba: EXIT : no organizations returned. You probably need to log in again')}`);
         return;
     }
 
@@ -106,12 +105,12 @@ export const chooseOrganisationFromList = async (config: SimbaConfig, url?: stri
     }
 
     if (!response.organisation) {
-        log.error(`${chalk.redBright('\nsimba: EXIT : No Organisation Selected!')}`);
+        SimbaConfig.log.error(`${chalk.redBright('\nsimba: EXIT : No Organisation Selected!')}`);
         throw new Error('No Organisation Selected!');
     }
     
     config.organisation = response.organisation;
-    log.debug(`:: EXIT : ${JSON.stringify(response.organisation)}`);
+    SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(response.organisation)}`);
     return response.organisation;
 };
 
@@ -125,14 +124,14 @@ export async function chooseOrganisationFromInput(
 function parseBuildInfoJsonName(
     location: string,
 ): string {
-    log.debug(`:: ENTER : ${location}`);
+    SimbaConfig.log.debug(`:: ENTER : ${location}`);
     if (location.includes("/")) {
         const idArr = location.split("/");
         const jsonName = idArr[idArr.length-1];
-        log.debug(`:: EXIT : ${jsonName}`);
+        SimbaConfig.log.debug(`:: EXIT : ${jsonName}`);
         return jsonName;
     } else {
-        log.debug(`:: EXIT : ${location}`);
+        SimbaConfig.log.debug(`:: EXIT : ${location}`);
         return location;
     }
 }
@@ -141,7 +140,7 @@ async function buildInfoJsonName(
     contractName: string,
     contractSourceName: string,
 ): Promise<string> {
-    log.debug(`:: ENTER : ${contractName}`);
+    SimbaConfig.log.debug(`:: ENTER : ${contractName}`);
     const buildDir = SimbaConfig.buildDirectory;
     let files: string[] = [];
     try {
@@ -149,10 +148,10 @@ async function buildInfoJsonName(
     } catch (e) {
         const err = e as any;
         if (err.code === 'ENOENT') {
-            log.error(`${chalk.redBright('\nsimba: EXIT : Simba was not able to find any build info artifacts.\nDid you forget to run: "npx hardhat compile" ?\n')}`);
+            SimbaConfig.log.error(`${chalk.redBright('\nsimba: EXIT : Simba was not able to find any build info artifacts.\nDid you forget to run: "npx hardhat compile" ?\n')}`);
             return "";
         }
-        log.error(`:: EXIT : ERROR : ${JSON.stringify(err)}`);
+        SimbaConfig.log.error(`:: EXIT : ERROR : ${JSON.stringify(err)}`);
         return "";
     }
     for (const file of files) {
@@ -163,11 +162,11 @@ async function buildInfoJsonName(
             const parsed = JSON.parse(buf.toString());
             const location = parsed.buildInfo;
             const jsonName = parseBuildInfoJsonName(location);
-            log.debug(`:: EXIT : ${jsonName}`);
+            SimbaConfig.log.debug(`:: EXIT : ${jsonName}`);
             return jsonName;
         }
     }
-    log.error(`${chalk.redBright('\nsimba: EXIT : no info found for contract')}`);
+    SimbaConfig.log.error(`${chalk.redBright('\nsimba: EXIT : no info found for contract')}`);
     return "";
 }
 
@@ -186,7 +185,7 @@ function getContractKind(
         const node = astNodes[i];
         if (node.contractKind) {
             const contractKind = node.contractKind;
-            log.info(`contractKind: ${contractKind}`);
+            SimbaConfig.log.info(`contractKind: ${contractKind}`);
             return contractKind;
         }
     }
@@ -198,7 +197,7 @@ export function isLibrary(
 ): boolean {
     const contractKind = getContractKind(ast);
     const _isLibrary = (contractKind === "library");
-    log.info(`isLibrary: ${_isLibrary}`)
+    SimbaConfig.log.info(`isLibrary: ${_isLibrary}`)
     return _isLibrary;
 }
 
@@ -211,7 +210,7 @@ async function astAndOtherInfo(
         contractName,
         _buildInfoJsonName,
     };
-    log.debug(`:: ENTER : ${JSON.stringify(params)}`);
+    SimbaConfig.log.debug(`:: ENTER : ${JSON.stringify(params)}`);
     const buildInfoDir = SimbaConfig.buildInfoDirectory;
     let files: string[] = [];
 
@@ -227,14 +226,14 @@ async function astAndOtherInfo(
 
     try {
         files = await walkDirForContracts(buildInfoDir, ".json");
-        log.debug(`:: files : ${JSON.stringify(files)}`);
+        SimbaConfig.log.debug(`:: files : ${JSON.stringify(files)}`);
     } catch (e) {
         const err = e as any;
         if (err.code === 'ENOENT') {
-            log.error(`${chalk.redBright('\nsimba: EXIT : Simba was not able to find any build info artifacts.\nDid you forget to run: "npx hardhat compile" ?\n')}`);
+            SimbaConfig.log.error(`${chalk.redBright('\nsimba: EXIT : Simba was not able to find any build info artifacts.\nDid you forget to run: "npx hardhat compile" ?\n')}`);
             return _astAndOtherInfo;
         }
-        log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(err)}`)}`);
+        SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(err)}`)}`);
         return _astAndOtherInfo;
     }
 
@@ -261,11 +260,11 @@ async function astAndOtherInfo(
             const contractSourceCode = inputContractSource.content;
             _astAndOtherInfo.source = contractSourceCode;
             _astAndOtherInfo.language = language;
-            log.info(`:: EXIT : ${JSON.stringify(_astAndOtherInfo)}`);
+            SimbaConfig.log.info(`:: EXIT : ${JSON.stringify(_astAndOtherInfo)}`);
             return _astAndOtherInfo;
         }
     }
-    log.error(`:: EXIT : ERROR : no contract info found`);
+    SimbaConfig.log.error(`:: EXIT : ERROR : no contract info found`);
     return _astAndOtherInfo;
 }
 
@@ -277,7 +276,7 @@ export async function getASTAndOtherInfo(
         contractName,
         contractSourceName,
     }
-    log.debug(`:: ENTER : ${JSON.stringify(entryParams)}`);
+    SimbaConfig.log.debug(`:: ENTER : ${JSON.stringify(entryParams)}`);
     const _buildInfoJsonName = await buildInfoJsonName(contractName, contractSourceName);
     const _astAndOtherInfo = await astAndOtherInfo(
         contractName,
@@ -286,10 +285,10 @@ export async function getASTAndOtherInfo(
     );
     if (_astAndOtherInfo.ast === {}) {
         const message = `no ast found for ${contractName}`;
-        log.error(`${chalk.redBright(`\nsimba: EXIT : ${message}`)}`);
+        SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${message}`)}`);
         return new Error(`${message}`);
     }
-    log.debug(`:: EXIT : ${JSON.stringify(_astAndOtherInfo)}`);
+    SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(_astAndOtherInfo)}`);
     return _astAndOtherInfo;
 }
 
@@ -301,7 +300,7 @@ export async function writeAndReturnASTAndOtherInfo(
         contractName,
         contractSourceName,
     };
-    log.debug(`:: ENTER : ${JSON.stringify(entryParams)}`);
+    SimbaConfig.log.debug(`:: ENTER : ${JSON.stringify(entryParams)}`);
     const _astAndOtherInfo = await getASTAndOtherInfo(
         contractName,
         contractSourceName,
@@ -319,9 +318,9 @@ export async function writeAndReturnASTAndOtherInfo(
         parsed.ast = _astAndOtherInfo.ast;
         parsed.source = _astAndOtherInfo.source;
         const data = JSON.stringify(parsed);
-        log.debug(`:: writing to ${filePath}`);
+        SimbaConfig.log.debug(`:: writing to ${filePath}`);
         fs.writeFileSync(filePath, data);
-        log.debug(`:: EXIT : ${JSON.stringify(_astAndOtherInfo)}`);
+        SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(_astAndOtherInfo)}`);
         return _astAndOtherInfo;
     }
     return _astAndOtherInfo;
@@ -330,10 +329,10 @@ export async function writeAndReturnASTAndOtherInfo(
 export async function getApp(config: SimbaConfig,
     id: string,
 ): Promise<any> {
-    log.debug(`:: ENTER : ${id}`);
+    SimbaConfig.log.debug(`:: ENTER : ${id}`);
     const url = `organisations/${config.organisation.id}/applications/${id}`;
     const response = await config.authStore.doGetRequest(url, 'application/json');
-    log.debug(`:: EXIT : ${JSON.stringify(response)}`);
+    SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(response)}`);
     return response;
 };
 
@@ -345,7 +344,7 @@ export async function chooseApplicationFromList(
         config,
         url,
     };
-    log.debug(`:: ENTER : ${JSON.stringify(entryParams)}`);
+    SimbaConfig.log.debug(`:: ENTER : ${JSON.stringify(entryParams)}`);
     if (!url) {
         url = `organisations/${config.organisation.id}/applications/`;
     }
@@ -353,7 +352,7 @@ export async function chooseApplicationFromList(
     const appResponse = await getList(config, url);
 
     if (!appResponse) {
-        log.error(`${chalk.redBright('\nsimba: EXIT : no applications in list. You probably need to login again.')}`);
+        SimbaConfig.log.error(`${chalk.redBright('\nsimba: EXIT : no applications in list. You probably need to login again.')}`);
         return;
     }
 
@@ -398,11 +397,11 @@ export async function chooseApplicationFromList(
     }
 
     if (!response.application) {
-        log.error(`${chalk.redBright('\nsimba: EXIT : No Application Selected!')}`);
+        SimbaConfig.log.error(`${chalk.redBright('\nsimba: EXIT : No Application Selected!')}`);
         throw new Error('No Application Selected!');
     }
     config.application = response.application;
-    log.debug(`:: EXIT : ${JSON.stringify(response.application)}`);
+    SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(response.application)}`);
     return response.application;
 };
 
@@ -415,7 +414,7 @@ export async function getBlockchains(
         config,
         url,
     };
-    log.debug(`:: ENTER : ${JSON.stringify(entryParams)}`);
+    SimbaConfig.log.debug(`:: ENTER : ${JSON.stringify(entryParams)}`);
     if (!url) {
         url = `organisations/${config.organisation.id}/blockchains/`;
     }
@@ -429,7 +428,7 @@ export async function getBlockchains(
             value: chain.name,
         });
     });
-    log.debug(`:: EXIT : ${JSON.stringify(choices)}`);
+    SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(choices)}`);
     return choices;
 };
 
@@ -442,7 +441,7 @@ export async function getStorages(
         config,
         url,
     };
-    log.debug(`:: ENTER : ${JSON.stringify(entryParams)}`);
+    SimbaConfig.log.debug(`:: ENTER : ${JSON.stringify(entryParams)}`);
     if (!url) {
         url = `organisations/${config.organisation.id}/storage/`;
     }
@@ -456,17 +455,17 @@ export async function getStorages(
             value: storage.name,
         });
     });
-    log.debug(`:: EXIT : ${JSON.stringify(choices)}`);
+    SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(choices)}`);
     return choices;
 };
 
 // the following code is for merging AST for a contract into build artifact for that contract
 async function getABIForPrimaryContract(
 ) {
-    log.debug(`:: ENTER :`);
+    SimbaConfig.log.debug(`:: ENTER :`);
     const contractName = SimbaConfig.ProjectConfigStore.get("primary");
     if (!contractName) {
-        log.error(`${chalk.redBright('\nsimba: EXIT : no primary contract in simba.json')}`);
+        SimbaConfig.log.error(`${chalk.redBright('\nsimba: EXIT : no primary contract in simba.json')}`);
         return "";
     }
     const buildDir = SimbaConfig.buildDirectory;
@@ -478,7 +477,7 @@ async function getABIForPrimaryContract(
         const buf = await promisifiedReadFile(file, {flag: 'r'});
         const parsed = JSON.parse(buf.toString());
         const abi = parsed.abi;
-        log.debug(`:: EXIT : ${JSON.stringify(abi)}`);
+        SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(abi)}`);
         return abi;
     }
 }
@@ -486,35 +485,35 @@ async function getABIForPrimaryContract(
 export async function getFieldFromPrimaryContractABI(
     name: string,
 ) {
-    log.debug(`:: ENTER : ${name}`);
+    SimbaConfig.log.debug(`:: ENTER : ${name}`);
     const abi = await getABIForPrimaryContract();
     for (let i = 0; i < abi.length; i++) {
         const entry = abi[i];
         if (entry.name === name) {
-            log.debug(`:: EXIT : ${JSON.stringify(entry)}`);
+            SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(entry)}`);
             return entry;
         }
     }
-    log.debug(`:: EXIT : {}`);
+    SimbaConfig.log.debug(`:: EXIT : {}`);
     return {};
 }
 
 async function primaryContractConstructor() {
-    log.debug(`:: ENTER :`);
+    SimbaConfig.log.debug(`:: ENTER :`);
     const abi = await getABIForPrimaryContract();
     for (let i = 0; i < abi.length; i++) {
         const entry = abi[i];
         if (entry.type === "constructor") {
-            log.debug(`:: EXIT : ${JSON.stringify(entry)}`);
+            SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(entry)}`);
             return entry;
         }
     }
-    log.debug(`:: EXIT : {}`);
+    SimbaConfig.log.debug(`:: EXIT : {}`);
     return {};
 }
 
 export async function primaryConstructorInputs() {
-    log.debug(`:: ENTER :`);
+    SimbaConfig.log.debug(`:: ENTER :`);
     const constructor = await primaryContractConstructor();
     const constructorInputs = constructor.inputs ? constructor.inputs : [];
     const inputs = [];
@@ -527,18 +526,18 @@ export async function primaryConstructorInputs() {
             name,
         });
     }
-    log.debug(`:: EXIT : ${JSON.stringify(inputs)}`);
+    SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(inputs)}`);
     return inputs;
 }
 
 export async function primaryConstructorRequiresArgs(): Promise<boolean> {
-    log.debug(`:: ENTER :`);
+    SimbaConfig.log.debug(`:: ENTER :`);
     const constructor = await primaryContractConstructor();
     const inputs = constructor.inputs;
     let requiresArgs = false;
     if (inputs && inputs.length > 0) {
         requiresArgs = true;
     }
-    log.debug(`:: EXIT : ${requiresArgs}`);
+    SimbaConfig.log.debug(`:: EXIT : ${requiresArgs}`);
     return requiresArgs;
 }

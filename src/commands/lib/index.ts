@@ -1,4 +1,4 @@
-export {log} from './logger';
+export {LogLevel} from './logger';
 export {SimbaConfig} from './config';
 export {
     promisifiedReadFile,

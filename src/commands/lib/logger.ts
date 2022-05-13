@@ -1,11 +1,9 @@
-import {
-    Logger,
-} from "tslog";
-const DEBUG = 'debug';
-const INFO = 'info';
-const ERROR = 'error';
-const log: Logger = new Logger({minLevel:DEBUG});
-
-export {
-    log,
-};
+export enum LogLevel {
+    SILLY = "silly",
+    TRACE = "trace",
+    DEBUG = "debug",
+    INFO = "info",
+    WARN = "warn",
+    ERROR = "error",
+    FATAL = "fatal",
+}
