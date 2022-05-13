@@ -6,6 +6,9 @@ import {
 import {default as chalk} from 'chalk';
 import axios from "axios";
 import {
+    AxiosError
+} from "axios";
+import {
     URLSearchParams,
 } from "url";
 
@@ -34,6 +37,8 @@ interface AuthErrors {
     noAuthURLError: string;
     noRealmError: string;
 }
+
+const SIMBAERROR = "SIMBAERROR";
 
 const KeycloakAuthErrors: AuthErrors = {
     headersError: `${chalk.red('simba: Error acquiring auth headers. Please make sure keycloak certs are not expired.')}`,
@@ -216,7 +221,7 @@ class KeycloakHandler {
         // the following line is where we begin the flow of handling not acquiring verification info
         if (!verificationCompleteURI) {
             log.error(`${chalk.redBright(`\nsimba: EXIT : ${this.authErrors.keycloakCertsError}`)}`);
-            return
+            return SIMBAERROR;
         }
         log.info(`\n${chalk.cyanBright('\nsimba: Please navigate to the following URI to log in: ')} ${chalk.greenBright(verificationCompleteURI)}`);
         log.debug(`:: EXIT :`);
@@ -310,7 +315,7 @@ class KeycloakHandler {
         }
         // return true below, to pad for time required for operations
         if (authToken.expires_at < Math.floor(Date.now()/1000) - this.tokenExpirationPad) {
-            log.debug(`:: EXIT : access_token expiring within 60 seconds, returning true`);
+            log.debug(`:: EXIT : access_token expiring within ${this.tokenExpirationPad} seconds, returning true`);
             return true;
         }
         log.debug(`:: EXIT : false`);
@@ -330,7 +335,7 @@ class KeycloakHandler {
         }
         // return true below, to pad for time required for operations
         if (authToken.refresh_expires_at <= Math.floor(Date.now()/1000) - this.tokenExpirationPad) {
-            log.debug(`:: EXIT : access_token expiring within 60 seconds, returning true`);
+            log.debug(`:: EXIT : access_token expiring within ${this.tokenExpirationPad} seconds, returning true`);
             return true;
         }
         log.debug(`:: EXIT : false`);
@@ -339,10 +344,11 @@ class KeycloakHandler {
 
     public async refreshToken(): Promise<KeycloakAccessToken | void> {
         log.debug(`:: ENTER :`);
-        if (!this.tokenExpired()) {
-            log.debug(`:: EXIT : authToken still valid`);
-            return;
-        }
+        // if (!this.tokenExpired()) {
+        //     log.debug(`:: EXIT : authToken still valid`);
+        //     const authToken = await this.getConfig("authToken");
+        //     return authToken;
+        // }
         if (this.refreshTokenExpired()) {
             this.deleteAuthInfo();
             const authToken = await this.loginAndGetAuthToken();
@@ -382,7 +388,8 @@ class KeycloakHandler {
             this.logout();
             verificationCompleteURI = await this.loginUser();
         }
-        if (verificationCompleteURI) {
+        // below we are checking to make sure that SIMBERROR was not returned from loginuser
+        if (verificationCompleteURI !== SIMBAERROR) {
             const pollingConfig: PollingConfig = {
                 maxAttempts: 60,
                 interval: 3000,
@@ -392,7 +399,7 @@ class KeycloakHandler {
             this.setLoggedInStatus(true);
             return authToken;
         } else {
-            log.debug(`:: EXIT : ${this.authErrors.verificationInfoError}`);
+            log.error(`:: EXIT : ${this.authErrors.verificationInfoError}`);
             return;
         }
     }
@@ -432,7 +439,7 @@ class KeycloakHandler {
         contentType?: string,
         _queryParams?: Record<any, any>,
         _buildURL: boolean = true,
-    ): Promise<Record<any, any> | Error> {
+    ): Promise<Record<any, any> | Error | void> {
         const funcParams = {
             url,
             _queryParams,
@@ -452,7 +459,8 @@ class KeycloakHandler {
                 const newAuthToken = await this.refreshToken();
                 if (!newAuthToken) {
                     log.error(`${chalk.redBright(`\nsimba: EXIT : ${this.authErrors.authTokenError}`)}`)
-                    return new Error(`${this.authErrors.authTokenError}`);
+                    log.info(`${chalk.cyanBright(`simba: there was an error with your request, please log out and then login again, then try your request again`)}`);
+                    return
                 }
             }
         }
@@ -481,7 +489,35 @@ class KeycloakHandler {
                 log.debug(`:: EXIT : ${JSON.stringify(resData)}`);
                 return resData;
             } catch (error) {
-                log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error)}`)}`);
+                const err = error as AxiosError
+                if (err.response && err.response.status === 401)  {
+                    log.debug(`:: received 401 response, attempting to refresh token`);
+                    // if 401 from Simba, then try refreshing token.
+                    try {
+                        const newAuthToken = await this.refreshToken();
+                        if (newAuthToken) {
+                            log.info(`${chalk.cyanBright(`simba: new token acquired. Please try your request again`)}`)
+                            return;
+                        } else {
+                            log.error(`${chalk.redBright(`simba: there was a problem acquiring your access token. Please log out and then login and then try your request again`)}`);
+                            return;
+                        }
+                    } catch (e) {
+                        try {
+                            log.info(`${chalk.cyanBright(`simba: you need to login again; redirecting you to login. Then please try your request again.`)}`);
+                            await this.loginAndGetAuthToken(false);
+                            return;
+                        } catch (e) {
+                            const err = e as any;
+                            log.error(`${chalk.redBright(`simba: EXIT : there was a problem with your request. Please log out and then login and then try your request again`)}`);
+                            return err;
+                        }
+                    }
+                } else if (err.response && (err.response.status === 500 || err.response.status === 400)) {
+                    log.error(`${chalk.redBright(`simba: there was a problem with your request. This may be due to your access token. Please log out and then login and then try your request again`)}`);
+                    return;
+                }
+                log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(err)}`)}`);
                 return error as Error;
             }
         } else {
@@ -493,7 +529,7 @@ class KeycloakHandler {
     public async doKeycloakGetRequest(
         url: string,
         _queryParams?: Record<any, any>,
-    ): Promise<Record<any, any> | Error> {
+    ): Promise<Record<any, any> | Error | void> {
         const funcParams = {
             url,
             _queryParams,
@@ -514,7 +550,7 @@ class KeycloakHandler {
         _postData?: Record<any, any>,
         contentType?: string,
         _buildURL: boolean = true,
-    ): Promise<Record<any, any>> {
+    ): Promise<Record<any, any> | void> {
         const funcParams = {
             url,
             _postData,
@@ -534,7 +570,8 @@ class KeycloakHandler {
                 const newAuthToken = await this.refreshToken();
                 if (!newAuthToken) {
                     log.error(`${chalk.redBright(`\nsimba: EXIT : ${this.authErrors.authTokenError}`)}`)
-                    return new Error(`${this.authErrors.authTokenError}`);
+                    log.info(`${chalk.cyanBright(`simba: there was an error with your request, please log out and then login again, then try your request again`)}`);
+                    return
                 }
             }
         }
@@ -558,6 +595,34 @@ class KeycloakHandler {
                 log.debug(`:: EXIT : ${JSON.stringify(resData)}`);
                 return resData;
             } catch (error) {
+                const err = error as AxiosError
+                if (err.response && err.response.status === 401)  {
+                    log.debug(`:: received 401 response, attempting to refresh token`);
+                    // if 401 from Simba, then try refreshing token.
+                    try {
+                        const newAuthToken = await this.refreshToken();
+                        if (newAuthToken) {
+                            log.info(`${chalk.cyanBright(`simba: new token acquired. Please try your request again`)}`)
+                            return;
+                        } else {
+                            log.error(`${chalk.redBright(`simba: there was a problem acquiring your access token. Please log out and then login and then try your request again`)}`);
+                            return;
+                        }
+                    } catch (e) {
+                        try {
+                            log.info(`${chalk.cyanBright(`simba: you need to login again; redirecting you to login. Then please try your request again.`)}`);
+                            await this.loginAndGetAuthToken(false);
+                            return;
+                        } catch (e) {
+                            const err = e as any;
+                            log.error(`${chalk.redBright(`simba: EXIT : there was a problem with your request. Please log out and then login and then try your request again`)}`);
+                            return err;
+                        }
+                    }
+                } else if (err.response && (err.response.status === 500 || err.response.status === 400)) {
+                    log.error(`${chalk.redBright(`simba: there was a problem with your request. This may be due to your access token. Please log out and then login and then try your request again`)}`);
+                    return;
+                }
                 log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error)}`)}`);
                 return error as Error;
             }
@@ -570,7 +635,7 @@ class KeycloakHandler {
     public async doKeycloakPostRequest(
         url: string,
         _postData?: Record<any, any>
-    ): Promise<Record<any, any> | Error> {
+    ): Promise<Record<any, any> | Error | void> {
         const funcParams = {
             url,
             _postData,

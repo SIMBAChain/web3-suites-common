@@ -24,10 +24,14 @@ interface Response {
     data: Dictionary<any>;
 }
 
-interface ASTSourceAndCompiler {
+interface ASTAndOtherInfo {
     ast: Record<any, any>;
     source: Record<any, any>;
     compiler: string;
+    language: string;
+    isLib: boolean;
+    contractName: string;
+    contractSourceName: string;
 }
 
 const getList = async (config: SimbaConfig, url?: string): Promise<Record<any, any> | void> => {
@@ -167,11 +171,42 @@ async function buildInfoJsonName(
     return "";
 }
 
-async function astSourceAndCompiler(
+function getASTNodes(
+    ast: any
+): Array<Record<any, any>> {
+    const astNodes = ast.nodes ? ast.nodes : [];
+    return astNodes;
+}
+
+function getContractKind(
+    ast: any,
+): string {
+    const astNodes = getASTNodes(ast);
+    for (let i = 0; i < astNodes.length; i++) {
+        const node = astNodes[i];
+        if (node.contractKind) {
+            const contractKind = node.contractKind;
+            log.info(`contractKind: ${contractKind}`);
+            return contractKind;
+        }
+    }
+    return "";
+}
+
+export function isLibrary(
+    ast: any,
+): boolean {
+    const contractKind = getContractKind(ast);
+    const _isLibrary = (contractKind === "library");
+    log.info(`isLibrary: ${_isLibrary}`)
+    return _isLibrary;
+}
+
+async function astAndOtherInfo(
     contractName: string,
     contractSourceName: string,
     _buildInfoJsonName: string,
-): Promise<ASTSourceAndCompiler> {
+): Promise<ASTAndOtherInfo> {
     const params = {
         contractName,
         _buildInfoJsonName,
@@ -180,10 +215,14 @@ async function astSourceAndCompiler(
     const buildInfoDir = SimbaConfig.buildInfoDirectory;
     let files: string[] = [];
 
-    let astAndSourceAndCompiler: ASTSourceAndCompiler = {
-        "ast": {},
-        "source": {},
-        "compiler": "",
+    let _astAndOtherInfo: ASTAndOtherInfo = {
+        ast: {},
+        source: {},
+        compiler: "",
+        language: "",
+        isLib: false,
+        contractName,
+        contractSourceName,
     };
 
     try {
@@ -193,10 +232,10 @@ async function astSourceAndCompiler(
         const err = e as any;
         if (err.code === 'ENOENT') {
             log.error(`${chalk.redBright('\nsimba: EXIT : Simba was not able to find any build info artifacts.\nDid you forget to run: "npx hardhat compile" ?\n')}`);
-            return astAndSourceAndCompiler;
+            return _astAndOtherInfo;
         }
         log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(err)}`)}`);
-        return astAndSourceAndCompiler;
+        return _astAndOtherInfo;
     }
 
     for (const file of files) {
@@ -209,91 +248,64 @@ async function astSourceAndCompiler(
             const outputSources = output.sources;
             const outputContractSource = outputSources[contractSourceName];
             const ast = outputContractSource.ast;
-            astAndSourceAndCompiler.ast = ast;
+            _astAndOtherInfo.ast = ast;
+            _astAndOtherInfo.isLib = isLibrary(ast);
 
             const solcVersion = parsed.solcVersion;
-            astAndSourceAndCompiler.compiler = solcVersion;
+            _astAndOtherInfo.compiler = solcVersion;
 
             const input = parsed.input;
+            const language = parsed.language;
             const inputSources = input.sources;
             const inputContractSource = inputSources[contractSourceName];
             const contractSourceCode = inputContractSource.content;
-            astAndSourceAndCompiler.source = contractSourceCode;
-            log.debug(`:: EXIT : ${JSON.stringify(astAndSourceAndCompiler)}`);
-            return astAndSourceAndCompiler;
+            _astAndOtherInfo.source = contractSourceCode;
+            _astAndOtherInfo.language = language;
+            log.info(`:: EXIT : ${JSON.stringify(_astAndOtherInfo)}`);
+            return _astAndOtherInfo;
         }
     }
     log.error(`:: EXIT : ERROR : no contract info found`);
-    return astAndSourceAndCompiler;
+    return _astAndOtherInfo;
 }
 
-function getASTNodes(
-    _astSourceAndCompiler: ASTSourceAndCompiler,
-): Array<Record<any, any>> {
-    const ast = _astSourceAndCompiler.ast;
-    const astNodes = ast.nodes ? ast.nodes : [];
-    return astNodes;
-}
-
-function getContractKind(
-    _astSourceAndCompiler: ASTSourceAndCompiler,
-): string {
-    const astNodes = getASTNodes(_astSourceAndCompiler);
-    for (let i = 0; i < astNodes.length; i++) {
-        const node = astNodes[i];
-        if (node.contractKind) {
-            const contractKind = node.contractKind;
-            return contractKind;
-        }
-    }
-    return "";
-}
-
-export function isLibrary(
-    _astSourceAndCompiler: ASTSourceAndCompiler,
-): boolean {
-    const contractKind = getContractKind(_astSourceAndCompiler);
-    const _isLibrary = (contractKind === "library") ? true : false;
-    return _isLibrary;
-}
-
-async function getASTSourceAndCompiler(
+export async function getASTAndOtherInfo(
     contractName: string,
     contractSourceName: string,
-): Promise<ASTSourceAndCompiler | Error> {
+): Promise<ASTAndOtherInfo | Error> {
     const entryParams = {
         contractName,
         contractSourceName,
     }
     log.debug(`:: ENTER : ${JSON.stringify(entryParams)}`);
     const _buildInfoJsonName = await buildInfoJsonName(contractName, contractSourceName);
-    const _astAndSourceAndCompiler = await astSourceAndCompiler(
+    const _astAndOtherInfo = await astAndOtherInfo(
         contractName,
         contractSourceName,
         _buildInfoJsonName,
     );
-    if (_astAndSourceAndCompiler.ast === {}) {
+    if (_astAndOtherInfo.ast === {}) {
         const message = `no ast found for ${contractName}`;
         log.error(`${chalk.redBright(`\nsimba: EXIT : ${message}`)}`);
         return new Error(`${message}`);
     }
-    log.debug(`:: EXIT : ${JSON.stringify(_astAndSourceAndCompiler)}`);
-    return _astAndSourceAndCompiler;
+    log.debug(`:: EXIT : ${JSON.stringify(_astAndOtherInfo)}`);
+    return _astAndOtherInfo;
 }
 
-export async function writeAndReturnASTSourceAndCompiler(
+export async function writeAndReturnASTAndOtherInfo(
     contractName: string,
     contractSourceName: string,
-): Promise<ASTSourceAndCompiler> {
+): Promise<ASTAndOtherInfo> {
     const entryParams = {
         contractName,
         contractSourceName,
     };
     log.debug(`:: ENTER : ${JSON.stringify(entryParams)}`);
-    const _astSourceAndCompiler = await getASTSourceAndCompiler(
+    const _astAndOtherInfo = await getASTAndOtherInfo(
         contractName,
         contractSourceName,
-        ) as ASTSourceAndCompiler;
+        ) as ASTAndOtherInfo;
     const buildDir = SimbaConfig.buildDirectory;
     const sourceFileName = contractSourceName.split("/")[1];
     const filePath = `${buildDir}/${sourceFileName}/${contractName}.json`;
@@ -304,15 +316,15 @@ export async function writeAndReturnASTSourceAndCompiler(
         }
         const buf = await promisifiedReadFile(file, {flag: 'r'});
         const parsed = JSON.parse(buf.toString());
-        parsed.ast = _astSourceAndCompiler.ast;
-        parsed.source = _astSourceAndCompiler.source;
+        parsed.ast = _astAndOtherInfo.ast;
+        parsed.source = _astAndOtherInfo.source;
         const data = JSON.stringify(parsed);
         log.debug(`:: writing to ${filePath}`);
         fs.writeFileSync(filePath, data);
-        log.debug(`:: EXIT : ${JSON.stringify(_astSourceAndCompiler)}`);
-        return _astSourceAndCompiler;
+        log.debug(`:: EXIT : ${JSON.stringify(_astAndOtherInfo)}`);
+        return _astAndOtherInfo;
     }
-    return _astSourceAndCompiler;
+    return _astAndOtherInfo;
 }
 
 export async function getApp(config: SimbaConfig,

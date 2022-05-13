@@ -12,6 +12,7 @@ export {
     getStorages,
     primaryConstructorRequiresArgs,
     primaryConstructorInputs,
-    writeAndReturnASTSourceAndCompiler,
+    writeAndReturnASTAndOtherInfo,
+    getASTAndOtherInfo,
     isLibrary,
 } from './api';
