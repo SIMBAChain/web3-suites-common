@@ -16,8 +16,8 @@ import {default as chalk} from 'chalk';
 
 
 export class SimbaConfig {
-    // these instance properties are not actually uses
-    // they're just defined here for debugging/logging purposes
+    // many of these properties are not actually used. They are here for debugging purposes
+    // however, _configStore and _projectConfigStore are used as arguments to instaniate this._authStore
     public static _web3Suite: string;
     // Common config, such as auth
     public static _configStore: Configstore;
@@ -97,7 +97,11 @@ export class SimbaConfig {
     }
 
     public static get artifactDirectory(): string {
-        let artifactPath = "";
+        let artifactPath = this.ProjectConfigStore.get("artifactDirectory");
+        if (artifactPath) {
+            this.log.debug(`${chalk.cyanBright(`simba: artifactDirectory path obtained from simba.json. If you wish to have Simba obtain your artifacts from the default location for your web3 project, then please remove the 'artifactDirectory' field from simba.json.`)}`)
+            return artifactPath;
+        }
         const web3Suite = this.ProjectConfigStore.get("web3Suite") ?
             this.ProjectConfigStore.get("web3Suite").toLowerCase() :
             this.ProjectConfigStore.get("web3suite").toLowerCase();
@@ -131,11 +135,29 @@ export class SimbaConfig {
     }
 
     public static get buildDirectory(): string {
+        let buildDir = this.ProjectConfigStore.get("buildDirectory");
+        if (buildDir) {
+            this.log.debug(`${chalk.cyanBright(`simba: buildDirectory path obtained from simba.json. If you wish to have Simba obtain your build artifacts from the default location for your web3 project, then please remove the 'buildDirectory' field from simba.json.`)}`);
+            return buildDir;
+        }
         return SimbaConfig.artifactDirectory + "/contracts";
     }
 
     public get buildDirectory(): string {
         return SimbaConfig.buildDirectory;
+    }
+
+    public static get contractDirectory(): string {
+        const contractDir = this.ProjectConfigStore.get("contractDirectory");
+        if (contractDir) {
+            this.log.debug(`${chalk.cyanBright(`simba: contractDirectory path obtained from simba.json. If you wish to have Simba obtain your build artifacts from the default location for your web3 project, then please remove the 'contractDirectory' field from simba.json.`)}`);
+            return contractDir;
+        }
+        return path.join(cwd(), 'contracts');
+    }
+
+    public get contractDirectory(): string {
+        return SimbaConfig.contractDirectory;
     }
 
     public static get web3Suite(): string {

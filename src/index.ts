@@ -16,3 +16,8 @@ export {
     getASTAndOtherInfo,
     isLibrary
 } from './commands/lib';
+export {
+    syncContract,
+    allContracts,
+    printAllContracts,
+} from "./commands/contract";

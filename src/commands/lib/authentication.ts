@@ -206,7 +206,7 @@ class KeycloakHandler {
             SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(this.verificationInfo)}`);
             return verificationInfo;
         } catch (error) {
-            SimbaConfig.log.error(`${chalk.redBright(`simba: EXIT : ${JSON.stringify(error)}`)}`);
+            SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error)}`)}`);
             return error as Error;
         }
     }
@@ -447,18 +447,18 @@ class KeycloakHandler {
         SimbaConfig.log.debug(`:: ENTER : ${JSON.stringify(funcParams)}`);
         if (this.tokenExpired()) {
             if (this.refreshTokenExpired()) {
-                SimbaConfig.log.info(`${chalk.cyanBright} token expired, please log in again`);
+                SimbaConfig.log.debug(`${chalk.cyanBright(`\nsimba: refresh token expired`)}`);
                 const authToken = await this.loginAndGetAuthToken();
                 if (!authToken) {
                     SimbaConfig.log.error(`${chalk.red(`\nsimba: EXIT : ${this.authErrors.authTokenError}`)}`);
                     return new Error(`${this.authErrors.authTokenError}`);
                 }
             } else {
-                SimbaConfig.log.info(`${chalk.cyanBright(`simba: refreshing token`)}`);
+                SimbaConfig.log.debug(`${chalk.cyanBright(`\nsimba: refreshing token`)}`);
                 const newAuthToken = await this.refreshToken();
                 if (!newAuthToken) {
                     SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${this.authErrors.authTokenError}`)}`)
-                    SimbaConfig.log.info(`${chalk.cyanBright(`simba: there was an error with your request, please log out and then login again, then try your request again`)}`);
+                    SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: there was an error with your request, please log out and then login again, then try your request again`)}`);
                     return
                 }
             }
@@ -467,7 +467,7 @@ class KeycloakHandler {
         const headers = await this.accessTokenHeader();
         if (headers) {
             if (!contentType) {
-                headers["accept"] = "application/json";
+                headers["content-type"] = "application/json";
             } else {
                 headers["content-type"] = contentType;
             }
@@ -495,20 +495,20 @@ class KeycloakHandler {
                     try {
                         const newAuthToken = await this.refreshToken();
                         if (newAuthToken) {
-                            SimbaConfig.log.info(`${chalk.cyanBright(`simba: new token acquired. Please try your request again`)}`)
+                            SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: new token acquired. Please try your request again`)}`)
                             return;
                         } else {
-                            SimbaConfig.log.error(`${chalk.redBright(`simba: there was a problem acquiring your access token. Please log out and then login and then try your request again`)}`);
+                            SimbaConfig.log.error(`${chalk.redBright(`\nsimba: there was a problem acquiring your access token. Please log out and then login and then try your request again`)}`);
                             return;
                         }
                     } catch (e) {
                         try {
-                            SimbaConfig.log.info(`${chalk.cyanBright(`simba: you need to login again; redirecting you to login. Then please try your request again.`)}`);
+                            SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: you need to login again; redirecting you to login. Then please try your request again.`)}`);
                             await this.loginAndGetAuthToken(false);
                             return;
                         } catch (e) {
                             const err = e as any;
-                            SimbaConfig.log.error(`${chalk.redBright(`simba: EXIT : there was a problem with your request. Please log out and then login and then try your request again`)}`);
+                            SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : there was a problem with your request. Please log out and then login and then try your request again`)}`);
                             return err;
                         }
                     }
@@ -569,7 +569,7 @@ class KeycloakHandler {
                 const newAuthToken = await this.refreshToken();
                 if (!newAuthToken) {
                     SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${this.authErrors.authTokenError}`)}`)
-                    SimbaConfig.log.info(`${chalk.cyanBright(`simba: there was an error with your request, please log out and then login again, then try your request again`)}`);
+                    SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: there was an error with your request, please log out and then login again, then try your request again`)}`);
                     return
                 }
             }
@@ -601,26 +601,28 @@ class KeycloakHandler {
                     try {
                         const newAuthToken = await this.refreshToken();
                         if (newAuthToken) {
-                            SimbaConfig.log.info(`${chalk.cyanBright(`simba: new token acquired. Please try your request again`)}`)
+                            SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: new token acquired. Please try your request again`)}`)
                             return;
                         } else {
-                            SimbaConfig.log.error(`${chalk.redBright(`simba: there was a problem acquiring your access token. Please log out and then login and then try your request again`)}`);
+                            SimbaConfig.log.error(`${chalk.redBright(`\nsimba: there was a problem acquiring your access token. Please log out and then login and then try your request again`)}`);
                             return;
                         }
                     } catch (e) {
                         try {
-                            SimbaConfig.log.info(`${chalk.cyanBright(`simba: you need to login again; redirecting you to login. Then please try your request again.`)}`);
+                            SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: you need to login again; redirecting you to login. Then please try your request again.`)}`);
                             await this.loginAndGetAuthToken(false);
                             return;
                         } catch (e) {
                             const err = e as any;
-                            SimbaConfig.log.error(`${chalk.redBright(`simba: EXIT : there was a problem with your request. Please log out and then login and then try your request again`)}`);
+                            SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : there was a problem with your request. Please log out and then login and then try your request again`)}`);
                             return err;
                         }
                     }
                 } else if (err.response && (err.response.status === 500 || err.response.status === 400)) {
-                    SimbaConfig.log.error(`${chalk.redBright(`simba: there was a problem with your request. This may be due to your access token. Please log out and then login and then try your request again`)}`);
+                    SimbaConfig.log.error(`${chalk.redBright(`simba: there was a problem with your request: ${chalk.greenBright(`${JSON.stringify(err)}`)}`)}`);
                     return;
+                } else {
+                    SimbaConfig.log.error(`${chalk.redBright(`simba: ${JSON.stringify(err)}`)}`)
                 }
                 SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error)}`)}`);
                 return error as Error;

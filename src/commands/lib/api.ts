@@ -185,7 +185,7 @@ function getContractKind(
         const node = astNodes[i];
         if (node.contractKind) {
             const contractKind = node.contractKind;
-            SimbaConfig.log.info(`contractKind: ${contractKind}`);
+            SimbaConfig.log.debug(`contractKind: ${contractKind}`);
             return contractKind;
         }
     }
@@ -197,7 +197,7 @@ export function isLibrary(
 ): boolean {
     const contractKind = getContractKind(ast);
     const _isLibrary = (contractKind === "library");
-    SimbaConfig.log.info(`isLibrary: ${_isLibrary}`)
+    SimbaConfig.log.debug(`isLibrary: ${_isLibrary}`)
     return _isLibrary;
 }
 
@@ -260,7 +260,7 @@ async function astAndOtherInfo(
             const contractSourceCode = inputContractSource.content;
             _astAndOtherInfo.source = contractSourceCode;
             _astAndOtherInfo.language = language;
-            SimbaConfig.log.info(`:: EXIT : ${JSON.stringify(_astAndOtherInfo)}`);
+            SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(_astAndOtherInfo)}`);
             return _astAndOtherInfo;
         }
     }
