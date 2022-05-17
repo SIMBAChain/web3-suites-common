@@ -105,62 +105,89 @@ class KeycloakHandler {
     }
 
     protected getConfigBase(): string {
+        SimbaConfig.log.debug(`:: ENTER :`);
         if (!this.configBase) {
             this.configBase = this.baseURL.split(".").join("_");
         }
+        SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(this.configBase)}`);
         return this.configBase;
     }
 
     public setLoggedInStatus(status: boolean): void {
+        SimbaConfig.log.debug(`:: ENTER : ${status}`);
         this._loggedIn = status;
+        SimbaConfig.log.debug(`:: EXIT :`);
     }
 
     public isLoggedIn(): boolean {
+        SimbaConfig.log.debug(`:: ENTER :`);
         if (this.verificationInfo) {
+            SimbaConfig.log.debug(`:: EXIT : ${true}`);
             return true;
         } else {
+            SimbaConfig.log.debug(`:: EXIT : ${false}`);
             return false;
         }
     }
 
     public async logout(): Promise<void> {
+        SimbaConfig.log.debug(`:: ENTER :`);
         this.setLoggedInStatus(false);
         this.deleteAuthInfo();
+        SimbaConfig.log.debug(`:: EXIT :`);
     }
 
     protected deleteAuthInfo(): void {
-        SimbaConfig.log.debug(`:: ENTER : deleting any existing authToken info`);
+        SimbaConfig.log.debug(`:: ENTER :`);
         this.config.set(this.configBase, {});
+        SimbaConfig.log.debug(`:: EXIT :`);
     }
 
     protected getPathToConfigFile(): string {
+        SimbaConfig.log.debug(`:: ENTER :`);
+        SimbaConfig.log.debug(`:: EXIT :`);
         return this.config.path;
     }
 
     protected hasConfig(key: string): boolean {
+        SimbaConfig.log.debug(`:: ENTER : ${key}`);
         if (!this.config.has(this.configBase)) {
+            SimbaConfig.log.debug(`:: EXIT : ${false}`);
             return false;
         }
-        return key in this.config.get(this.getConfigBase());
+        const _hasConfig = key in this.config.get(this.getConfigBase());
+        SimbaConfig.log.debug(`:: EXIT : ${_hasConfig}`);
+        return _hasConfig;
     }
 
     protected getConfig(key: string): any {
+        SimbaConfig.log.debug(`:: ENTER :`);
         if (!this.config.has(this.configBase)) {
+            SimbaConfig.log.debug(`:: EXIT :`);
             return;
         }
         const dict = this.config.get(this.getConfigBase());
         if (!(key in dict)) {
+            SimbaConfig.log.debug(`:: EXIT :`);
             return;
         }
-        return dict[key];
+        const _config = dict[key];
+        SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(_config)}`);
+        return _config;
     }
 
     protected getOrSetConfig(key: string, value: any): any {
+        const entryParams = {
+            key,
+            value,
+        }
+        SimbaConfig.log.debug(`:: ENTER : ${JSON.stringify(entryParams)}`);
         if (!this.hasConfig(key)) {
             this.setConfig(key, value);
+            SimbaConfig.log.debug(`:: EXIT :`);
             return value;
         }
-
+        SimbaConfig.log.debug(`:: EXIT :`);
         return this.getConfig(key);
     }
 
@@ -173,19 +200,24 @@ class KeycloakHandler {
         dict[key] = value;
         this.config.set(this.configBase, dict);
         SimbaConfig.log.debug(`:: EXIT : this.config: ${JSON.stringify(this.config)}`);
+        SimbaConfig.log.debug(`:: EXIT :`);
         return value;
     }
 
     protected deleteConfig(key: string): void {
+        SimbaConfig.log.debug(`:: ENTER :`);
         if (!this.config.has(this.configBase)) {
+            SimbaConfig.log.debug(`:: EXIT :`);
             return;
         }
         const dict = this.config.get(this.configBase);
         if (!(key in dict)) {
+            SimbaConfig.log.debug(`:: EXIT :`);
             return;
         }
         delete dict[key];
         this.config.set(this.configBase, dict);
+        SimbaConfig.log.debug(`:: EXIT :`);
     }
 
     private async getVerificationInfo(): Promise<KeycloakDeviceVerificationInfo | Error> {
@@ -513,7 +545,7 @@ class KeycloakHandler {
                         }
                     }
                 } else if (err.response && (err.response.status === 500 || err.response.status === 400)) {
-                    SimbaConfig.log.error(`${chalk.redBright(`simba: there was a problem with your request. This may be due to your access token. Please log out and then login and then try your request again`)}`);
+                    SimbaConfig.log.error(`${chalk.redBright(`simba: there was a problem with your request. Even though the error code was not 401, this error may be related to your access token. Please log out and then login and then try your request again`)}`);
                     return;
                 }
                 SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(err)}`)}`);
@@ -619,7 +651,7 @@ class KeycloakHandler {
                         }
                     }
                 } else if (err.response && (err.response.status === 500 || err.response.status === 400)) {
-                    SimbaConfig.log.error(`${chalk.redBright(`simba: there was a problem with your request: ${chalk.greenBright(`${JSON.stringify(err)}`)}`)}`);
+                    SimbaConfig.log.error(`${chalk.redBright(`simba: there was a problem with your request. Even though the error code was not 401, this error may be related to your access token. Please log out and then login and then try your request again`)}`);
                     return;
                 } else {
                     SimbaConfig.log.error(`${chalk.redBright(`simba: ${JSON.stringify(err)}`)}`)
