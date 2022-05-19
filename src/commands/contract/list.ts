@@ -10,7 +10,7 @@ export async function allContracts(): Promise<ContractDesign[] | Error> {
     SimbaConfig.log.debug(`resp: ${JSON.stringify(resp)}`);
     if (resp && !(resp instanceof Error)) {
         SimbaConfig.log.debug(`resp is not ERROR`);
-        SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: retrieving all contracts for organisation ${SimbaConfig.organisation.name}`)}`);
+        SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: retrieving all contracts for organisation ${chalk.greenBright(`${SimbaConfig.organisation.name}`)}`)}`);
         let res = resp as any;
         contractDesigns = contractDesigns.concat(res.results as ContractDesign[]);
         while (res.next !== null) {

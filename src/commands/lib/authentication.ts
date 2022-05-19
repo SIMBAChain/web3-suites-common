@@ -312,7 +312,7 @@ class KeycloakHandler {
         } else {
             SimbaConfig.log.debug(`:: entering refresh logic`);
             const authToken = this.getConfig("authToken");
-            SimbaConfig.log.debug(`:: auth!! : ${JSON.stringify(authToken)}`);
+            SimbaConfig.log.debug(`:: auth : ${JSON.stringify(authToken)}`);
             const _refreshToken = authToken.refresh_token;
             params.append("client_id", this.clientID);
             params.append("grant_type", "refresh_token");
@@ -478,15 +478,16 @@ class KeycloakHandler {
         }
         SimbaConfig.log.debug(`:: ENTER : ${JSON.stringify(funcParams)}`);
         if (this.tokenExpired()) {
+            SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: auth token expired`)}`)
             if (this.refreshTokenExpired()) {
-                SimbaConfig.log.debug(`${chalk.cyanBright(`\nsimba: refresh token expired`)}`);
+                SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: refresh token expired, acquiring new auth token`)}`);
                 const authToken = await this.loginAndGetAuthToken();
                 if (!authToken) {
                     SimbaConfig.log.error(`${chalk.red(`\nsimba: EXIT : ${this.authErrors.authTokenError}`)}`);
                     return new Error(`${this.authErrors.authTokenError}`);
                 }
             } else {
-                SimbaConfig.log.debug(`${chalk.cyanBright(`\nsimba: refreshing token`)}`);
+                SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: refreshing token`)}`);
                 const newAuthToken = await this.refreshToken();
                 if (!newAuthToken) {
                     SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${this.authErrors.authTokenError}`)}`)
@@ -545,7 +546,7 @@ class KeycloakHandler {
                         }
                     }
                 } else if (err.response && (err.response.status === 500 || err.response.status === 400)) {
-                    SimbaConfig.log.error(`${chalk.redBright(`simba: there was a problem with your request. Even though the error code was not 401, this error may be related to your access token. Please log out and then login and then try your request again`)}`);
+                    SimbaConfig.log.error(`${chalk.redBright(`simba: there was a problem with your request. Please make sure that the data in your request was formatted correctly, with correct data types, and then try your request again.\n\nFull error: ${JSON.stringify(err)}`)}`);
                     return;
                 }
                 SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(err)}`)}`);
@@ -589,15 +590,16 @@ class KeycloakHandler {
         };
         SimbaConfig.log.debug(`:: ENTER : ${JSON.stringify(funcParams)}`);
         if (this.tokenExpired()) {
+            SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: auth token expired`)}`);
             if (this.refreshTokenExpired()) {
-                SimbaConfig.log.info(`:: INFO : token expired, please log in again`);
+                SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: refresh token expired, acquiring new auth token`)}`);
                 const authToken = await this.loginAndGetAuthToken();
                 if (!authToken) {
                     SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${this.authErrors.authTokenError}`)}`);
                     return new Error(`${this.authErrors.authTokenError}`);
                 }
             } else {
-                SimbaConfig.log.info(`:: INFO : refreshing token`);
+                SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: refreshing token`)}`);
                 const newAuthToken = await this.refreshToken();
                 if (!newAuthToken) {
                     SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${this.authErrors.authTokenError}`)}`)
@@ -651,7 +653,7 @@ class KeycloakHandler {
                         }
                     }
                 } else if (err.response && (err.response.status === 500 || err.response.status === 400)) {
-                    SimbaConfig.log.error(`${chalk.redBright(`simba: there was a problem with your request. Even though the error code was not 401, this error may be related to your access token. Please log out and then login and then try your request again`)}`);
+                    SimbaConfig.log.error(`${chalk.redBright(`simba: there was a problem with your request. Please make sure that the data in your request was formatted correctly, with correct data types, and then try your request again.\n\nFull error: ${JSON.stringify(err)}`)}`);
                     return;
                 } else {
                     SimbaConfig.log.error(`${chalk.redBright(`simba: ${JSON.stringify(err)}`)}`)

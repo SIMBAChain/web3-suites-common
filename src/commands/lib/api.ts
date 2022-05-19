@@ -306,11 +306,9 @@ export async function writeAndReturnASTAndOtherInfo(
         contractSourceName,
         ) as ASTAndOtherInfo;
     const buildDir = SimbaConfig.buildDirectory;
-    const sourceFileName = contractSourceName.split("/")[1];
-    const filePath = `${buildDir}/${sourceFileName}/${contractName}.json`;
     const files = await walkDirForContracts(buildDir, ".json");
     for (const file of files) {
-        if (!(file.endsWith(`${contractName}.json`))) {
+        if (!(file.endsWith(`/${contractName}.json`))) {
             continue;
         }
         const buf = await promisifiedReadFile(file, {flag: 'r'});
@@ -318,8 +316,8 @@ export async function writeAndReturnASTAndOtherInfo(
         parsed.ast = _astAndOtherInfo.ast;
         parsed.source = _astAndOtherInfo.source;
         const data = JSON.stringify(parsed);
-        SimbaConfig.log.debug(`:: writing to ${filePath}`);
-        fs.writeFileSync(filePath, data);
+        SimbaConfig.log.debug(`:: writing to ${file}`);
+        fs.writeFileSync(file, data);
         SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(_astAndOtherInfo)}`);
         return _astAndOtherInfo;
     }
@@ -471,7 +469,7 @@ async function getABIForPrimaryContract(
     const buildDir = SimbaConfig.buildDirectory;
     const files = await walkDirForContracts(buildDir, ".json");
     for (const file of files) {
-        if (!(file.endsWith(`${contractName}.json`))) {
+        if (!(file.endsWith(`/${contractName}.json`))) {
             continue;
         }
         const buf = await promisifiedReadFile(file, {flag: 'r'});
