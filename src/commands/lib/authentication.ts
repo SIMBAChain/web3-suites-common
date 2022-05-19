@@ -63,6 +63,11 @@ interface KeycloakAccessToken {
     scope: string;
 }
 
+/**
+ * This class handles our login for keycloak device login
+ * In the future, when we decide to introduce other auth flows,
+ * then we should have a similar class for other auth flows
+ */
 class KeycloakHandler {
     private config: Configstore;
     private projectConfig: Configstore;
@@ -104,6 +109,10 @@ class KeycloakHandler {
         
     }
 
+    /**
+     * used as field for our auth token
+     * @returns 
+     */
     protected getConfigBase(): string {
         SimbaConfig.log.debug(`:: ENTER :`);
         if (!this.configBase) {
@@ -113,12 +122,20 @@ class KeycloakHandler {
         return this.configBase;
     }
 
+    /**
+     * self explanatory
+     * @param status 
+     */
     public setLoggedInStatus(status: boolean): void {
         SimbaConfig.log.debug(`:: ENTER : ${status}`);
         this._loggedIn = status;
         SimbaConfig.log.debug(`:: EXIT :`);
     }
 
+    /**
+     * used to avoid trying to login in when the process has already begun
+     * @returns 
+     */
     public isLoggedIn(): boolean {
         SimbaConfig.log.debug(`:: ENTER :`);
         if (this.verificationInfo) {
@@ -130,6 +147,9 @@ class KeycloakHandler {
         }
     }
 
+    /**
+     * deletes our auth info
+     */
     public async logout(): Promise<void> {
         SimbaConfig.log.debug(`:: ENTER :`);
         this.setLoggedInStatus(false);
@@ -137,18 +157,30 @@ class KeycloakHandler {
         SimbaConfig.log.debug(`:: EXIT :`);
     }
 
+    /**
+     * deletes auth info
+     */
     protected deleteAuthInfo(): void {
         SimbaConfig.log.debug(`:: ENTER :`);
         this.config.set(this.configBase, {});
         SimbaConfig.log.debug(`:: EXIT :`);
     }
 
+    /**
+     * not currently used
+     * @returns 
+     */
     protected getPathToConfigFile(): string {
         SimbaConfig.log.debug(`:: ENTER :`);
         SimbaConfig.log.debug(`:: EXIT :`);
         return this.config.path;
     }
 
+    /**
+     * tells us whether a certian key exists in our configstore
+     * @param key 
+     * @returns 
+     */
     protected hasConfig(key: string): boolean {
         SimbaConfig.log.debug(`:: ENTER : ${key}`);
         if (!this.config.has(this.configBase)) {
@@ -160,6 +192,11 @@ class KeycloakHandler {
         return _hasConfig;
     }
 
+    /**
+     * return config from configstore
+     * @param key 
+     * @returns 
+     */
     protected getConfig(key: string): any {
         SimbaConfig.log.debug(`:: ENTER :`);
         if (!this.config.has(this.configBase)) {
@@ -176,6 +213,12 @@ class KeycloakHandler {
         return _config;
     }
 
+    /**
+     * pertains to configstore
+     * @param key 
+     * @param value 
+     * @returns 
+     */
     protected getOrSetConfig(key: string, value: any): any {
         const entryParams = {
             key,
@@ -191,6 +234,12 @@ class KeycloakHandler {
         return this.getConfig(key);
     }
 
+    /**
+     * sets config in configstore
+     * @param key 
+     * @param value 
+     * @returns 
+     */
     protected setConfig(key: string, value: any): any {
         SimbaConfig.log.debug(`:: ENTER : KEY: ${key}, VALUE: ${JSON.stringify(value)}`);
         if (!this.config.has(this.configBase)) {
@@ -204,6 +253,11 @@ class KeycloakHandler {
         return value;
     }
 
+    /**
+     * deletes config in configstore
+     * @param key 
+     * @returns 
+     */
     protected deleteConfig(key: string): void {
         SimbaConfig.log.debug(`:: ENTER :`);
         if (!this.config.has(this.configBase)) {
@@ -220,6 +274,11 @@ class KeycloakHandler {
         SimbaConfig.log.debug(`:: EXIT :`);
     }
 
+    /**
+     * first step in logging in. returns verification info, including a URI,
+     * to allow user to login.
+     * @returns 
+     */
     private async getVerificationInfo(): Promise<KeycloakDeviceVerificationInfo | Error> {
         SimbaConfig.log.debug(`:: ENTER :`);
         const url = `${this.authURL}/auth/realms/${this.realm}/protocol/openid-connect/auth/device`;
@@ -243,6 +302,10 @@ class KeycloakHandler {
         }
     }
 
+    /**
+     * reads out URI user should navigate to for login
+     * @returns 
+     */
     public async loginUser(): Promise<void | string> {
         SimbaConfig.log.debug(`:: ENTER :`);
         if (!this.isLoggedIn()) {
@@ -259,6 +322,12 @@ class KeycloakHandler {
         return verificationCompleteURI;
     }
 
+    /**
+     * allows user to login after they have navigated to the URI from loginUser()
+     * @param pollingConfig 
+     * @param refreshing 
+     * @returns 
+     */
     public async getAuthToken(
         pollingConfig: PollingConfig = {
             maxAttempts: 60,
@@ -333,6 +402,11 @@ class KeycloakHandler {
         }
     }
 
+    /**
+     * checks if auth token is expired. used as a check before we make http call
+     * idea is to check for bad token before http call, if possible
+     * @returns 
+     */
     public tokenExpired(): boolean {
         SimbaConfig.log.debug(`:: ENTER :`);
         if (!this.hasConfig("authToken")) {
@@ -353,6 +427,11 @@ class KeycloakHandler {
         return false;
     }
 
+    /**
+     * checks if refresh token is expired. used as a check before we make http call
+     * idea is to check for bad token before http call, if possible
+     * @returns 
+     */
     public refreshTokenExpired(): boolean {
         SimbaConfig.log.debug(`:: ENTER :`);
         if (!this.hasConfig("authToken")) {
@@ -373,13 +452,12 @@ class KeycloakHandler {
         return false;
     }
 
+    /**
+     * refresh auth token using refresh token
+     * @returns 
+     */
     public async refreshToken(): Promise<KeycloakAccessToken | void> {
         SimbaConfig.log.debug(`:: ENTER :`);
-        // if (!this.tokenExpired()) {
-        //     SimbaConfig.log.debug(`:: EXIT : authToken still valid`);
-        //     const authToken = await this.getConfig("authToken");
-        //     return authToken;
-        // }
         if (this.refreshTokenExpired()) {
             this.deleteAuthInfo();
             const authToken = await this.loginAndGetAuthToken();
@@ -410,6 +488,11 @@ class KeycloakHandler {
         }
     }
 
+    /**
+     * self explanatory
+     * @param refreshing 
+     * @returns 
+     */
     public async loginAndGetAuthToken(
         refreshing: boolean = false,
     ): Promise<KeycloakAccessToken | void> {
@@ -435,6 +518,10 @@ class KeycloakHandler {
         }
     }
 
+    /**
+     * returns headers with access token
+     * @returns 
+     */
     public async accessTokenHeader(): Promise<Record<any, any> | void> {
         SimbaConfig.log.debug(`:: ENTER :`);
         let authToken = this.getConfig("authToken");
@@ -454,6 +541,11 @@ class KeycloakHandler {
         }
     }
 
+    /**
+     * combines URL paths while checking for "v2" at end of first path, since this is a common mistake (double v2s)
+     * @param urlExtension 
+     * @returns 
+     */
     public buildURL(
         urlExtension: string,
     ): string {
@@ -465,6 +557,14 @@ class KeycloakHandler {
         return fullURL;
     }
 
+    /**
+     * make get request. uses axios library
+     * @param url 
+     * @param contentType 
+     * @param _queryParams 
+     * @param _buildURL 
+     * @returns 
+     */
     public async doGetRequest(
         url: string,
         contentType?: string,
@@ -558,6 +658,12 @@ class KeycloakHandler {
         }
     }
 
+    /**
+     * keycloak expects a different contentType (see below)
+     * @param url 
+     * @param _queryParams 
+     * @returns 
+     */
     public async doKeycloakGetRequest(
         url: string,
         _queryParams?: Record<any, any>,
@@ -577,6 +683,14 @@ class KeycloakHandler {
         return resData;
     }
 
+    /**
+     * do post request. uses axios library
+     * @param url 
+     * @param _postData 
+     * @param contentType 
+     * @param _buildURL 
+     * @returns 
+     */
     public async doPostRequest(
         url: string,
         _postData?: Record<any, any>,
@@ -667,6 +781,12 @@ class KeycloakHandler {
         }
     }
 
+    /**
+     * keycloak expects different contentType
+     * @param url 
+     * @param _postData 
+     * @returns 
+     */
     public async doKeycloakPostRequest(
         url: string,
         _postData?: Record<any, any>

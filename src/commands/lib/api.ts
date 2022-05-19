@@ -33,6 +33,12 @@ interface ASTAndOtherInfo {
     contractSourceName: string;
 }
 
+/**
+ * used to retrieve lists of applications and organisations, mainly
+ * @param config 
+ * @param url 
+ * @returns
+ */
 const getList = async (config: SimbaConfig, url?: string): Promise<Record<any, any> | void> => {
     SimbaConfig.log.debug(`:: ENTER :`);
     if (!url) {
@@ -52,6 +58,12 @@ const getList = async (config: SimbaConfig, url?: string): Promise<Record<any, a
     }
 };
 
+/**
+ * choose SIMBA org from list
+ * @param config 
+ * @param url 
+ * @returns 
+ */
 export const chooseOrganisationFromList = async (config: SimbaConfig, url?: string): Promise<any> => {
     SimbaConfig.log.debug(`:: ENTER : ${JSON.stringify(config)}`);
     if (!url) {
@@ -114,6 +126,11 @@ export const chooseOrganisationFromList = async (config: SimbaConfig, url?: stri
     return response.organisation;
 };
 
+/**
+ * not implemented. doesn't fit with current login flow
+ * @param config
+ * @param url 
+ */
 export async function chooseOrganisationFromInput(
     config: SimbaConfig,
     url?: string,
@@ -121,6 +138,11 @@ export async function chooseOrganisationFromInput(
     console.error("needs to be implemented");
 }
 
+/**
+ * Used for Hardhat, which stores AST separately from ABI
+ * @param location 
+ * @returns 
+ */
 function parseBuildInfoJsonName(
     location: string,
 ): string {
@@ -136,6 +158,12 @@ function parseBuildInfoJsonName(
     }
 }
 
+/**
+ * Used for Hardhat, which stores AST separately from ABI
+ * @param contractName 
+ * @param contractSourceName 
+ * @returns 
+ */
 async function buildInfoJsonName(
     contractName: string,
     contractSourceName: string,
@@ -170,6 +198,11 @@ async function buildInfoJsonName(
     return "";
 }
 
+/**
+ * Mainly used to determine if a contract is a library, contract, interface, etc.
+ * @param ast 
+ * @returns 
+ */
 function getASTNodes(
     ast: any
 ): Array<Record<any, any>> {
@@ -177,6 +210,11 @@ function getASTNodes(
     return astNodes;
 }
 
+/**
+ * returns type of contract (library, contract, interface)
+ * @param ast 
+ * @returns 
+ */
 function getContractKind(
     ast: any,
 ): string {
@@ -192,6 +230,11 @@ function getContractKind(
     return "";
 }
 
+/**
+ * determines if a contract is a library
+ * @param ast 
+ * @returns 
+ */
 export function isLibrary(
     ast: any,
 ): boolean {
@@ -201,6 +244,13 @@ export function isLibrary(
     return _isLibrary;
 }
 
+/**
+ * Used for Hardhat, which stores AST separately from ABI
+ * @param contractName 
+ * @param contractSourceName 
+ * @param _buildInfoJsonName 
+ * @returns 
+ */
 async function astAndOtherInfo(
     contractName: string,
     contractSourceName: string,
@@ -268,6 +318,12 @@ async function astAndOtherInfo(
     return _astAndOtherInfo;
 }
 
+/**
+ * Used for Hardhat, which stores AST separately from ABI
+ * @param contractName 
+ * @param contractSourceName 
+ * @returns 
+ */
 export async function getASTAndOtherInfo(
     contractName: string,
     contractSourceName: string,
@@ -292,6 +348,13 @@ export async function getASTAndOtherInfo(
     return _astAndOtherInfo;
 }
 
+/**
+ * Used for Hardhat, which stores AST separately from ABI
+ * This actually writes the AST to the build file containing the ABI
+ * @param contractName 
+ * @param contractSourceName 
+ * @returns 
+ */
 export async function writeAndReturnASTAndOtherInfo(
     contractName: string,
     contractSourceName: string,
@@ -324,6 +387,12 @@ export async function writeAndReturnASTAndOtherInfo(
     return _astAndOtherInfo;
 }
 
+/**
+ * Not currently used anywhere
+ * @param config 
+ * @param id 
+ * @returns 
+ */
 export async function getApp(config: SimbaConfig,
     id: string,
 ): Promise<any> {
@@ -334,6 +403,12 @@ export async function getApp(config: SimbaConfig,
     return response;
 };
 
+/**
+ * choose SIMBA app from list
+ * @param config 
+ * @param url 
+ * @returns 
+ */
 export async function chooseApplicationFromList(
     config: SimbaConfig,
     url?: string,
@@ -403,6 +478,12 @@ export async function chooseApplicationFromList(
     return response.application;
 };
 
+/**
+ * fetch available blockchains
+ * @param config 
+ * @param url 
+ * @returns 
+ */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function getBlockchains(
     config: SimbaConfig,
@@ -430,6 +511,12 @@ export async function getBlockchains(
     return choices;
 };
 
+/**
+ * fetch available storages
+ * @param config 
+ * @param url 
+ * @returns 
+ */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function getStorages(
     config: SimbaConfig,
@@ -457,7 +544,10 @@ export async function getStorages(
     return choices;
 };
 
-// the following code is for merging AST for a contract into build artifact for that contract
+/**
+ * Used for Hardhat, which stores AST separately from ABI
+ * @returns 
+ */
 async function getABIForPrimaryContract(
 ) {
     SimbaConfig.log.debug(`:: ENTER :`);
@@ -480,6 +570,11 @@ async function getABIForPrimaryContract(
     }
 }
 
+/**
+ * helper function for getting constructor
+ * @param name 
+ * @returns 
+ */
 export async function getFieldFromPrimaryContractABI(
     name: string,
 ) {
@@ -496,6 +591,10 @@ export async function getFieldFromPrimaryContractABI(
     return {};
 }
 
+/**
+ * get constructor for primary contract
+ * @returns 
+ */
 async function primaryContractConstructor() {
     SimbaConfig.log.debug(`:: ENTER :`);
     const abi = await getABIForPrimaryContract();
@@ -510,6 +609,10 @@ async function primaryContractConstructor() {
     return {};
 }
 
+/**
+ * aids in specifying types when asking user to input values
+ * @returns 
+ */
 export async function primaryConstructorInputs() {
     SimbaConfig.log.debug(`:: ENTER :`);
     const constructor = await primaryContractConstructor();
@@ -528,6 +631,12 @@ export async function primaryConstructorInputs() {
     return inputs;
 }
 
+/**
+ * tells us whether a contract's constructor has params
+ * We use this function so we know whether to prompt the
+ * user to specify the method they want to use to provide param values
+ * @returns 
+ */
 export async function primaryConstructorRequiresArgs(): Promise<boolean> {
     SimbaConfig.log.debug(`:: ENTER :`);
     const constructor = await primaryContractConstructor();

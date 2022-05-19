@@ -1,6 +1,12 @@
 import * as fs from "fs";
 import * as path from 'path';
 
+/**
+ * function used in many operations in this module. helps us find compiled contracts
+ * @param dir 
+ * @param extension 
+ * @returns 
+ */
 export const walkDirForContracts = (dir: string, extension: string): Promise<string[]> =>
 new Promise((resolve, reject) => {
     fs.readdir(dir, {withFileTypes: true}, async (err, entries) => {
@@ -30,6 +36,12 @@ new Promise((resolve, reject) => {
     });
 });
 
+/**
+ * helps read file once we've found it
+ * @param filePath 
+ * @param options 
+ * @returns 
+ */
 export const promisifiedReadFile = (filePath: fs.PathLike, options: { encoding?: null; flag?: string }): Promise<Buffer> =>
     new Promise((resolve, reject) => {
         fs.readFile(filePath, options, (err: NodeJS.ErrnoException | null, data: Buffer) => {

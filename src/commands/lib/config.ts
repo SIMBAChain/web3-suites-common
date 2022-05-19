@@ -14,7 +14,14 @@ import {KeycloakHandler} from './authentication';
 import {default as chalk} from 'chalk';
 // const fsPromises = require("fs").promises;
 
-
+/**
+ * this class handles our configstore operations (eg reading simba.json)
+ * http operations are handled by our authStore property.
+ * 
+ * If you notice throughout this class, the same methods are defined in static
+ * and instance methods. This was so that some older code that was integrated,
+ * that uses instance methods, would still be supported.
+ */
 export class SimbaConfig {
     // many of these properties are not actually used. They are here for debugging purposes
     // however, _configStore and _projectConfigStore are used as arguments to instaniate this._authStore
@@ -30,9 +37,11 @@ export class SimbaConfig {
     public static _build_directory: string;
     public static _log: Logger;
 
+    /**
+     *  many of these instance properties are not actually uses
+     *  they're just defined here for debugging/logging purposes
+     */
     public constructor() {
-        // these instance properties are not actually uses
-        // they're just defined here for debugging/logging purposes
         const confstore = this.ConfigStore;
         const projconfstore = this.ProjectConfigStore;
         const w3Suite = this.web3Suite;
@@ -52,10 +61,13 @@ export class SimbaConfig {
             buildDir,
             logLevel,
         }
-        log.debug(`:: ENTER : SimbaConfig constructor params : ${JSON.stringify(constructorParams)}`)
+        SimbaConfig.log.debug(`:: ENTER : SimbaConfig constructor params : ${JSON.stringify(constructorParams)}`)
 
     }
 
+    /**
+     * handles our auth / access token info
+     */
     public static get ConfigStore(): Configstore {
         if (!this._configStore) {
             this._configStore = new Configstore(`@simbachain/${this._web3Suite}`, null, {
@@ -69,6 +81,9 @@ export class SimbaConfig {
         return SimbaConfig.ConfigStore;
     }
 
+    /**
+     * handles project info, contained in simba.json
+     */
     public static get ProjectConfigStore(): Configstore {
         if (!this._projectConfigStore) {
             this._projectConfigStore = new Configstore(`@simbachain/${this._web3Suite}`, null, {
@@ -82,6 +97,10 @@ export class SimbaConfig {
         return SimbaConfig.ProjectConfigStore;
     }
 
+    /**
+     * currently an instance of KeycloakHandler, but code can be amended
+     * to be different kind of authStore once supported
+     */
     public static get authStore(): KeycloakHandler {
         SimbaConfig.log.debug(`:: ENTER :`)
         if (!this._authStore) {
@@ -96,6 +115,9 @@ export class SimbaConfig {
         return SimbaConfig.authStore;
     }
 
+    /**
+     * to determine where compiled contracts are stored
+     */
     public static get artifactDirectory(): string {
         let artifactPath = this.ProjectConfigStore.get("artifactDirectory");
         if (artifactPath) {
@@ -126,6 +148,9 @@ export class SimbaConfig {
         return SimbaConfig.artifactDirectory;
     }
 
+    /**
+     * used for Hardhat, since some build info is stored in separate file from main artifact info
+     */
     public static get buildInfoDirectory(): string {
         return SimbaConfig.artifactDirectory + "/build-info";
     }
@@ -134,6 +159,9 @@ export class SimbaConfig {
         return SimbaConfig.buildInfoDirectory;
     }
 
+    /**
+     * finds contracts directory and returns path
+     */
     public static get buildDirectory(): string {
         let buildDir = this.ProjectConfigStore.get("buildDirectory");
         if (buildDir) {
@@ -147,6 +175,9 @@ export class SimbaConfig {
         return SimbaConfig.buildDirectory;
     }
 
+    /**
+     * not used in standard flow
+     */
     public static get contractDirectory(): string {
         const contractDir = this.ProjectConfigStore.get("contractDirectory");
         if (contractDir) {
@@ -160,6 +191,10 @@ export class SimbaConfig {
         return SimbaConfig.contractDirectory;
     }
 
+    /**
+     * used to determine whether we're using Hardhat, Truffle, etc.
+     * this field should be stored in simba.json at beginning of each project
+     */
     public static get web3Suite(): string {
         return this.ProjectConfigStore.get('web3Suite');
     }
@@ -176,6 +211,9 @@ export class SimbaConfig {
         SimbaConfig.web3Suite = _w3Suite;
     }
 
+    /**
+     * this is what we use for logging throughout our plugins
+     */
     public static get log(): Logger {
         const logLevel = SimbaConfig.logLevel;
         const logger: Logger = new Logger({minLevel:logLevel});
@@ -186,6 +224,9 @@ export class SimbaConfig {
         return SimbaConfig.log;
     }
 
+    /**
+     * how we get loglevel throughout our plugins
+     */
     public static get logLevel(): LogLevel {
         let logLevel = this.ProjectConfigStore.get('logLevel') ? 
         this.ProjectConfigStore.get('logLevel').toLowerCase() :
@@ -200,6 +241,9 @@ export class SimbaConfig {
         return SimbaConfig.logLevel;
     }
 
+    /**
+     * how we set loglevel throughout our plugins
+     */
     public static set logLevel(level: LogLevel) {
         const lowerLevel = level.toLocaleLowerCase() as any;
         if (!Object.values(LogLevel).includes(lowerLevel)) {
@@ -213,6 +257,9 @@ export class SimbaConfig {
         SimbaConfig.logLevel = level;
     }
 
+    /**
+     * view organisation from our simba.json
+     */
     public static get organisation(): any {
         const org = this.ProjectConfigStore.get('organisation') ? this.ProjectConfigStore.get('organisation') : this.ProjectConfigStore.get('organization');
         return org;
@@ -230,6 +277,9 @@ export class SimbaConfig {
         SimbaConfig.organisation = org;
     }
 
+    /**
+     * view application from our simba.json
+     */
     public static get application(): any {
         return this.ProjectConfigStore.get('application');
     }

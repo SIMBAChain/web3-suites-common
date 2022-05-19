@@ -4,6 +4,10 @@ import {default as chalk} from 'chalk';
 import {SimbaConfig} from '../lib';
 import {ContractDesignWithCode} from './';
 
+/**
+ * syncs contractX saved in simbachain.com with contractX in your project directory
+ * @param {Promise<void>} designID 
+ */
 export async function syncContract(designID: string): Promise<void> {
     SimbaConfig.log.debug(`:: ENTER : ${designID}`);
     let contractDesign: ContractDesignWithCode;

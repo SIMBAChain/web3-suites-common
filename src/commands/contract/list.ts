@@ -2,6 +2,10 @@ import {default as chalk} from 'chalk';
 import {SimbaConfig} from '../lib';
 import {ContractDesign} from './';
 
+/**
+ * Returns data on contract name, version, and design_id
+ * @return {Promise<any>}
+ */
 export async function allContracts(): Promise<ContractDesign[] | Error> {
     SimbaConfig.log.debug(`:: ENTER :`);
     let contractDesigns: ContractDesign[] = [];
@@ -29,6 +33,9 @@ export async function allContracts(): Promise<ContractDesign[] | Error> {
     }
 }
 
+/**
+ * Prints data on contract name, version, and design_id
+ */
 export async function printAllContracts(): Promise<void> {
     let contractDesigns: ContractDesign[];
     const _allContracts = await allContracts();
