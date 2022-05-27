@@ -215,7 +215,7 @@ function getASTNodes(
  * @param ast 
  * @returns 
  */
-function getContractKind(
+export function getContractKind(
     ast: any,
 ): string {
     const astNodes = getASTNodes(ast);

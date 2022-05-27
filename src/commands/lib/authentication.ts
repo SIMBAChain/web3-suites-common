@@ -617,6 +617,7 @@ class KeycloakHandler {
                     url = this.buildURL(url);
                 }
                 const res = await axios.get(url, config);
+                SimbaConfig.log.debug(`:: res : ${JSON.stringify(res)}`);
                 const resData: Record<any, any> = res.data;
                 SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(resData)}`);
                 return resData;
@@ -738,6 +739,7 @@ class KeycloakHandler {
                     url = this.buildURL(url);
                 }
                 const res = await axios.post(url, postData, config);
+                SimbaConfig.log.debug(`:: res : ${JSON.stringify(res)}`);
                 const resData: Record<any, any> = res.data;
                 SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(resData)}`);
                 return resData;

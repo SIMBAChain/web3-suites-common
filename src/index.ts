@@ -14,10 +14,12 @@ export {
     primaryConstructorInputs,
     writeAndReturnASTAndOtherInfo,
     getASTAndOtherInfo,
-    isLibrary
+    isLibrary,
+    getContractKind,
 } from './commands/lib';
 export {
     syncContract,
     allContracts,
     printAllContracts,
+    addLib
 } from "./commands/contract";

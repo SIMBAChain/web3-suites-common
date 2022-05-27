@@ -15,4 +15,5 @@ export {
     writeAndReturnASTAndOtherInfo,
     getASTAndOtherInfo,
     isLibrary,
+    getContractKind,
 } from './api';

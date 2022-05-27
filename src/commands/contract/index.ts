@@ -17,3 +17,7 @@ export {
 export {
     syncContract,
 } from "./sync";
+
+export {
+    addLib,
+} from "./addlibrary";
