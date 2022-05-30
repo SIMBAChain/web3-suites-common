@@ -41,7 +41,7 @@ const SIMBAERROR = "SIMBAERROR";
 
 const KeycloakAuthErrors: AuthErrors = {
     headersError: `${chalk.red('simba: Error acquiring auth headers. Please make sure keycloak certs are not expired.')}`,
-    keycloakCertsError: `${chalk.red('simba: Error obtaining certs from keycloak. Please make sure keycloak certs are not expired.')}`,
+    keycloakCertsError: `${chalk.red('simba: Error obtaining creds from keycloak. Please make sure keycloak certs are not expired.')}`,
     verificationInfoError: `${chalk.red('simba: Error acquiring verification info. Please make sure keycloak certs are not expired.')}`,
     authTokenError: `${chalk.red('simba: Error acquiring auth token. Please make sure keycloak certs are not expired')}`,
     noClientIDError: `${chalk.red('simba: Error acquiring clientID. Please make sure "clientID" is configured in simba.json')}`,
@@ -297,7 +297,11 @@ class KeycloakHandler {
             SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(this.verificationInfo)}`);
             return verificationInfo;
         } catch (error) {
-            SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error)}`)}`);
+            if (axios.isAxiosError(error) && error.response) {
+                SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error.response.data)}`)}`)
+            } else {
+                SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error)}`)}`);
+            }
             return error as Error;
         }
     }
@@ -396,7 +400,11 @@ class KeycloakHandler {
                 SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(newAuthToken)}`);
                 return newAuthToken;
             } catch (error) {
-                SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error)}`)}`)
+                if (axios.isAxiosError(error) && error.response) {
+                    SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error.response.data)}`)}`)
+                } else {
+                    SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error)}`)}`);
+                }
                 return;
             }
         }
@@ -513,7 +521,7 @@ class KeycloakHandler {
             this.setLoggedInStatus(true);
             return authToken;
         } else {
-            SimbaConfig.log.error(`:: EXIT : ${this.authErrors.verificationInfoError}`);
+            SimbaConfig.log.error(`${chalk.redBright(`\nsimba: :: EXIT : ${this.authErrors.verificationInfoError}`)}`);
             return;
         }
     }
@@ -617,13 +625,17 @@ class KeycloakHandler {
                     url = this.buildURL(url);
                 }
                 const res = await axios.get(url, config);
-                SimbaConfig.log.debug(`:: res : ${JSON.stringify(res)}`);
                 const resData: Record<any, any> = res.data;
                 SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(resData)}`);
                 return resData;
             } catch (error) {
-                const err = error as AxiosError
-                if (err.response && err.response.status === 401)  {
+                if (axios.isAxiosError(error) && error.response) {
+                    SimbaConfig.log.error(`${chalk.redBright(`\nsimba: ${JSON.stringify(error.response.data)}`)}`)
+                } else {
+                    SimbaConfig.log.error(`${chalk.redBright(`\nsimba: ${JSON.stringify(error)}`)}`);
+                }
+                SimbaConfig.log.debug(`err: ${JSON.stringify(error)}`);
+                if (axios.isAxiosError(error) && error.response && error.response.status === 401)  {
                     SimbaConfig.log.debug(`:: received 401 response, attempting to refresh token`);
                     // if 401 from Simba, then try refreshing token.
                     try {
@@ -636,21 +648,30 @@ class KeycloakHandler {
                             return;
                         }
                     } catch (e) {
+                        if (axios.isAxiosError(e) && e.response) {
+                            SimbaConfig.log.error(`${chalk.redBright(`\nsimba: ${JSON.stringify(e.response.data)}`)}`)
+                        } else {
+                            SimbaConfig.log.error(`${chalk.redBright(`\nsimba: ${JSON.stringify(e)}`)}`);
+                        }
                         try {
                             SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: you need to login again; redirecting you to login. Then please try your request again.`)}`);
                             await this.loginAndGetAuthToken(false);
                             return;
                         } catch (e) {
+                            if (axios.isAxiosError(e) && e.response) {
+                                SimbaConfig.log.error(`${chalk.redBright(`\nsimba: ${JSON.stringify(e.response.data)}`)}`)
+                            } else {
+                                SimbaConfig.log.error(`${chalk.redBright(`\nsimba: ${JSON.stringify(e)}`)}`);
+                            }
                             const err = e as any;
                             SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : there was a problem with your request. Please log out and then login and then try your request again`)}`);
                             return err;
                         }
                     }
-                } else if (err.response && (err.response.status === 500 || err.response.status === 400)) {
-                    SimbaConfig.log.error(`${chalk.redBright(`simba: there was a problem with your request. Please make sure that the data in your request was formatted correctly, with correct data types, and then try your request again.\n\nFull error: ${JSON.stringify(err)}`)}`);
+                } else if (axios.isAxiosError(error) && error.response && (error.response.status === 500 || error.response.status === 400)) {
+                    SimbaConfig.log.error(`${chalk.redBright(`simba: there was a problem with your request. Sometimes this is an issue with formatting of your data. Please make sure that the data in your request was formatted correctly, with correct data types. This can also be due to insufficient funds in your wallet. To check error logs, please set your loglevel to debug.\n\nFull error: ${JSON.stringify(error.response.data)}`)}`);
                     return;
                 }
-                SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(err)}`)}`);
                 return error as Error;
             }
         } else {
@@ -676,7 +697,7 @@ class KeycloakHandler {
         SimbaConfig.log.debug(`:: ENTER : ${JSON.stringify(funcParams)}`);
         const contentType = 'application/x-www-form-urlencoded;charset=utf-8';
         const resData = await this.doGetRequest(url, contentType, _queryParams, false);
-        if (resData instanceof Error) {
+        if (resData instanceof Error || axios.isAxiosError(resData)) {
             SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(resData)}`)}`);
             return resData;
         }
@@ -739,13 +760,17 @@ class KeycloakHandler {
                     url = this.buildURL(url);
                 }
                 const res = await axios.post(url, postData, config);
-                SimbaConfig.log.debug(`:: res : ${JSON.stringify(res)}`);
                 const resData: Record<any, any> = res.data;
                 SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(resData)}`);
                 return resData;
             } catch (error) {
-                const err = error as AxiosError
-                if (err.response && err.response.status === 401)  {
+                if (axios.isAxiosError(error) && error.response) {
+                    SimbaConfig.log.error(`${chalk.redBright(`\nsimba: ${JSON.stringify(error.response.data)}`)}`)
+                } else {
+                    SimbaConfig.log.error(`${chalk.redBright(`\nsimba: ${JSON.stringify(error)}`)}`);
+                }
+                SimbaConfig.log.debug(`err: ${JSON.stringify(error)}`);
+                if (axios.isAxiosError(error) && error.response && error.response.status === 401)  {
                     SimbaConfig.log.debug(`:: received 401 response, attempting to refresh token`);
                     // if 401 from Simba, then try refreshing token.
                     try {
@@ -758,23 +783,32 @@ class KeycloakHandler {
                             return;
                         }
                     } catch (e) {
+                        if (axios.isAxiosError(e) && e.response) {
+                            SimbaConfig.log.error(`${chalk.redBright(`\nsimba: ${JSON.stringify(e.response.data)}`)}`)
+                        } else {
+                            SimbaConfig.log.error(`${chalk.redBright(`\nsimba: ${JSON.stringify(e)}`)}`);
+                        }
                         try {
                             SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: you need to login again; redirecting you to login. Then please try your request again.`)}`);
                             await this.loginAndGetAuthToken(false);
                             return;
                         } catch (e) {
+                            if (axios.isAxiosError(e) && e.response) {
+                                SimbaConfig.log.error(`${chalk.redBright(`\nsimba: ${JSON.stringify(e.response.data)}`)}`)
+                            } else {
+                                SimbaConfig.log.error(`${chalk.redBright(`\nsimba: ${JSON.stringify(e)}`)}`);
+                            }
                             const err = e as any;
                             SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : there was a problem with your request. Please log out and then login and then try your request again`)}`);
                             return err;
                         }
                     }
-                } else if (err.response && (err.response.status === 500 || err.response.status === 400)) {
-                    SimbaConfig.log.error(`${chalk.redBright(`simba: there was a problem with your request. Please make sure that the data in your request was formatted correctly, with correct data types, and then try your request again.\n\nFull error: ${JSON.stringify(err)}`)}`);
+                } else if (axios.isAxiosError(error) && error.response && (error.response.status === 500 || error.response.status === 400)) {
+                    SimbaConfig.log.error(`${chalk.redBright(`simba: there was a problem with your request. Sometimes this is an issue with formatting of your data. Please make sure that the data in your request was formatted correctly, with correct data types. This can also be due to insufficient funds in your wallet. To check error logs, please set your loglevel to debug.\n\nFull error: ${JSON.stringify(error.response.data)}`)}`);
                     return;
                 } else {
-                    SimbaConfig.log.error(`${chalk.redBright(`simba: ${JSON.stringify(err)}`)}`)
+                    SimbaConfig.log.error(`${chalk.redBright(`simba: ${JSON.stringify(error)}`)}`)
                 }
-                SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error)}`)}`);
                 return error as Error;
             }
         } else {
