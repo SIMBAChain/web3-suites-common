@@ -668,11 +668,11 @@ class KeycloakHandler {
                             return err;
                         }
                     }
-                } else if (axios.isAxiosError(error) && error.response && (error.response.status === 500 || error.response.status === 400)) {
-                    SimbaConfig.log.error(`${chalk.redBright(`simba: there was a problem with your request. Sometimes this is an issue with formatting of your data. Please make sure that the data in your request was formatted correctly, with correct data types. This can also be due to insufficient funds in your wallet. To check error logs, please set your loglevel to debug.\n\nFull error: ${JSON.stringify(error.response.data)}`)}`);
-                    return;
+                } else {
+                    SimbaConfig.log.error(`${chalk.redBright(`simba: there was a problem with your request. To view debug logs, please set your loglevel to debug and try your request again.`)}`);
+                    return error as Error;
                 }
-                return error as Error;
+                
             }
         } else {
             SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${this.authErrors.authTokenError}`)}`);
@@ -803,13 +803,10 @@ class KeycloakHandler {
                             return err;
                         }
                     }
-                } else if (axios.isAxiosError(error) && error.response && (error.response.status === 500 || error.response.status === 400)) {
-                    SimbaConfig.log.error(`${chalk.redBright(`simba: there was a problem with your request. Sometimes this is an issue with formatting of your data. Please make sure that the data in your request was formatted correctly, with correct data types. This can also be due to insufficient funds in your wallet. To check error logs, please set your loglevel to debug.\n\nFull error: ${JSON.stringify(error.response.data)}`)}`);
-                    return;
                 } else {
-                    SimbaConfig.log.error(`${chalk.redBright(`simba: ${JSON.stringify(error)}`)}`)
+                    SimbaConfig.log.error(`${chalk.redBright(`simba: there was a problem with your request. To view debug logs, please set your loglevel to debug and try your request again.`)}`);
+                    return error as Error;
                 }
-                return error as Error;
             }
         } else {
             SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${this.authErrors.headersError}`)}`);

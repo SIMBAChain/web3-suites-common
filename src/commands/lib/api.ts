@@ -216,12 +216,13 @@ function getASTNodes(
  * @returns 
  */
 export function getContractKind(
+    contractName: string,
     ast: any,
 ): string {
     const astNodes = getASTNodes(ast);
     for (let i = 0; i < astNodes.length; i++) {
         const node = astNodes[i];
-        if (node.contractKind) {
+        if (node.contractKind && (node.name === contractName)) {
             const contractKind = node.contractKind;
             SimbaConfig.log.debug(`contractKind: ${contractKind}`);
             return contractKind;
@@ -236,9 +237,10 @@ export function getContractKind(
  * @returns 
  */
 export function isLibrary(
+    contractName: string,
     ast: any,
 ): boolean {
-    const contractKind = getContractKind(ast);
+    const contractKind = getContractKind(contractName, ast);
     const _isLibrary = (contractKind === "library");
     SimbaConfig.log.debug(`isLibrary: ${_isLibrary}`)
     return _isLibrary;
@@ -298,7 +300,7 @@ async function astAndOtherInfo(
             const outputContractSource = outputSources[contractSourceName];
             const ast = outputContractSource.ast;
             _astAndOtherInfo.ast = ast;
-            _astAndOtherInfo.isLib = isLibrary(ast);
+            _astAndOtherInfo.isLib = isLibrary(contractName, ast);
 
             const solcVersion = parsed.solcVersion;
             _astAndOtherInfo.compiler = solcVersion;
