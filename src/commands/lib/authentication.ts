@@ -558,6 +558,10 @@ class KeycloakHandler {
         urlExtension: string,
     ): string {
         SimbaConfig.log.debug(`:: ENTER : ${urlExtension}`);
+        if (urlExtension.startsWith("http")) {
+            SimbaConfig.log.debug(`:: EXIT : ${urlExtension}`);
+            return urlExtension;
+        }
         let baseURL = this.baseURL.endsWith("/") ? this.baseURL : this.baseURL + "/";
         baseURL = baseURL.endsWith("v2/") ? baseURL : baseURL.slice(0, -1) + "v2/";
         const fullURL = baseURL + urlExtension;

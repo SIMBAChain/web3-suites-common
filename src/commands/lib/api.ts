@@ -11,6 +11,7 @@ interface Dictionary<T> {
     [Key: string]: T;
 }
 import {default as chalk} from 'chalk';
+import axios from "axios";
 
 interface Choice {
     title: string;
@@ -48,9 +49,13 @@ const getList = async (config: SimbaConfig, url?: string): Promise<Record<any, a
         const res = config.authStore.doGetRequest(url);
         SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(res)}`);
         return res;
-    } catch (e) {
-        const err = e as any;
-        if (err.message === "Request failed with status code 500") {
+    } catch (error) {
+        if (axios.isAxiosError(error) && error.response) {
+            SimbaConfig.log.debug(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error.response.data)}`)}`)
+        } else {
+            SimbaConfig.log.debug(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error)}`)}`);
+        }
+        if (axios.isAxiosError(error) && error.message === "Request failed with status code 500") {
             SimbaConfig.log.info(`${chalk.cyanBright('\nsimba: Auth token expired, please log in again')}`);
             SimbaConfig.authStore.logout();
             await SimbaConfig.authStore.loginAndGetAuthToken();
@@ -73,6 +78,19 @@ export const chooseOrganisationFromList = async (config: SimbaConfig, url?: stri
 
     if (!orgResponse) {
         SimbaConfig.log.error(`${chalk.redBright('\nsimba: EXIT : no organizations returned. You probably need to log in again')}`);
+        return;
+    }
+    if (orgResponse.results) {
+        SimbaConfig.log.debug(`orgResponse.results: ${JSON.stringify(orgResponse.results)}`);
+    }
+    if (!orgResponse.results || !orgResponse.results.length) {
+        SimbaConfig.log.error(`${chalk.redBright(`\nsimba: There are no organisations present. You must create an organisation to use the plugin.`)}`);
+    }
+
+    SimbaConfig.log.debug(`orgResponse.results: ${JSON.stringify(orgResponse.results)}`);
+
+    if (!orgResponse.results || !orgResponse.results.length) {
+        SimbaConfig.log.error(`${chalk.redBright(`\nsimba: No organisations present`)}`);
         return;
     }
 
@@ -109,6 +127,8 @@ export const chooseOrganisationFromList = async (config: SimbaConfig, url?: stri
         message: 'Please pick an organisation',
         choices,
     });
+
+    SimbaConfig.log.debug(`selected organisation: ${JSON.stringify(response.organisation)}`);
 
     if (response.organisation === 'prev') {
         return chooseOrganisationFromList(config, orgs.prev);
@@ -426,9 +446,17 @@ export async function chooseApplicationFromList(
 
     const appResponse = await getList(config, url);
 
+    SimbaConfig.log.debug(`appResponse: ${JSON.stringify(appResponse)}`);
+    
     if (!appResponse) {
         SimbaConfig.log.error(`${chalk.redBright('\nsimba: EXIT : no applications in list. You probably need to login again.')}`);
         return;
+    }
+    if (appResponse.results) {
+        SimbaConfig.log.debug(`appResponse.results: ${JSON.stringify(appResponse.results)}`);
+    }
+    if (!appResponse.results || !appResponse.results.length) {
+        SimbaConfig.log.error(`${chalk.redBright(`\nsimba: Your organisation does not have any apps. Go to the UI and create an app. This app can remain empty - your org just needs an app present to use the plugin.`)}`);
     }
 
     const apps: Response = {
@@ -464,6 +492,8 @@ export async function chooseApplicationFromList(
         message: 'Please pick an application',
         choices,
     });
+
+    SimbaConfig.log.debug(`selected application: ${JSON.stringify(response.application)}`);
 
     if (response.application === 'prev') {
         return chooseApplicationFromList(config, apps.prev);
