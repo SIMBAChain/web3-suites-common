@@ -10,9 +10,23 @@ import {
 import {cwd} from 'process';
 import * as path from 'path';
 import Configstore from 'configstore';
-import {KeycloakHandler} from './authentication';
+import {
+    KeycloakHandler,
+    AzureHandler,
+    AuthProviders,
+} from './authentication';
 import {default as chalk} from 'chalk';
+import axios from "axios";
 // const fsPromises = require("fs").promises;
+
+function handleV2(baseURL: string): string {
+    if (baseURL.endsWith("/v2/") || baseURL.endsWith("/v2")) {
+        const extension = baseURL.endsWith("/v2") ? "/v2" : "/v2/";
+        const shortenedBaseURL = baseURL.slice(0,-(extension.length));
+        return shortenedBaseURL;
+    }
+    return baseURL;
+}
 
 /**
  * this class handles our configstore operations (eg reading simba.json)
@@ -31,7 +45,7 @@ export class SimbaConfig {
     // Project config, such as app ID, etc
     public static _projectConfigStore: Configstore;
     public static help = false;
-    public static _authStore: KeycloakHandler;
+    public static _authStore: KeycloakHandler | AzureHandler;
     public static _application: any;
     public static _organisation: any;
     public static _build_directory: string;
@@ -97,22 +111,52 @@ export class SimbaConfig {
         return SimbaConfig.ProjectConfigStore;
     }
 
+    public static async setAndGetAuthProviderInfo(): Promise<any> {
+        if (!SimbaConfig.ProjectConfigStore.get("authProviderInfo")) {
+            const baseURL = SimbaConfig.ProjectConfigStore.get("baseURL") ?
+                SimbaConfig.ProjectConfigStore.get("baseURL") :
+                SimbaConfig.ProjectConfigStore.get("baseUrl");
+            const authInfoURL = `${handleV2(baseURL)}/authinfo`;
+            const res = await axios.get(authInfoURL);
+            const _authProviderInfo = res.data;
+            SimbaConfig.log.debug(`${chalk.cyanBright(`\n_authProviderInfo: ${JSON.stringify(_authProviderInfo)}`)}`);
+            SimbaConfig.ProjectConfigStore.set("authProviderInfo", _authProviderInfo);
+        }
+        return SimbaConfig.ProjectConfigStore.get("authProviderInfo");
+    }
+
     /**
      * currently an instance of KeycloakHandler, but code can be amended
      * to be different kind of authStore once supported
      */
-    public static get authStore(): KeycloakHandler {
+    public static async authStore(): Promise<KeycloakHandler | AzureHandler> {
         SimbaConfig.log.debug(`:: ENTER :`)
         if (!this._authStore) {
-            SimbaConfig.log.debug(`:: instantiating new authStore`);
-            this._authStore = new KeycloakHandler(this._configStore, this._projectConfigStore);
+            SimbaConfig.log.debug(`${chalk.cyanBright(`\nsimba: instantiating new authStore`)}`);
+            const _authProviderInfo = await SimbaConfig.setAndGetAuthProviderInfo();
+            const authProviderType = _authProviderInfo.type;
+            switch(authProviderType) {
+                case AuthProviders.KEYCLOAK: { 
+                    this._authStore = new KeycloakHandler(this._configStore, this._projectConfigStore);
+                    break; 
+                }
+                case AuthProviders.AZUREB2C: {
+                    this._authStore = new AzureHandler(this._configStore, this._projectConfigStore);
+                    break;
+                }
+                default: { 
+                   SimbaConfig.log.error(`${chalk.redBright(`\nsimba: a valid auth provider was not found. Please make sure your 'baseURL' field is property set in your simba.json`)}`);
+                   break; 
+                } 
+            }
+
         }
         SimbaConfig.log.debug(`:: EXIT :`);
         return this._authStore;
     }
 
-    public get authStore(): KeycloakHandler {
-        return SimbaConfig.authStore;
+    public async authStore(): Promise<KeycloakHandler | AzureHandler> {
+        return await SimbaConfig.authStore();
     }
 
     /**

@@ -10,7 +10,8 @@ export async function allContracts(): Promise<ContractDesign[] | Error> {
     SimbaConfig.log.debug(`:: ENTER :`);
     let contractDesigns: ContractDesign[] = [];
     const url = `organisations/${SimbaConfig.organisation.id}/contract_designs/`;
-    let resp = await SimbaConfig.authStore.doGetRequest(url);
+    const authStore = await SimbaConfig.authStore();
+    let resp = await authStore.doGetRequest(url);
     SimbaConfig.log.debug(`resp: ${JSON.stringify(resp)}`);
     if (resp && !(resp instanceof Error)) {
         SimbaConfig.log.debug(`resp is not ERROR`);
@@ -20,7 +21,7 @@ export async function allContracts(): Promise<ContractDesign[] | Error> {
         while (res.next !== null) {
             const q: string = res.next.split('?').pop();
             SimbaConfig.log.debug(`\nsimba: retrieving contract ${JSON.stringify(q)}`);
-            res = await SimbaConfig.authStore.doGetRequest(`${url}?${q}`);
+            res = await authStore.doGetRequest(`${url}?${q}`);
             contractDesigns = contractDesigns.concat(res.results as ContractDesign[]);
         }
         SimbaConfig.log.debug(`contractDesigns: ${JSON.stringify(contractDesigns)}`);

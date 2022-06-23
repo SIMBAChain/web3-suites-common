@@ -11,7 +11,8 @@ import {ContractDesignWithCode} from './';
 export async function syncContract(designID: string): Promise<void> {
     SimbaConfig.log.debug(`:: ENTER : ${designID}`);
     let contractDesign: ContractDesignWithCode;
-    const resp = await SimbaConfig.authStore.doGetRequest(
+    const authStore = await SimbaConfig.authStore();
+    const resp = await authStore.doGetRequest(
         `organisations/${SimbaConfig.organisation.id}/contract_designs/${designID}`,
     );
     SimbaConfig.log.debug(`resp: ${JSON.stringify(resp)}`);
