@@ -116,6 +116,11 @@ export class SimbaConfig {
             const baseURL = SimbaConfig.ProjectConfigStore.get("baseURL") ?
                 SimbaConfig.ProjectConfigStore.get("baseURL") :
                 SimbaConfig.ProjectConfigStore.get("baseUrl");
+            if (!baseURL) {
+                const message = `\nsimba: no baseURL defined in your simba.json!`;
+                SimbaConfig.log.error(`${chalk.redBright(`${message}`)}`);
+                throw new Error(message);
+            }
             const authInfoURL = `${handleV2(baseURL)}/authinfo`;
             const res = await axios.get(authInfoURL);
             const _authProviderInfo = res.data;
