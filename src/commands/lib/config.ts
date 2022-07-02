@@ -55,18 +55,16 @@ function handleAlternativeAuthJSON(authInfo: Record<any, any>): Record<any, any>
                     authInfo.config.host :
                     `${authInfo.config.host}/auth`;
                 newAuthInfo.baseurl = baseurl;
-                SimbaConfig.log.debug(`:: EXIT :`);
-                return newAuthInfo;
             }
             break; 
         }
         default: { 
-            SimbaConfig.log.debug(`:: EXIT :`);
             newAuthInfo = authInfo;
             break; 
         }
-     }
-     return authInfo;
+    }
+    SimbaConfig.log.debug(`:: EXIT :`);
+    return newAuthInfo;
 }
 
 /**
