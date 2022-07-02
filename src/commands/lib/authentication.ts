@@ -18,6 +18,7 @@ interface PollingConfig {
 
 enum AuthProviders {
     KEYCLOAK = "keycloak",
+    KEYCLOAKOAUTH2 = "KeycloakOAuth2",
     AZUREB2C = "azureb2c",
 };
 

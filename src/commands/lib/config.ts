@@ -19,13 +19,54 @@ import {default as chalk} from 'chalk';
 import axios from "axios";
 // const fsPromises = require("fs").promises;
 
+enum WebThreeSuites {
+    TRUFFLE = "truffle",
+    HARDHAT = "hardhat",
+}
+
+enum CompiledDirs {
+    ARTIFACTS = "artifacts",
+    BUILD = "build",
+}
+
 function handleV2(baseURL: string): string {
+    SimbaConfig.log.debug(`:: ENTER : baseURL : ${baseURL}`)
     if (baseURL.endsWith("/v2/") || baseURL.endsWith("/v2")) {
         const extension = baseURL.endsWith("/v2") ? "/v2" : "/v2/";
         const shortenedBaseURL = baseURL.slice(0,-(extension.length));
+        SimbaConfig.log.debug(`:: EXIT :`);
         return shortenedBaseURL;
     }
+    SimbaConfig.log.debug(`:: EXIT :`);
     return baseURL;
+}
+
+function handleAlternativeAuthJSON(authInfo: Record<any, any>): Record<any, any> {
+    SimbaConfig.log.debug(`:: ENTER : ${JSON.stringify(authInfo)}`);
+    const type = authInfo.type;
+    let newAuthInfo = {} as any;
+    switch(type) {
+        case AuthProviders.KEYCLOAKOAUTH2: {
+            if (authInfo.config) {
+                newAuthInfo.type = type;
+                newAuthInfo.realm = authInfo.config.realm;
+                newAuthInfo.client_id = authInfo.config.key;
+                const baseurl = authInfo.config.host.endsWith("/auth") ?
+                    authInfo.config.host :
+                    `${authInfo.config.host}/auth`;
+                newAuthInfo.baseurl = baseurl;
+                SimbaConfig.log.debug(`:: EXIT :`);
+                return newAuthInfo;
+            }
+            break; 
+        }
+        default: { 
+            SimbaConfig.log.debug(`:: EXIT :`);
+            newAuthInfo = authInfo;
+            break; 
+        }
+     }
+     return authInfo;
 }
 
 /**
@@ -112,6 +153,7 @@ export class SimbaConfig {
     }
 
     public static async setAndGetAuthProviderInfo(): Promise<any> {
+        SimbaConfig.log.debug(`:: ENTER :`);
         if (!SimbaConfig.ProjectConfigStore.get("authProviderInfo")) {
             const baseURL = SimbaConfig.ProjectConfigStore.get("baseURL") ?
                 SimbaConfig.ProjectConfigStore.get("baseURL") :
@@ -122,10 +164,21 @@ export class SimbaConfig {
                 throw new Error(message);
             }
             const authInfoURL = `${handleV2(baseURL)}/authinfo`;
-            const res = await axios.get(authInfoURL);
-            const _authProviderInfo = res.data;
-            SimbaConfig.log.debug(`${chalk.cyanBright(`\n_authProviderInfo: ${JSON.stringify(_authProviderInfo)}`)}`);
-            SimbaConfig.ProjectConfigStore.set("authProviderInfo", _authProviderInfo);
+            try {
+                const res = await axios.get(authInfoURL);
+                let _authProviderInfo = res.data;
+                _authProviderInfo = handleAlternativeAuthJSON(_authProviderInfo);
+                SimbaConfig.log.debug(`${chalk.cyanBright(`\n_authProviderInfo: ${JSON.stringify(_authProviderInfo)}`)}`);
+                SimbaConfig.ProjectConfigStore.set("authProviderInfo", _authProviderInfo);
+            } catch (error) {
+                if (axios.isAxiosError(error) && error.response) {
+                    SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error.response.data)}`)}`)
+                } else {
+                    SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error)}`)}`);
+                }
+                return;
+            } 
+                
         }
         return SimbaConfig.ProjectConfigStore.get("authProviderInfo");
     }
@@ -139,9 +192,17 @@ export class SimbaConfig {
         if (!this._authStore) {
             SimbaConfig.log.debug(`${chalk.cyanBright(`\nsimba: instantiating new authStore`)}`);
             const _authProviderInfo = await SimbaConfig.setAndGetAuthProviderInfo();
+            SimbaConfig.log.debug(`${chalk.cyanBright(`\nsimba: _authProviderInfo: ${JSON.stringify(_authProviderInfo)}`)}`)
+            if (!_authProviderInfo) {
+                SimbaConfig.log.error(`${chalk.redBright(`\nsimba: no auth provider info detected.`)}`)
+            }
             const authProviderType = _authProviderInfo.type;
             switch(authProviderType) {
                 case AuthProviders.KEYCLOAK: { 
+                    this._authStore = new KeycloakHandler(this._configStore, this._projectConfigStore);
+                    break; 
+                }
+                case AuthProviders.KEYCLOAKOAUTH2: {
                     this._authStore = new KeycloakHandler(this._configStore, this._projectConfigStore);
                     break; 
                 }
@@ -150,11 +211,10 @@ export class SimbaConfig {
                     break;
                 }
                 default: { 
-                   SimbaConfig.log.error(`${chalk.redBright(`\nsimba: a valid auth provider was not found. Please make sure your 'baseURL' field is property set in your simba.json`)}`);
+                   SimbaConfig.log.error(`${chalk.redBright(`\nsimba: a valid auth provider was not found. Please make sure your 'baseURL' field is properly set in your simba.json`)}`);
                    break; 
                 } 
             }
-
         }
         SimbaConfig.log.debug(`:: EXIT :`);
         return this._authStore;
@@ -177,12 +237,12 @@ export class SimbaConfig {
             this.ProjectConfigStore.get("web3Suite").toLowerCase() :
             this.ProjectConfigStore.get("web3suite").toLowerCase();
         switch(web3Suite) {
-            case "hardhat": {
-                artifactPath =  path.join(cwd(), 'artifacts')
+            case WebThreeSuites.HARDHAT: {
+                artifactPath =  path.join(cwd(), CompiledDirs.ARTIFACTS)
                 break; 
             }
-            case "truffle": {
-                artifactPath =  path.join(cwd(), 'build')
+            case WebThreeSuites.TRUFFLE: {
+                artifactPath =  path.join(cwd(), CompiledDirs.BUILD)
                 break;
             }
             default: { 
