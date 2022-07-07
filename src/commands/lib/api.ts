@@ -47,7 +47,6 @@ const getList = async (config: SimbaConfig, url?: string): Promise<Record<any, a
     }
     const authStore = await config.authStore();
     try {
-        
         const res = authStore.doGetRequest(url);
         SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(res)}`);
         return res;
