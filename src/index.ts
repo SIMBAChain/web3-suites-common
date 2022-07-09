@@ -3,8 +3,6 @@ export {SimbaConfig} from './commands/lib';
 export {
     promisifiedReadFile,
     walkDirForContracts,
-} from './commands/lib';
-export {
     chooseApplicationFromList,
     chooseOrganisationFromList,
     getApp,
@@ -16,6 +14,7 @@ export {
     getASTAndOtherInfo,
     isLibrary,
     getContractKind,
+    AuthProviders,
 } from './commands/lib';
 export {
     syncContract,

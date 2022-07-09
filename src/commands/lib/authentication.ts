@@ -12,15 +12,10 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as http from "http";
 import {
-    AxiosError
-} from "axios";
-import {
     URLSearchParams,
 } from "url";
 
 export const AUTHKEY = 'SIMBAAUTH';
-
-const authHtml = fs.readFileSync(path.join(__dirname, '..', '..', '..', 'html', 'authResult.html'));
 
 interface PollingConfig {
     maxAttempts: number;
@@ -80,13 +75,8 @@ interface KeycloakAccessToken {
     scope: string;
 }
 
-function handleV2(baseURL: string): string {
-    if (baseURL.endsWith("/v2/") || baseURL.endsWith("/v2")) {
-        const extension = baseURL.endsWith("/v2") ? "/v2" : "/v2/";
-        const shortenedBaseURL = baseURL.slice(0,-(extension.length));
-        return shortenedBaseURL;
-    }
-    return baseURL;
+function addSlashToURL(baseURL: string): string {
+    return baseURL.endsWith("/") ? baseURL : `${baseURL}/`
 }
 
 /**
@@ -884,14 +874,13 @@ class AzureHandler {
     private authErrors: AuthErrors;
     private authInfo: Record<any, any>;
     private baseAuthURL: string;
-
-    // PROBABLY NOT HARDCODING FOLLOWING LINES IN PRODUCTION:
-    private clientID: string; //"3906ab4c-b1fd-43f8-95e5-ab95efee26cf";
-    private tenant: string; // "simbadevblocks";
-    private policy: string; // "B2C_1_Signin_Signup";
-    private scope: string; // `${this.clientID} offline_access`;
-    private _authorizeUrl: string // `https://${this.tenant}.b2clogin.com/${this.tenant}.onmicrosoft.com/${this.policy}/oauth2/v2.0/authorize`;
-    private tokenURL: string; // `https://${this.tenant}.b2clogin.com/${this.tenant}.onmicrosoft.com/${this.policy}/oauth2/v2.0/token`;
+    private authHtml: Buffer = fs.readFileSync(path.join(__dirname, '..', '..', '..', 'html', 'authResult.html'));
+    private clientID: string;
+    private tenant: string;
+    private policy: string;
+    private scope: string;
+    private _authorizeUrl: string;
+    private tokenURL: string;
     constructor(
         config?: Configstore,
         projectConfig?: Configstore,
@@ -900,6 +889,8 @@ class AzureHandler {
         this.config = SimbaConfig.ConfigStore;
         this.projectConfig = SimbaConfig.ProjectConfigStore;
         this.baseURL = this.projectConfig.get('baseURL') ? this.projectConfig.get('baseURL') : this.projectConfig.get('baseUrl');
+        this.baseURL = addSlashToURL(this.baseURL);
+        SimbaConfig.ProjectConfigStore.set("baseURL", this.baseURL)
         if (!this.baseURL) {
             SimbaConfig.log.error(`:: ${this.authErrors.noBaseURLError}`);
         }
@@ -940,7 +931,7 @@ class AzureHandler {
         }
     }
 
-    public get isLoggedIn(): boolean {
+    public isLoggedIn(): boolean {
         return this.hasConfig(AUTHKEY);
     }
 
@@ -999,10 +990,10 @@ class AzureHandler {
                 })
                 .get('/', (_req: Request | any, res: http.ServerResponse) => {
                     res.writeHead(200, {
-                        'Content-Length': authHtml.length,
+                        'Content-Length': this.authHtml.length,
                         'Content-Type': 'text/html; charset=utf-8',
                     });
-                    res.end(authHtml.toString());
+                    res.end(this.authHtml.toString());
                 })
                 .listen(this.port, (err: Error) => {
                     if (err) {
@@ -1105,8 +1096,6 @@ class AzureHandler {
                 },
             };
 
-            SimbaConfig.log.info(`option: ${JSON.stringify(option)}`);
-
             return request
                 .post(option)
                 .then(async (resp) => {
@@ -1121,7 +1110,7 @@ class AzureHandler {
         }
     }
 
-    public getClientOptions(url: string, contentType = 'application/json', data?: any): Promise<any> {
+    public async getClientOptions(url: string, contentType = 'application/json', data?: any): Promise<any> {
         const auth = this.getConfig(AUTHKEY);
         if (!url.startsWith('http')) {
             url = this.baseURL + url;
@@ -1147,15 +1136,15 @@ class AzureHandler {
     }
 
     public async doGetRequest(url: string, contentType?: string, _buildURL: boolean = true): Promise<any> {
-        // the _buildURL param here does not get used. It's strict been
-        // added because the interface in the truffle and hardhat suites
+        // the _buildURL param here does not get used. It's strictly been
+        // added because the interface call in the truffle and hardhat suites
         // for authStore.doGetRequest expects it.
         return this.retryAfterTokenRefresh(url, request.get, contentType);
     }
 
     public async doPostRequest(url: string, data: any, contentType?: string, _buildURL: boolean = true): Promise<any> {
-        // the _buildURL param here does not get used. It's strict been
-        // added because the interface in the truffle and hardhat suites
+        // the _buildURL param here does not get used. It's strictly been
+        // added because the interface call in the truffle and hardhat suites
         // for authStore.doPostRequest expects it.
         return this.retryAfterTokenRefresh(url, request.post, contentType, data);
     }

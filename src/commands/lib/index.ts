@@ -17,3 +17,6 @@ export {
     isLibrary,
     getContractKind,
 } from './api';
+export {
+    AuthProviders,
+} from "./authentication";
