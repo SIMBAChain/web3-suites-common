@@ -162,8 +162,10 @@ class KeycloakHandler {
      */
     protected deleteAuthInfo(): void {
         SimbaConfig.log.debug(`:: ENTER :`);
-        this.config.set(this.configBase, {});
-        SimbaConfig.log.debug(`:: EXIT :`);
+        if (this.config.get(this.configBase)) {
+            this.config.set(this.configBase, {});
+            SimbaConfig.log.debug(`:: EXIT :`);
+        }
     }
 
     /**
@@ -915,6 +917,14 @@ class AzureHandler {
         return `${this._authorizeUrl}?client_id=${this.clientID}&redirect_uri=${this.redirectURI}&response_type=code&state=${this.state}&scope=${this.scope}&code_challenge=${this.pkceChallenge}&code_challenge_method=S256`;
     }
 
+    protected deleteAuthInfo(): void {
+        SimbaConfig.log.debug(`:: ENTER :`);
+        if (this.config.get(this.configBase)) {
+            this.config.set(this.configBase, {});
+            SimbaConfig.log.debug(`:: EXIT :`);
+        }
+    }
+
     protected getConfigBase(): string {
         SimbaConfig.log.debug(`:: ENTER :`);
         if (!this.configBase) {
@@ -953,7 +963,7 @@ class AzureHandler {
         await this.setAndGetAZAuthInfo();
         return new Promise<void>((resolve, reject) => {
             // clear out old auth
-            this.deleteConfig(AUTHKEY);
+            this.logout();
 
             if (this.server) {
                 reject(new Error('Auth already in progress!'));
@@ -1150,7 +1160,9 @@ class AzureHandler {
     }
 
     public logout(): void {
-        this.deleteConfig(AUTHKEY);
+        SimbaConfig.log.debug(`:: ENTER :`);
+        this.deleteAuthInfo();
+        SimbaConfig.log.debug(`:: EXIT :`);
     }
 
     protected hasConfig(key: string): boolean {
@@ -1197,18 +1209,22 @@ class AzureHandler {
     }
 
     protected deleteConfig(key: string): void {
+        SimbaConfig.log.debug(`:: ENTER : key : ${key}`);
         if (!this.config.has(this.baseURL.replace('.', '_'))) {
+            SimbaConfig.log.debug(":: EXIT : no configBase detected");
             return;
         }
 
         const dict = this.config.get(this.configBase);
+        SimbaConfig.log.debug(`\nsimba: configBase: ${JSON.stringify(this.configBase)}`)
 
         if (!(key in dict)) {
+            SimbaConfig.log.debug(`:: EXIT : key ${key} not present in config`);
             return;
         }
 
         delete dict[key];
-
+        SimbaConfig.log.debug(`:: EXIT : new configBase: ${JSON.stringify(dict)}`);
         this.config.set(this.configBase, dict);
     }
 
