@@ -15,6 +15,7 @@ export {
     isLibrary,
     getContractKind,
     AuthProviders,
+    authErrors,
 } from './commands/lib';
 export {
     syncContract,

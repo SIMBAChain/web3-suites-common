@@ -19,4 +19,5 @@ export {
 } from './api';
 export {
     AuthProviders,
+    authErrors,
 } from "./authentication";

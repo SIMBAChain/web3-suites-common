@@ -47,11 +47,12 @@ interface AuthErrors {
     noBaseURLError: string;
     noAuthURLError: string;
     noRealmError: string;
+    badAuthProviderInfo: string;
 }
 
 const SIMBAERROR = "SIMBAERROR";
 
-const KeycloakAuthErrors: AuthErrors = {
+const authErrors: AuthErrors = {
     headersError: `${chalk.red('simba: Error acquiring auth headers. Please make sure keycloak certs are not expired.')}`,
     keycloakCertsError: `${chalk.red('simba: Error obtaining creds from keycloak. Please make sure keycloak certs are not expired.')}`,
     verificationInfoError: `${chalk.red('simba: Error acquiring verification info. Please make sure keycloak certs are not expired.')}`,
@@ -60,6 +61,7 @@ const KeycloakAuthErrors: AuthErrors = {
     noBaseURLError: `${chalk.red('simba: Error acquiring baseURL. Please make sure "baseURL" is configured in simba.json')}`,
     noAuthURLError: `${chalk.red('simba: Error acquiring authURL. Please make sure "authURLID" is configured in simba.json')}`,
     noRealmError: `${chalk.red('simba: Error acquiring realm. Please make sure "realm" is configured in simba.json')}`,
+    badAuthProviderInfo: `${chalk.red('simba: Error acquiring auth provider info. This may be due to a bad "baseURL" value. Please check that your "baseURL" field is properly set in your simba.json')}`,
 }
 
 interface KeycloakAccessToken {
@@ -98,7 +100,7 @@ class KeycloakHandler {
         projectConfig?: Configstore,
         tokenExpirationPad: number = 60,
     ) {
-        this.authErrors = KeycloakAuthErrors;
+        this.authErrors = authErrors;
         this.config = SimbaConfig.ConfigStore;
         this.projectConfig = SimbaConfig.ProjectConfigStore;
         this.baseURL = this.projectConfig.get('baseURL') ? this.projectConfig.get('baseURL') : this.projectConfig.get('baseUrl');
@@ -887,7 +889,7 @@ class AzureHandler {
         config?: Configstore,
         projectConfig?: Configstore,
     ) {
-        this.authErrors = KeycloakAuthErrors;
+        this.authErrors = authErrors;
         this.config = SimbaConfig.ConfigStore;
         this.projectConfig = SimbaConfig.ProjectConfigStore;
         this.baseURL = this.projectConfig.get('baseURL') ? this.projectConfig.get('baseURL') : this.projectConfig.get('baseUrl');
@@ -1279,4 +1281,5 @@ export {
     KeycloakHandler,
     AzureHandler,
     AuthProviders,
+    authErrors,
 }

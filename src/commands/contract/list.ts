@@ -1,6 +1,9 @@
 import {default as chalk} from 'chalk';
 import {SimbaConfig} from '../lib';
 import {ContractDesign} from './';
+import {
+    authErrors,
+} from "../lib/authentication";
 
 /**
  * Returns data on contract name, version, and design_id
@@ -11,26 +14,30 @@ export async function allContracts(): Promise<ContractDesign[] | Error> {
     let contractDesigns: ContractDesign[] = [];
     const url = `organisations/${SimbaConfig.organisation.id}/contract_designs/`;
     const authStore = await SimbaConfig.authStore();
-    let resp = await authStore.doGetRequest(url);
-    SimbaConfig.log.debug(`resp: ${JSON.stringify(resp)}`);
-    if (resp && !(resp instanceof Error)) {
-        SimbaConfig.log.debug(`resp is not ERROR`);
-        SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: retrieving all contracts for organisation ${chalk.greenBright(`${SimbaConfig.organisation.name}`)}`)}`);
-        let res = resp as any;
-        contractDesigns = contractDesigns.concat(res.results as ContractDesign[]);
-        while (res.next !== null) {
-            const q: string = res.next.split('?').pop();
-            SimbaConfig.log.debug(`\nsimba: retrieving contract ${JSON.stringify(q)}`);
-            res = await authStore.doGetRequest(`${url}?${q}`);
+    if (authStore) {
+        let resp = await authStore.doGetRequest(url);
+        SimbaConfig.log.debug(`resp: ${JSON.stringify(resp)}`);
+        if (resp && !(resp instanceof Error)) {
+            SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: retrieving all contracts for organisation ${chalk.greenBright(`${SimbaConfig.organisation.name}`)}`)}`);
+            let res = resp as any;
             contractDesigns = contractDesigns.concat(res.results as ContractDesign[]);
+            while (res.next !== null) {
+                const q: string = res.next.split('?').pop();
+                SimbaConfig.log.debug(`\nsimba: retrieving contract ${JSON.stringify(q)}`);
+                res = await authStore.doGetRequest(`${url}?${q}`);
+                contractDesigns = contractDesigns.concat(res.results as ContractDesign[]);
+            }
+            SimbaConfig.log.debug(`contractDesigns: ${JSON.stringify(contractDesigns)}`);
+            SimbaConfig.log.debug(`:: EXIT :`);
+            return contractDesigns;
+        } else {
+            SimbaConfig.log.error(`${chalk.redBright(`\nsimba: error acquiring contract designs for organisation ${chalk.greenBright(`${SimbaConfig.organisation.id}`)}`)}`);
+            SimbaConfig.log.debug(`:: EXIT :`);
+            return new Error(`\nsimba: error acquiring contract designs for organisation`);
         }
-        SimbaConfig.log.debug(`contractDesigns: ${JSON.stringify(contractDesigns)}`);
-        SimbaConfig.log.debug(`:: EXIT :`);
-        return contractDesigns;
     } else {
-        SimbaConfig.log.error(`${chalk.redBright(`\nsimba: error acquiring contract designs for organisation ${chalk.greenBright(`${SimbaConfig.organisation.id}`)}`)}`);
-        SimbaConfig.log.debug(`:: EXIT :`);
-        return new Error(`\nsimba: error acquiring contract designs for organisation`);
+        SimbaConfig.log.error(authErrors.badAuthProviderInfo);
+        return new Error(authErrors.badAuthProviderInfo)
     }
 }
 

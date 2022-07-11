@@ -12,6 +12,9 @@ interface Dictionary<T> {
 }
 import {default as chalk} from 'chalk';
 import axios from "axios";
+import {
+    authErrors,
+} from "./authentication"
 
 interface Choice {
     title: string;
@@ -46,21 +49,25 @@ const getList = async (config: SimbaConfig, url?: string): Promise<Record<any, a
         url = 'v2/organisations/';
     }
     const authStore = await config.authStore();
-    try {
-        const res = authStore.doGetRequest(url);
-        SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(res)}`);
-        return res;
-    } catch (error) {
-        if (axios.isAxiosError(error) && error.response) {
-            SimbaConfig.log.debug(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error.response.data)}`)}`)
-        } else {
-            SimbaConfig.log.debug(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error)}`)}`);
+    if (authStore) {
+        try {
+            const res = authStore.doGetRequest(url);
+            SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(res)}`);
+            return res;
+        } catch (error) {
+            if (axios.isAxiosError(error) && error.response) {
+                SimbaConfig.log.debug(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error.response.data)}`)}`)
+            } else {
+                SimbaConfig.log.debug(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error)}`)}`);
+            }
+            if (axios.isAxiosError(error) && error.message === "Request failed with status code 500") {
+                SimbaConfig.log.info(`${chalk.cyanBright('\nsimba: Auth token expired, please log in again')}`);
+                authStore.logout();
+                await authStore.loginAndGetAuthToken();
+            }
         }
-        if (axios.isAxiosError(error) && error.message === "Request failed with status code 500") {
-            SimbaConfig.log.info(`${chalk.cyanBright('\nsimba: Auth token expired, please log in again')}`);
-            authStore.logout();
-            await authStore.loginAndGetAuthToken();
-        }
+    } else {
+        SimbaConfig.log.error(authErrors.badAuthProviderInfo)
     }
 };
 
@@ -422,9 +429,13 @@ export async function getApp(config: SimbaConfig,
     SimbaConfig.log.debug(`:: ENTER : ${id}`);
     const url = `organisations/${config.organisation.id}/applications/${id}`;
     const authStore = await config.authStore();
-    const response = await authStore.doGetRequest(url, 'application/json');
-    SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(response)}`);
-    return response;
+    if (authStore) {
+        const response = await authStore.doGetRequest(url, 'application/json');
+        SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(response)}`);
+        return response;
+    } else {
+        SimbaConfig.log.error(authErrors.badAuthProviderInfo);
+    }
 };
 
 /**
