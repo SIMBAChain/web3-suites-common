@@ -53,11 +53,11 @@ interface AuthErrors {
 const SIMBAERROR = "SIMBAERROR";
 
 const authErrors: AuthErrors = {
-    headersError: `${chalk.red('simba: Error acquiring auth headers. Please make sure keycloak certs are not expired.')}`,
-    keycloakCertsError: `${chalk.red('simba: Error obtaining creds from keycloak. Please make sure keycloak certs are not expired.')}`,
-    verificationInfoError: `${chalk.red('simba: Error acquiring verification info. Please make sure keycloak certs are not expired.')}`,
-    authTokenError: `${chalk.red('simba: Error acquiring auth token. Please make sure keycloak certs are not expired')}`,
-    noClientIDError: `${chalk.red('simba: Error acquiring clientID. Please make sure "clientID" is configured in simba.json')}`,
+    headersError: `${chalk.red('simba: Error acquiring auth headers. Please make sure your OAuth provider certs are not expired.')}`,
+    keycloakCertsError: `${chalk.red('simba: Error obtaining auth creds. Please make sure your OAuth provider certs are not expired.')}`,
+    verificationInfoError: `${chalk.red('simba: Error acquiring verification info. Please make sure OAuth provider certs are not expired.')}`,
+    authTokenError: `${chalk.red('simba: Error acquiring auth token. Please make sure OAuth provider certs are not expired')}`,
+    noClientIDError: `${chalk.red('simba: Error acquiring clientID. Please make sure "clientID" is configured correctly for your OAuth provider')}`,
     noBaseURLError: `${chalk.red('simba: Error acquiring baseURL. Please make sure "baseURL" is configured in simba.json')}`,
     noAuthURLError: `${chalk.red('simba: Error acquiring authURL. Please make sure "authURLID" is configured in simba.json')}`,
     noRealmError: `${chalk.red('simba: Error acquiring realm. Please make sure "realm" is configured in simba.json')}`,
