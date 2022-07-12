@@ -11,7 +11,8 @@
     "esModuleInterop": true,
     "strictPropertyInitialization": false,
     "typeRoots": ["node_modules/@types"],
-    "allowJs": true
+    "allowJs": true,
+    "skipLibCheck": true
   },
   "exclude": ["dist", "node_modules"],
   "include": [

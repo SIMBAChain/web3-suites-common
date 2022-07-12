@@ -14,6 +14,7 @@ import {
     KeycloakHandler,
     AzureHandler,
     AuthProviders,
+    authErrors,
 } from './authentication';
 import {default as chalk} from 'chalk';
 import axios from "axios";
@@ -185,11 +186,15 @@ export class SimbaConfig {
      * currently an instance of KeycloakHandler, but code can be amended
      * to be different kind of authStore once supported
      */
-    public static async authStore(): Promise<KeycloakHandler | AzureHandler> {
+    public static async authStore(): Promise<KeycloakHandler | AzureHandler | null> {
         SimbaConfig.log.debug(`:: ENTER :`)
         if (!this._authStore) {
             SimbaConfig.log.debug(`${chalk.cyanBright(`\nsimba: instantiating new authStore`)}`);
             const _authProviderInfo = await SimbaConfig.setAndGetAuthProviderInfo();
+            if (!_authProviderInfo) {
+                SimbaConfig.log.error(`${chalk.redBright(authErrors.badAuthProviderInfo)}`);
+                return null;
+            }
             SimbaConfig.log.debug(`${chalk.cyanBright(`\nsimba: _authProviderInfo: ${JSON.stringify(_authProviderInfo)}`)}`)
             if (!_authProviderInfo) {
                 SimbaConfig.log.error(`${chalk.redBright(`\nsimba: no auth provider info detected.`)}`)
@@ -218,7 +223,7 @@ export class SimbaConfig {
         return this._authStore;
     }
 
-    public async authStore(): Promise<KeycloakHandler | AzureHandler> {
+    public async authStore(): Promise<KeycloakHandler | AzureHandler | null> {
         return await SimbaConfig.authStore();
     }
 
