@@ -156,6 +156,7 @@ class KeycloakHandler {
         SimbaConfig.log.debug(`:: ENTER :`);
         this.setLoggedInStatus(false);
         this.deleteAuthInfo();
+        SimbaConfig.deleteAuthProviderInfo();
         SimbaConfig.log.debug(`:: EXIT :`);
     }
 
@@ -962,6 +963,7 @@ class AzureHandler {
     }
 
     public async loginAndGetAuthToken(): Promise<any> {
+        SimbaConfig.deleteAuthProviderInfo();
         await this.setAndGetAZAuthInfo();
         return new Promise<void>((resolve, reject) => {
             // clear out old auth
@@ -1164,6 +1166,7 @@ class AzureHandler {
     public logout(): void {
         SimbaConfig.log.debug(`:: ENTER :`);
         this.deleteAuthInfo();
+        SimbaConfig.deleteAuthProviderInfo();
         SimbaConfig.log.debug(`:: EXIT :`);
     }
 

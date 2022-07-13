@@ -151,6 +151,31 @@ export class SimbaConfig {
         return SimbaConfig.ProjectConfigStore;
     }
 
+    public static deleteSimbaJsonField(key: string) {
+        SimbaConfig.log.debug(`:: ENTER : key : ${key}`)
+        if (this.ProjectConfigStore.get(key)) {
+            this.ProjectConfigStore.delete(key);
+            SimbaConfig.log.debug(`${chalk.cyanBright(`key ${key} removed from simba.json`)}`);
+        } else {
+            SimbaConfig.log.debug(`${chalk.cyanBright(`key ${key} not present in simba.json`)}`);
+        }
+        SimbaConfig.log.debug(`:: EXIT :`);
+    }
+
+    public deleteSimbaJsonField(key: string) {
+        SimbaConfig.deleteSimbaJsonField(key);
+    }
+
+    public static deleteAuthProviderInfo() {
+        SimbaConfig.log.debug(`:: ENTER :`);
+        const key = "authProviderInfo";
+        SimbaConfig.deleteSimbaJsonField(key);
+    }
+
+    public deleteAuthProviderInfo() {
+        SimbaConfig.deleteAuthProviderInfo();
+    }
+
     public static async setAndGetAuthProviderInfo(): Promise<any> {
         SimbaConfig.log.debug(`:: ENTER :`);
         if (!SimbaConfig.ProjectConfigStore.get("authProviderInfo")) {
