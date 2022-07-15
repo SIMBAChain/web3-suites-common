@@ -224,7 +224,7 @@ export class SimbaConfig {
             if (!_authProviderInfo) {
                 SimbaConfig.log.error(`${chalk.redBright(`\nsimba: no auth provider info detected.`)}`)
             }
-            const authProviderType = _authProviderInfo.type;
+            let authProviderType = _authProviderInfo.type;
             switch(authProviderType) {
                 case AuthProviders.KEYCLOAK: { 
                     this._authStore = new KeycloakHandler(this._configStore, this._projectConfigStore);
@@ -239,7 +239,8 @@ export class SimbaConfig {
                     break;
                 }
                 default: { 
-                   SimbaConfig.log.error(`${chalk.redBright(`\nsimba: a valid auth provider was not found. Please make sure your 'baseURL' field is properly set in your simba.json`)}`);
+                   SimbaConfig.log.error(`${chalk.redBright(`\nsimba: a valid auth provider was not found. Deleting authProviderInfo from simba.json. Please make sure your 'baseURL' field is properly set in your simba.json and try again.`)}`);
+                   SimbaConfig.deleteAuthProviderInfo();
                    break; 
                 } 
             }
