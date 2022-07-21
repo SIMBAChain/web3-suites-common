@@ -3,6 +3,8 @@ export interface ContractDesign {
     name: string;
     version: string;
     language: string;
+    created_on: string;
+    updated_on: string;
 }
 
 export interface ContractDesignWithCode extends ContractDesign {

@@ -903,6 +903,7 @@ class AzureHandler {
     }
 
     public async setAndGetAZAuthInfo(): Promise<Record<any, any>> {
+        SimbaConfig.log.debug(`:: ENTER :`)
         const authInfo = await SimbaConfig.setAndGetAuthProviderInfo();
         this.clientID = authInfo.client_id;
         this.tenant = authInfo.tenant;
@@ -912,11 +913,14 @@ class AzureHandler {
         this._authorizeUrl = `${this.baseAuthURL}/${this.policy}/oauth2/v2.0/authorize`
         this.authInfo = authInfo;
         this.scope = `${this.clientID} offline_access`;
+        SimbaConfig.log.debug(`:: EXIT :`)
         return authInfo;
     }
 
     public get authorizeUrl(): string {
+        SimbaConfig.log.debug(`:: ENTER :`)
         this.generatePKCE();
+        SimbaConfig.log.debug(`:: EXIT :`)
         return `${this._authorizeUrl}?client_id=${this.clientID}&redirect_uri=${this.redirectURI}&response_type=code&state=${this.state}&scope=${this.scope}&code_challenge=${this.pkceChallenge}&code_challenge_method=S256`;
     }
 
@@ -963,6 +967,7 @@ class AzureHandler {
     }
 
     public async loginAndGetAuthToken(): Promise<any> {
+        SimbaConfig.log.debug(`:: ENTER :`)
         SimbaConfig.deleteAuthProviderInfo();
         await this.setAndGetAZAuthInfo();
         return new Promise<void>((resolve, reject) => {
@@ -1022,6 +1027,7 @@ class AzureHandler {
     }
 
     public refreshToken(): Promise<boolean> {
+        SimbaConfig.log.debug(`:: ENTER :`)
         return new Promise((resolve, reject) => {
             const auth: any = this.getConfig(AUTHKEY);
             if (auth) {
@@ -1080,7 +1086,7 @@ class AzureHandler {
     }
 
     public async receiveCode(code: string, state: string, error: string): Promise<any> {
-        
+        SimbaConfig.log.debug(`:: ENTER :`)
         if (state !== this.state) {
             SimbaConfig.log.error(chalk.red('Error logging in to SIMBAChain: state does not match'));
             return Promise.reject('Error logging in to SIMBAChain: state does not match');
@@ -1095,7 +1101,7 @@ class AzureHandler {
             if (this.redirectURI) {
                 uri = decodeURIComponent(this.redirectURI);
             }
-            SimbaConfig.log.info(`tokenURL: `, this.tokenURL);
+            SimbaConfig.log.debug(`tokenURL: `, this.tokenURL);
             const option = {
                 uri: this.tokenURL,
                 method: 'POST',
@@ -1125,6 +1131,7 @@ class AzureHandler {
     }
 
     public async getClientOptions(url: string, contentType = 'application/json', data?: any): Promise<any> {
+        SimbaConfig.log.debug(`:: ENTER :`)
         const auth = this.getConfig(AUTHKEY);
         if (!url.startsWith('http')) {
             url = this.baseURL + url;
@@ -1150,6 +1157,7 @@ class AzureHandler {
     }
 
     public async doGetRequest(url: string, contentType?: string, _buildURL: boolean = true): Promise<any> {
+        SimbaConfig.log.debug(`:: ENTER :`)
         // the _buildURL param here does not get used. It's strictly been
         // added because the interface call in the truffle and hardhat suites
         // for authStore.doGetRequest expects it.
@@ -1157,6 +1165,7 @@ class AzureHandler {
     }
 
     public async doPostRequest(url: string, data: any, contentType?: string, _buildURL: boolean = true): Promise<any> {
+        SimbaConfig.log.debug(`:: ENTER :`)
         // the _buildURL param here does not get used. It's strictly been
         // added because the interface call in the truffle and hardhat suites
         // for authStore.doPostRequest expects it.
@@ -1171,6 +1180,7 @@ class AzureHandler {
     }
 
     protected hasConfig(key: string): boolean {
+        SimbaConfig.log.debug(`:: ENTER :`)
         if (!this.config.has(this.configBase)) {
             return false;
         }
@@ -1179,6 +1189,7 @@ class AzureHandler {
     }
 
     protected getConfig(key: string): any {
+        SimbaConfig.log.debug(`:: ENTER :`)
         if (!this.config.has(this.configBase)) {
             return;
         }
@@ -1193,6 +1204,7 @@ class AzureHandler {
     }
 
     protected getOrSetConfig(key: string, value: any): any {
+        SimbaConfig.log.debug(`:: ENTER :`)
         if (!this.hasConfig(key)) {
             this.setConfig(key, value);
             return value;
@@ -1202,6 +1214,7 @@ class AzureHandler {
     }
 
     protected setConfig(key: string, value: any): any {
+        SimbaConfig.log.debug(`:: ENTER :`)
         if (!this.config.has(this.configBase)) {
             // NOTE(Adam): This should never be the case since it is created in the constructor
             this.config.set(this.configBase, {});
@@ -1234,6 +1247,7 @@ class AzureHandler {
     }
 
     protected generatePKCE(): void {
+        SimbaConfig.log.debug(`:: ENTER :`)
         this.pkceVerifier = cryptoRandomString({length: 128, type: 'url-safe'});
         const hash = CryptoJS.SHA256(this.pkceVerifier);
         const b64 = this.base64URL(hash.toString(CryptoJS.enc.Base64));
@@ -1246,11 +1260,13 @@ class AzureHandler {
         contentType?: string,
         data?: any,
     ): Promise<any> {
+        SimbaConfig.log.debug(`:: ENTER :`)
         await this.setAndGetAZAuthInfo();
         let opts = await this.getClientOptions(url, contentType, data);
         try {
             return call(opts);
         } catch (err) {
+            SimbaConfig.log.debug(`${chalk.redBright(`\nsimba: error: ${err}`)}`)
             const e = err as any; 
             if (e.statusCode === 403 || e.statusCode === '403') {
                 await this.refreshToken();

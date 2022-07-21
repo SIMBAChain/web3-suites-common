@@ -9,7 +9,7 @@ import {
  * Returns data on contract name, version, and design_id
  * @return {Promise<any>}
  */
-export async function allContracts(): Promise<ContractDesign[] | Error> {
+export async function allContracts(): Promise<ContractDesign[] | void> {
     SimbaConfig.log.debug(`:: ENTER :`);
     let contractDesigns: ContractDesign[] = [];
     const url = `organisations/${SimbaConfig.organisation.id}/contract_designs/`;
@@ -33,11 +33,11 @@ export async function allContracts(): Promise<ContractDesign[] | Error> {
         } else {
             SimbaConfig.log.error(`${chalk.redBright(`\nsimba: error acquiring contract designs for organisation ${chalk.greenBright(`${SimbaConfig.organisation.id}`)}`)}`);
             SimbaConfig.log.debug(`:: EXIT :`);
-            return new Error(`\nsimba: error acquiring contract designs for organisation`);
+            return;
         }
     } else {
         SimbaConfig.log.error(authErrors.badAuthProviderInfo);
-        return new Error(authErrors.badAuthProviderInfo)
+        return;
     }
 }
 
@@ -51,9 +51,8 @@ export async function printAllContracts(): Promise<void> {
         contractDesigns = _allContracts;
         for (let i = 0; i < contractDesigns.length - 1; i++) {
             SimbaConfig.log.info(
-                `${chalk.green(contractDesigns[i].name)}\n\tversion ${contractDesigns[i].version}\n\tid ${
-                    contractDesigns[i].id
-                }`,
+                `\n\t${chalk.green(contractDesigns[i].name)}\n\tversion ${contractDesigns[i].version}\n\tid ${
+                    contractDesigns[i].id}\n\tcreated_on ${contractDesigns[i].created_on}\n\tupdated_on ${contractDesigns[i].updated_on}`,
             );
         }
     } else {
