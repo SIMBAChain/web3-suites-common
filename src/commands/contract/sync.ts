@@ -78,7 +78,6 @@ export async function syncContract(designID?: string): Promise<void> {
 
     try {
         const contracts = await allContracts();
-        console.log(contracts);
         const choices = [];
         if (contracts) {
             const contractDesigns = contracts as ContractDesign[];
