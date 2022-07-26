@@ -49,7 +49,7 @@ export async function printAllContracts(): Promise<void> {
     const _allContracts = await allContracts();
     if (_allContracts && !(_allContracts instanceof Error)) {
         contractDesigns = _allContracts;
-        for (let i = 0; i < contractDesigns.length - 1; i++) {
+        for (let i = 0; i < contractDesigns.length; i++) {
             SimbaConfig.log.info(
                 `\n\t${chalk.green(contractDesigns[i].name)}\n\tversion ${contractDesigns[i].version}\n\tid ${
                     contractDesigns[i].id}\n\tcreated_on ${contractDesigns[i].created_on}\n\tupdated_on ${contractDesigns[i].updated_on}`,
