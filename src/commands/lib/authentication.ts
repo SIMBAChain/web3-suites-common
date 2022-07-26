@@ -1161,7 +1161,7 @@ class AzureHandler {
         // the _buildURL param here does not get used. It's strictly been
         // added because the interface call in the truffle and hardhat suites
         // for authStore.doGetRequest expects it.
-        return this.retryAfterTokenRefresh(url, request.get, contentType);
+        return await this.retryAfterTokenRefresh(url, "GET", contentType);
     }
 
     public async doPostRequest(url: string, data: any, contentType?: string, _buildURL: boolean = true): Promise<any> {
@@ -1169,7 +1169,7 @@ class AzureHandler {
         // the _buildURL param here does not get used. It's strictly been
         // added because the interface call in the truffle and hardhat suites
         // for authStore.doPostRequest expects it.
-        return this.retryAfterTokenRefresh(url, request.post, contentType, data);
+        return await this.retryAfterTokenRefresh(url, "POST", contentType, data);
     }
 
     public logout(): void {
@@ -1256,37 +1256,53 @@ class AzureHandler {
 
     private async retryAfterTokenRefresh(
         url: string,
-        call: (opts: any) => request.RequestPromise<any>,
+        requestType: string,
         contentType?: string,
         data?: any,
     ): Promise<any> {
         SimbaConfig.log.debug(`:: ENTER :`)
         await this.setAndGetAZAuthInfo();
         let opts = await this.getClientOptions(url, contentType, data);
+        const uri = opts.uri;
+        const headers = opts.headers;
+        const config = {
+            headers,
+        };
+        SimbaConfig.log.info(`opts: ${JSON.stringify(opts)}`);
         try {
-            return call(opts);
-        } catch (err) {
-            SimbaConfig.log.debug(`${chalk.redBright(`\nsimba: error: ${err}`)}`)
-            const e = err as any; 
-            if (e.statusCode === 403 || e.statusCode === '403') {
-                await this.refreshToken();
-                opts = await this.getClientOptions(url, contentType, data);
-                return call(opts);
+            if (requestType === "POST") {
+                const res = await axios.post(uri, data, config);
+                return res;
             }
-            if ('errors' in e && Array.isArray(e.errors)) {
-                if (
-                    e.errors[0].status === '403' &&
-                    e.errors[0].code === '1403' &&
-                    e.errors[0].detail === '{"error":"Access token not found"}\n'
-                ) {
-                    await this.refreshToken();
-                    opts = await this.getClientOptions(url, contentType, data);
-                    return call(opts);
+            if (requestType === "GET") {
+                const res = await axios.get(uri, config);
+                return res;
+            }
+        } catch (error) {
+                if (axios.isAxiosError(error) && error.response) {
+                    SimbaConfig.log.debug(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error.response.data)}`)}`);
+                    if (axios.isAxiosError(error) && error.response && error.response.status === 403) {
+                        await this.refreshToken();
+                        opts = await this.getClientOptions(url, contentType, data);
+                        const headers = opts.headers;
+                        const uri = opts.uri;
+                        const config = {
+                            headers,
+                        };
+                        if (requestType === "POST") {
+                            return await axios.post(uri, data, config);
+                        }
+                        if (requestType === "GET") {
+                            return await axios.get(uri, config);
+                        }
+                    }
+                } else {
+                    SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error)}`)}`);
+                    return;
                 }
+                throw error;
             }
-            throw e;
         }
-    }
 
     private base64URL(str: string): string {
         return str
