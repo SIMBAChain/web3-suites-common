@@ -970,7 +970,7 @@ class AzureHandler {
         SimbaConfig.log.debug(`:: ENTER :`)
         SimbaConfig.deleteAuthProviderInfo();
         await this.setAndGetAZAuthInfo();
-        return new Promise<void>((resolve, reject) => {
+        return new Promise<void>(async (resolve, reject) => {
             // clear out old auth
             this.logout();
 
@@ -988,7 +988,7 @@ class AzureHandler {
             });
 
             polka({server: this.server})
-                .get('/auth-callback/', (req: Request | any, res: http.ServerResponse) => {
+                .get('/auth-callback/', async (req: Request | any, res: http.ServerResponse) => {
                     const code: string = Array.isArray(req.query.code) ? req.query.code[0] : req.query.code;
                     const state: string = Array.isArray(req.query.state) ? req.query.state[0] : req.query.state;
                     const error: string = Array.isArray(req.query.error) ? req.query.error[0] : req.query.error;
@@ -996,16 +996,26 @@ class AzureHandler {
                     res.on('finish', () => {
                         this.closeServer();
                     });
+                    
+                    try {
+                        await this.receiveCode(code, state, error);
+                        res.writeHead(302, {Location: '/'});
+                        res.end();
+                    } catch (err) {
+                        res.writeHead(302, {Location: `/?error=${Buffer.from(err as any).toString('base64')}`});
+                        res.end();
+                    }
+                    
 
-                    this.receiveCode(code, state, error)
-                        .then(() => {
-                            res.writeHead(302, {Location: '/'});
-                            res.end();
-                        })
-                        .catch((err: Error) => {
-                            res.writeHead(302, {Location: `/?error=${Buffer.from(err as any).toString('base64')}`});
-                            res.end();
-                        });
+                    // this.receiveCode(code, state, error)
+                    //     .then(() => {
+                    //         res.writeHead(302, {Location: '/'});
+                    //         res.end();
+                    //     })
+                    //     .catch((err: Error) => {
+                    //         res.writeHead(302, {Location: `/?error=${Buffer.from(err as any).toString('base64')}`});
+                    //         res.end();
+                    //     });
                 })
                 .get('/', (_req: Request | any, res: http.ServerResponse) => {
                     res.writeHead(200, {
@@ -1026,51 +1036,57 @@ class AzureHandler {
         });
     }
 
-    public refreshToken(): Promise<boolean> {
-        SimbaConfig.log.debug(`:: ENTER :`)
-        return new Promise((resolve, reject) => {
-            const auth: any = this.getConfig(AUTHKEY);
-            if (auth) {
-                if (!auth.refresh_token) {
-                    this.deleteConfig(AUTHKEY);
-                    reject(new Error('Not authenticated!'));
-                }
-                if ('expires_at' in auth) {
-                    const expiresAt = new Date(auth.expires_at);
-                    if (expiresAt <= new Date()) {
-                        const option = {
-                            uri: this.tokenURL,
-                            method: 'POST',
-                            json: true,
-                            form: {
-                                client_id: this.clientID,
-                                grant_type: 'refresh_token',
-                                refresh_token: auth.refresh_token,
-                            },
+    public async refreshToken(): Promise<any> {
+        SimbaConfig.log.debug(":: ENTER :")
+        const auth: any = this.getConfig(AUTHKEY);
+        if (auth) {
+            if (!auth.refresh_token) {
+                this.deleteConfig(AUTHKEY);
+                SimbaConfig.log.error("Not authenticated!");
+                return new Error("Not authenticated!")
+            }
+            if ("expires_at" in auth) {
+                const expiresAt = new Date(auth.expires_at);
+                if (expiresAt <= new Date()) {
+                    try {
+
+                        const params = new URLSearchParams();
+                        params.append('grant_type', 'refresh_token');
+                        params.append('client_id', this.clientID);
+                        params.append('refresh_token', auth.refresh_token);
+                        const headers = {
+                            'content-type': 'application/x-www-form-urlencoded;charset=utf-8'
                         };
-
-                        request
-                            .post(option)
-                            .then((resp) => {
-                                this.setConfig(AUTHKEY, this.parseExpiry(resp));
-
-                                resolve(true);
-                            })
-                            .catch((err: Error) => {
-                                reject(err);
-                            });
-                    } else {
-                        // Refresh not required
-                        resolve(false);
+                        const config = {
+                            headers: headers,
+                        }
+                        const resp = await axios.post(
+                            this.tokenURL,
+                            params,
+                            config,
+                        )
+                        this.setConfig(AUTHKEY, this.parseExpiry(resp.data));
+                        return;
+                    } catch (error)  {
+                        if (axios.isAxiosError(error) && error.response) {
+                            SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error.response.data)}`)}`)
+                        } else {
+                            SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error)}`)}`);
+                        }
+                        return error as Error;
                     }
                 } else {
-                    // Refresh not required
-                    resolve(false);
+                    SimbaConfig.log.debug(`auth token still valid`);
+                    return;
                 }
             } else {
-                reject(new Error('Not authenticated!'));
+                SimbaConfig.log.debug("auth token does not expire");
+                return;
             }
-        });
+        } else {
+            SimbaConfig.log.error(`${chalk.redBright(`not authenticated!`)}`);
+            return new Error("not authenticated!");
+        }
     }
 
     public parseExpiry(auth: any): any {
@@ -1088,45 +1104,53 @@ class AzureHandler {
     public async receiveCode(code: string, state: string, error: string): Promise<any> {
         SimbaConfig.log.debug(`:: ENTER :`)
         if (state !== this.state) {
-            SimbaConfig.log.error(chalk.red('Error logging in to SIMBAChain: state does not match'));
-            return Promise.reject('Error logging in to SIMBAChain: state does not match');
+            SimbaConfig.log.error(chalk.redBright('Error logging in to SIMBAChain: state does not match'));
+            return new Error('Error logging in to SIMBAChain: state does not match');
         } else if (error) {
-            SimbaConfig.log.error(chalk.red('Unknown Error logging in to SIMBAChain: ' + error));
-            return Promise.reject('Unknown Error logging in to SIMBAChain: ' + error);
+            SimbaConfig.log.error(chalk.redBright('Unknown Error logging in to SIMBAChain: ' + error));
+            return new Error('Unknown Error logging in to SIMBAChain: ' + error);
         } else if (!code) {
-            SimbaConfig.log.error(chalk.red('Error logging in to SIMBAChain: missing auth code'));
-            return Promise.reject('Error logging in to SIMBAChain: missing auth code');
+            SimbaConfig.log.error(chalk.redBright('Error logging in to SIMBAChain: missing auth code'));
+            return new Error('Error logging in to SIMBAChain: missing auth code');
         } else {
             let uri = '';
             if (this.redirectURI) {
                 uri = decodeURIComponent(this.redirectURI);
             }
             SimbaConfig.log.debug(`tokenURL: `, this.tokenURL);
-            const option = {
-                uri: this.tokenURL,
-                method: 'POST',
-                json: true,
-                form: {
-                    grant_type: 'authorization_code',
-                    redirect_uri: decodeURIComponent(uri),
-                    code_verifier: this.pkceVerifier,
-                    scope: this.scope,
-                    client_id: this.clientID,
-                    code,
-                },
-            };
 
-            return request
-                .post(option)
-                .then(async (resp) => {
-                    this.setConfig(AUTHKEY, this.parseExpiry(resp));
+            const params = new URLSearchParams();
+            params.append('grant_type', 'authorization_code');
+            params.append('redirect_uri', decodeURIComponent(uri));
+            params.append('code_verifier', this.pkceVerifier as string);
+            params.append('scope', this.scope);
+            params.append('client_id', this.clientID);
+            params.append('code', code);
+            try {
+                const headers = {
+                    'content-type': 'application/x-www-form-urlencoded;charset=utf-8'
+                };
+                const config = {
+                    headers: headers,
+                }
 
-                    SimbaConfig.log.info(chalk.green('Logged In!'));
-                })
-                .catch(async (err: Error) => {
-                    SimbaConfig.log.error(chalk.red('Error logging in to SIMBAChain: Token Exchange Error: ' + err));
-                    return Promise.reject('Error logging in to SIMBAChain: Token Exchange Error:' + err);
-                });
+                const resp = await axios.post(
+                    this.tokenURL,
+                    params,
+                    config,
+                );
+                SimbaConfig.log.debug(`resp: ${resp}`);
+                this.setConfig(AUTHKEY, this.parseExpiry(resp.data));
+                SimbaConfig.log.info(chalk.green('Logged In to SIMBA Chain!'));
+                return;
+            } catch (error)  {
+                if (axios.isAxiosError(error) && error.response) {
+                    SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error.response.data)}`)}`);
+                } else {
+                    SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error)}`)}`);
+                }
+                return error as Error;
+            }
         }
     }
 
@@ -1268,15 +1292,17 @@ class AzureHandler {
         const config = {
             headers,
         };
-        SimbaConfig.log.info(`opts: ${JSON.stringify(opts)}`);
+        SimbaConfig.log.debug(`opts: ${JSON.stringify(opts)}`);
         try {
             if (requestType === "POST") {
                 const res = await axios.post(uri, data, config);
-                return res;
+                const resData: Record<any, any> = res.data;
+                return resData;
             }
             if (requestType === "GET") {
                 const res = await axios.get(uri, config);
-                return res;
+                const resData: Record<any, any> = res.data;
+                return resData;
             }
         } catch (error) {
                 if (axios.isAxiosError(error) && error.response) {
