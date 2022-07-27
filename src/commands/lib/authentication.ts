@@ -1038,12 +1038,13 @@ class AzureHandler {
 
     public async refreshToken(): Promise<any> {
         SimbaConfig.log.debug(":: ENTER :")
-        const auth: any = this.getConfig(AUTHKEY);
+        const auth = this.getConfig(AUTHKEY);
+        await this.setAndGetAZAuthInfo();
         if (auth) {
             if (!auth.refresh_token) {
                 this.deleteConfig(AUTHKEY);
-                SimbaConfig.log.error("Not authenticated!");
-                return new Error("Not authenticated!")
+                SimbaConfig.log.debug(`${chalk.cyanBright(`simba: no refresh token detected; deleting auth info and exiting`)}`);
+                return;
             }
             if ("expires_at" in auth) {
                 const expiresAt = new Date(auth.expires_at);
@@ -1084,8 +1085,8 @@ class AzureHandler {
                 return;
             }
         } else {
-            SimbaConfig.log.error(`${chalk.redBright(`not authenticated!`)}`);
-            return new Error("not authenticated!");
+            SimbaConfig.log.error(`${chalk.redBright("No auth provider info detected. exiting.")}`);
+            return new Error("No auth provider info detected. exiting.");
         }
     }
 
