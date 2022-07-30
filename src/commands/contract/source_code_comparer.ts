@@ -81,8 +81,8 @@ export class SourceCodeComparer {
             }
         }
 
-        SimbaConfig.log.debug(`${chalk.cyanBright(`:: EXIT : sourceCodeMap : ${JSON.stringify(sourceCodeMap)}`)}`)
-        this.sourceCodeFromSimbaJson = sourceCodeMap;
+        SimbaConfig.log.debug(`:: EXIT : sourceCodeMap from Artifacts : ${JSON.stringify(sourceCodeMap)}`)
+        this.sourceCodeFromArtifacts = sourceCodeMap;
         return sourceCodeMap;
     }
 
@@ -102,7 +102,7 @@ export class SourceCodeComparer {
             const sourceCode = contractsInfo[contractName].source_code;
             sourceCodeMap[contractName] = sourceCode;
         }
-        SimbaConfig.log.debug(`:: EXIT : sourceCodeMap : ${JSON.stringify(sourceCodeMap)}`);
+        SimbaConfig.log.debug(`:: EXIT : sourceCodeMap from simba.json : ${JSON.stringify(sourceCodeMap)}`);
         this.sourceCodeFromSimbaJson = sourceCodeMap;
         return sourceCodeMap;
     }
@@ -110,6 +110,7 @@ export class SourceCodeComparer {
     // then a method to check if source code for contractName exists in simba.json:
     public sourceCodeExistsInSimbaJson(contractName: string): boolean {
         SimbaConfig.log.debug(`:: ENTER : contractName : ${contractName}`);
+        this.initSimbaJsonSourceCode();
         if (!this.sourceCodeFromSimbaJson) {
             this.getAndSetSourceCodeFromSimbaJson();
         }
@@ -129,9 +130,7 @@ export class SourceCodeComparer {
     // then a method to check if source code for contractName exists in artifacts / build dir:
     public async sourceCodeExistsInArtifacts(contractName: string): Promise<boolean> {
         SimbaConfig.log.debug(`:: ENTER : contractName : ${contractName}`);
-        if (!this.sourceCodeFromArtifacts) {
-            this.getAndSetSourceCodeFromArtifacts();
-        }
+        await this.initArtifactSourceCode();
         if (Object.keys(this.sourceCodeFromArtifacts).length === 0) {
             SimbaConfig.log.debug(`:: EXIT : false`);
             return false;
@@ -148,6 +147,7 @@ export class SourceCodeComparer {
     // then need a method that runs through and checks for differences
     public async sourceCodeHasChangedOrIsNew(contractName: string): Promise<boolean> {
         SimbaConfig.log.debug(`:: ENTER : contractName : ${contractName}`);
+        await this.initSourceCode();
         if (!this.sourceCodeExistsInArtifacts(contractName)) {
             SimbaConfig.log.error(`${chalk.redBright(`simba: source code for ${contractName} does not exist in your artifacts. Did you forget to compile your contracts?`)}`);
             SimbaConfig.log.debug(`:: EXIT :`);
@@ -168,5 +168,62 @@ export class SourceCodeComparer {
             SimbaConfig.log.debug(`source code in simba.json and artifacts match. returning false`);
             return false;
         }   
+    }
+
+    private async getStatusAndMessage(contractName: string): Promise<Record<any, any>> {
+        SimbaConfig.log.debug(`:: ENTER : contractName: ${contractName}`);
+        await this.initSourceCode();
+        const nonExportMessage = "No changes detected; not exported.";
+        const exportMessage = "Exported";
+        let statusAndMessage;
+        if (!await this.sourceCodeHasChangedOrIsNew(contractName)) {
+            statusAndMessage = {
+                newOrChanged: false,
+                message: `${chalk.redBright(`${nonExportMessage}`)}`,
+            }
+        } else {
+            statusAndMessage = {
+                newOrChanged: true,
+                message: `${chalk.greenBright(`${exportMessage}`)}`,
+            }
+        }
+        SimbaConfig.log.debug(`:: EXIT : statusAndMessage : ${JSON.stringify(statusAndMessage)}`);
+        return statusAndMessage;
+    }
+
+    public async exportStatuses(choices: Array<any> | string): Promise<Record<any, any>> {
+        const _exportStatuses: Record<any, any> = {};
+        await this.initSourceCode();
+        if (Array.isArray(choices)) {
+            for (let i = 0; i < choices.length; i++) {
+                const contractName = choices[i].title;
+                const statusAndMessage = await this.getStatusAndMessage(contractName);
+                _exportStatuses[contractName] = statusAndMessage;
+            }
+            SimbaConfig.log.debug(`:: EXIT : _exportStatuses: ${JSON.stringify(_exportStatuses)}`);
+            return _exportStatuses;
+        }
+        const contractName = choices;
+        const statusAndMessage = await this.getStatusAndMessage(contractName);
+        _exportStatuses[contractName] = statusAndMessage;
+        SimbaConfig.log.debug(`:: EXIT : _exportStatuses: ${JSON.stringify(_exportStatuses)}`);
+        return _exportStatuses;
+    }
+
+    private async initSourceCode(): Promise<void> {
+        await this.initArtifactSourceCode();
+        this.initSimbaJsonSourceCode();
+    }
+
+    private async initArtifactSourceCode(): Promise<void> {
+        if (!this.sourceCodeFromArtifacts) {
+            await this.getAndSetSourceCodeFromArtifacts();
+        }
+    }
+
+    private initSimbaJsonSourceCode(): void {
+        if (!this.sourceCodeFromSimbaJson) {
+            this.getAndSetSourceCodeFromSimbaJson();
+        }
     }
 }
