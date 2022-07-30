@@ -23,3 +23,7 @@ export {
 export {
     addLib,
 } from "./addlibrary";
+
+export {
+    SourceCodeComparer,
+} from "./source_code_comparer";
