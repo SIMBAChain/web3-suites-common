@@ -179,7 +179,7 @@ export class SourceCodeComparer {
         if (!await this.sourceCodeHasChangedOrIsNew(contractName)) {
             statusAndMessage = {
                 newOrChanged: false,
-                message: `${chalk.redBright(`${nonExportMessage}`)}`,
+                message: `${chalk.gray(`${nonExportMessage}`)}`,
             }
         } else {
             statusAndMessage = {
