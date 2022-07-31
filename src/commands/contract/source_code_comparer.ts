@@ -9,6 +9,7 @@ import {
 export class SourceCodeComparer {
     private sourceCodeFromSimbaJson: Record<any, any>;
     private sourceCodeFromArtifacts: Record<any, any>;
+    private imports: Array<string>;
 
     // first need a method that grabs source code for all compiled contracts
     // source code exists in artifact after compiling
@@ -44,7 +45,6 @@ export class SourceCodeComparer {
                     if (file.endsWith('Migrations.json') || file.endsWith('dbg.json')) {
                         continue;
                     }
-                    SimbaConfig.log.debug(`${chalk.green(`\nsimba export: reading file: ${file}`)}`);
                     const buf = await promisifiedReadFile(file, {flag: 'r'});
                     if (!(buf instanceof Buffer)) {
                         continue;
@@ -63,7 +63,6 @@ export class SourceCodeComparer {
                     if (file.endsWith('Migrations.json')) {
                         continue;
                     }
-                    SimbaConfig.log.debug(`${chalk.green(`\nsimba export: reading file: ${file}`)}`);
                     const buf = await promisifiedReadFile(file, {flag: 'r'});
                     if (!(buf instanceof Buffer)) {
                         continue;
@@ -173,20 +172,33 @@ export class SourceCodeComparer {
     private async getStatusAndMessage(contractName: string): Promise<Record<any, any>> {
         SimbaConfig.log.debug(`:: ENTER : contractName: ${contractName}`);
         await this.initSourceCode();
+        if (!this.imports) {
+            await this.getAndSetimports();
+        }
         const nonExportMessage = "No changes detected; not exported.";
         const exportMessage = "Exported";
+        const isDependencyMessage = "Contract is a dependency; not exported"
         let statusAndMessage;
-        if (!await this.sourceCodeHasChangedOrIsNew(contractName)) {
+
+        if (this.imports.includes(contractName)) {
             statusAndMessage = {
                 newOrChanged: false,
-                message: `${chalk.gray(`${nonExportMessage}`)}`,
+                message: `${chalk.gray(`${isDependencyMessage}`)}`
             }
         } else {
-            statusAndMessage = {
-                newOrChanged: true,
-                message: `${chalk.greenBright(`${exportMessage}`)}`,
+            if (!await this.sourceCodeHasChangedOrIsNew(contractName)) {
+                statusAndMessage = {
+                    newOrChanged: false,
+                    message: `${chalk.gray(`${nonExportMessage}`)}`,
+                }
+            } else {
+                statusAndMessage = {
+                    newOrChanged: true,
+                    message: `${chalk.greenBright(`${exportMessage}`)}`,
+                }
             }
         }
+
         SimbaConfig.log.debug(`:: EXIT : statusAndMessage : ${JSON.stringify(statusAndMessage)}`);
         return statusAndMessage;
     }
@@ -194,6 +206,7 @@ export class SourceCodeComparer {
     public async exportStatuses(choices: Array<any> | string): Promise<Record<any, any>> {
         const _exportStatuses: Record<any, any> = {};
         await this.initSourceCode();
+        await this.getAndSetimports();
         if (Array.isArray(choices)) {
             for (let i = 0; i < choices.length; i++) {
                 const contractName = choices[i].title;
@@ -225,5 +238,44 @@ export class SourceCodeComparer {
         if (!this.sourceCodeFromSimbaJson) {
             this.getAndSetSourceCodeFromSimbaJson();
         }
+    }
+
+    // this method is living in this class because it helps us determine
+    // what to export or not. If an artifact has empty bytecode,
+    // then it is an import, and we don't export it
+    private async getAndSetimports(): Promise<Array<string>> {
+        SimbaConfig.log.debug(`:: ENTER :`);
+        let files;
+        const importedContracts: Array<string> = [];
+        const buildDir = SimbaConfig.buildDirectory;
+        try {
+            files = await walkDirForContracts(buildDir, '.json');
+        } catch (e) {
+            const err = e as any;
+            if (err.code === 'ENOENT') {
+                SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : Simba was not able to find any build artifacts.\nDid you forget to run: "npx hardhat compile" ?\n`)}`);
+            }
+            SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(err)}`)}`);
+            return importedContracts;
+        }
+
+        for (const file of files) {
+            if (file.endsWith('Migrations.json') || file.endsWith('dbg.json')) {
+                continue;
+            }
+            const buf = await promisifiedReadFile(file, {flag: 'r'});
+            if (!(buf instanceof Buffer)) {
+                continue;
+            }
+            const parsed = JSON.parse(buf.toString());
+            const contractName = parsed.contractName;
+            const byteCode = parsed.bytecode;
+            if (byteCode === "0x") {
+                importedContracts.push(contractName);
+            }
+        }
+        SimbaConfig.log.debug(`:: EXIT : importedContracts : ${JSON.stringify(importedContracts)}`);
+        this.imports = importedContracts;
+        return importedContracts;
     }
 }
