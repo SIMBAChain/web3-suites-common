@@ -21,5 +21,6 @@ export {
     syncContract,
     allContracts,
     printAllContracts,
-    addLib
+    addLib,
+    SourceCodeComparer,
 } from "./commands/contract";
