@@ -80,7 +80,7 @@ export class SourceCodeComparer {
             }
         }
 
-        SimbaConfig.log.debug(`:: EXIT : sourceCodeMap from Artifacts : ${JSON.stringify(sourceCodeMap)}`)
+        SimbaConfig.log.debug(`:: EXIT : sourceCodeMap from Artifacts : ${JSON.stringify(sourceCodeMap)}`);
         this.sourceCodeFromArtifacts = sourceCodeMap;
         return sourceCodeMap;
     }
@@ -94,7 +94,7 @@ export class SourceCodeComparer {
         let sourceCodeMap = {} as any;
         if (!contractsInfo) {
             SimbaConfig.log.debug(`${chalk.cyanBright(`simba: no contracts_info found in simba.json`)}`);
-            this.sourceCodeFromArtifacts = sourceCodeMap;
+            this.sourceCodeFromSimbaJson = sourceCodeMap;
             return sourceCodeMap;
         }
         for (let contractName in contractsInfo) {
@@ -171,7 +171,9 @@ export class SourceCodeComparer {
 
     private async getStatusAndMessage(contractName: string): Promise<Record<any, any>> {
         SimbaConfig.log.debug(`:: ENTER : contractName: ${contractName}`);
-        await this.initSourceCode();
+        if (!this.sourceCodeFromArtifacts || !this.sourceCodeFromSimbaJson) {
+            await this.initSourceCode();
+        }
         if (!this.imports) {
             await this.getAndSetimports();
         }
