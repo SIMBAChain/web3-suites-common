@@ -1,5 +1,8 @@
 export {LogLevel} from './logger';
-export {SimbaConfig} from './config';
+export {
+    SimbaConfig,
+    handleV2,
+} from './config';
 export {
     promisifiedReadFile,
     walkDirForContracts,
@@ -7,7 +10,8 @@ export {
 export {
     chooseApplicationFromList,
     chooseOrganisationFromList,
-    getApp,
+    chooseApplicationFromName,
+    chooseOrganisationFromName,
     getBlockchains,
     getStorages,
     primaryConstructorRequiresArgs,
