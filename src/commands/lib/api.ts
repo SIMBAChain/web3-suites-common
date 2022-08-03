@@ -161,19 +161,18 @@ export const chooseOrganisationFromList = async (config: SimbaConfig, url?: stri
  */
 export async function chooseOrganisationFromName(
     config: SimbaConfig,
-    orgName?: string,
+    orgName: string,
 ): Promise<any> {
-    console.error("needs to be implemented");
-    const url = `/organisations/${orgName}/`;
+    SimbaConfig.log.debug(`:: ENTER : ${orgName}`);
+    const url = `organisations/${orgName}/`;
     const authStore = await config.authStore();
     if (authStore) {
         try {
             const res = await authStore.doGetRequest(url);
-            const resData = res.data;
-            SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(resData)}`);
-            config.organisation = resData;
-            SimbaConfig.log.debug(`:: EXIT : resData : ${JSON.stringify(resData)}`);
-            return resData;
+            config.organisation = res;
+            SimbaConfig.log.info(`${chalk.cyanBright(`simba: logging in using organisation ${res.name}`)}`);
+            SimbaConfig.log.debug(`:: EXIT : res : ${JSON.stringify(res)}`);
+            return res;
         } catch (error) {
             if (axios.isAxiosError(error) && error.response) {
                 SimbaConfig.log.debug(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error.response.data)}`)}`)
@@ -459,10 +458,10 @@ export async function chooseApplicationFromName(
     if (authStore) {
         try {
             const res = await authStore.doGetRequest(url, 'application/json');
-            const resData = res.data;
-            SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(resData)}`);
-            config.application = resData;
-            return resData;
+            SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(res)}`);
+            SimbaConfig.log.info(`${chalk.cyanBright(`simba: logging in using app ${res.name}`)}`);
+            config.application = res;
+            return res;
         } catch (error) {
             if (axios.isAxiosError(error) && error.response) {
                 SimbaConfig.log.debug(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error.response.data)}`)}`)

@@ -965,7 +965,7 @@ class AzureHandler {
         ): Promise<any> {
         this.state = cryptoRandomString({length: 24, type: 'url-safe'});
 
-        return this.loginAndGetAuthToken(interactive, org, app);
+        return this.loginAndGetAuthToken(interactive);
     }
 
     public closeServer(): void {
@@ -980,17 +980,14 @@ class AzureHandler {
         SimbaConfig.log.debug(`:: ENTER :`);
         // all three of these will need to  be changed to gather
         // these variables from ...ci.yml file
-        const clientID = SimbaConfig.ProjectConfigStore.get("CLIENT_ID");
-        const clientSecret = SimbaConfig.ProjectConfigStore.get("CLIENT_SECRET");
-        const authEndpoint = SimbaConfig.ProjectConfigStore.get("AUTH_ENDPOINT");
+        const clientID = process.env.SIMBA_PLUGIN_ID;
+        const clientSecret = process.env.SIMBA_PLUGIN_SECRET;
+        const authEndpoint = process.env.SIMBA_PLUGIN_AUTH_ENDPOINT;
         const credential = `${clientID}:${clientSecret}`;
         const utf8EncodedCred = utf8.encode(credential);
         const base64EncodedCred = Buffer.from(utf8EncodedCred).toString('base64');
         const params = new URLSearchParams();
         params.append('grant_type', "client_credentials");
-        // const payload = {
-        //     "grant_type": "client_credentials",
-        // };
         const headers = {
             "content-type": "application/x-www-form-urlencoded",
             "Cache-Control": "no-cache",
@@ -1005,7 +1002,7 @@ class AzureHandler {
             const res = await axios.post(url, params, config);
             const access_token = res.data;
             SimbaConfig.log.debug(`:: EXIT : res.data: ${JSON.stringify(res.data)}`);
-            this.setConfig(AUTHKEY, access_token);
+            this.setConfig(AUTHKEY, this.parseExpiry(access_token));
         } catch (error)  {
             if (axios.isAxiosError(error) && error.response) {
                 // console.log(`res info: ${JSON.stringify(error.response)}`)
@@ -1016,23 +1013,15 @@ class AzureHandler {
             }
             return;
         }
-
-
     }
 
     public async loginAndGetAuthToken(
         interactive: boolean = true,
-        org?: string,
-        app?: string,
         ): Promise<any> {
         SimbaConfig.log.debug(`:: ENTER :`);
         SimbaConfig.deleteAuthProviderInfo();
         await this.setAndGetAZAuthInfo();
         if (!interactive) {
-            if (!org || !app) {
-                SimbaConfig.log.error(`\nsimba: when running login in non-interactive mode, you must specify an org and app with --org <org> _app <app> syntax.`);
-                return;
-            }
             this.logout();
             try {
                 const authToken = await this.getAndSetAuthTokenFromClientCreds();
@@ -1109,16 +1098,29 @@ class AzureHandler {
         const auth = this.getConfig(AUTHKEY);
         await this.setAndGetAZAuthInfo();
         if (auth) {
-            if (!auth.refresh_token) {
-                this.deleteConfig(AUTHKEY);
-                SimbaConfig.log.debug(`${chalk.cyanBright(`simba: no refresh token detected; deleting auth info and exiting`)}`);
-                return;
-            }
+            // if (!auth.refresh_token) {
+            //     this.deleteConfig(AUTHKEY);
+            //     SimbaConfig.log.debug(`${chalk.cyanBright(`simba: no refresh token detected; deleting auth info and exiting`)}`);
+            //     return;
+            // }
             if ("expires_at" in auth) {
                 const expiresAt = new Date(auth.expires_at);
                 if (expiresAt <= new Date()) {
+                    if (!auth.refresh_token) {
+                        // this would mean our AZ token is for client creds
+                        const clientID = process.env.SIMBA_PLUGIN_ID;
+                        const clientSecret = process.env.SIMBA_PLUGIN_SECRET;
+                        const authEndpoint = process.env.SIMBA_PLUGIN_AUTH_ENDPOINT;
+                        if (!clientID || !clientSecret || !authEndpoint) {
+                            const message = "refresh_token not present in auth token, and SIMBA_PLUGIN_ID not present in environment variables. Please set SIMBA_PLUGIN_ID, SIMBA_PLUGIN_SECRET, and SIMBA_PLUGIN_AUTH_ENDPOINT in your environment variables.";
+                            SimbaConfig.log.error(`${chalk.redBright(`\nsimba: ${message}`)}`);
+                            return new Error(message);
+                        }
+                        await this.getAndSetAuthTokenFromClientCreds();
+                        SimbaConfig.log.debug(`:: EXIT :`);
+                        return;
+                    }
                     try {
-
                         const params = new URLSearchParams();
                         params.append('grant_type', 'refresh_token');
                         params.append('client_id', this.clientID);
@@ -1230,23 +1232,22 @@ class AzureHandler {
             url = this.baseURL + url;
         }
 
-        return this.refreshToken().then(() => {
-            const opts: request.Options = {
-                uri: url,
-                headers: {
-                    'Content-Type': contentType,
-                    Accept: 'application/json',
-                    Authorization: `${auth.token_type} ${auth.access_token}`,
-                },
-                json: true,
-            };
+        await this.refreshToken();
+        const opts: request.Options = {
+            uri: url,
+            headers: {
+                'Content-Type': contentType,
+                Accept: 'application/json',
+                Authorization: `${auth.token_type} ${auth.access_token}`,
+            },
+            json: true,
+        };
 
-            if (data) {
-                opts.body = data;
-            }
+        if (data) {
+            opts.body = data;
+        }
 
-            return opts;
-        });
+        return opts;
     }
 
     public async doGetRequest(url: string, contentType?: string, _buildURL: boolean = true): Promise<any> {
