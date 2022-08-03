@@ -982,7 +982,7 @@ class AzureHandler {
         // these variables from ...ci.yml file
         const clientID = process.env.SIMBA_PLUGIN_ID;
         const clientSecret = process.env.SIMBA_PLUGIN_SECRET;
-        const authEndpoint = process.env.SIMBA_PLUGIN_AUTH_ENDPOINT;
+        const authEndpoint = process.env.SIMBA_PLUGIN_AUTH_ENDPOINT ? process.env.SIMBA_PLUGIN_AUTH_ENDPOINT : "/o/";
         const credential = `${clientID}:${clientSecret}`;
         const utf8EncodedCred = utf8.encode(credential);
         const base64EncodedCred = Buffer.from(utf8EncodedCred).toString('base64');
@@ -1110,7 +1110,7 @@ class AzureHandler {
                         // this would mean our AZ token is for client creds
                         const clientID = process.env.SIMBA_PLUGIN_ID;
                         const clientSecret = process.env.SIMBA_PLUGIN_SECRET;
-                        const authEndpoint = process.env.SIMBA_PLUGIN_AUTH_ENDPOINT;
+                        const authEndpoint = process.env.SIMBA_PLUGIN_AUTH_ENDPOINT ? process.env.SIMBA_PLUGIN_AUTH_ENDPOINT : "/o/";
                         if (!clientID || !clientSecret || !authEndpoint) {
                             const message = "refresh_token not present in auth token, and SIMBA_PLUGIN_ID not present in environment variables. Please set SIMBA_PLUGIN_ID, SIMBA_PLUGIN_SECRET, and SIMBA_PLUGIN_AUTH_ENDPOINT in your environment variables.";
                             SimbaConfig.log.error(`${chalk.redBright(`\nsimba: ${message}`)}`);
