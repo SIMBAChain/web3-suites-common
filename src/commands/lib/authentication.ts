@@ -960,8 +960,6 @@ class AzureHandler {
 
     public async performLogin(
         interactive: boolean = true,
-        org?: string,
-        app?: string
         ): Promise<any> {
         this.state = cryptoRandomString({length: 24, type: 'url-safe'});
 
