@@ -30,7 +30,7 @@ enum CompiledDirs {
     BUILD = "build",
 }
 
-function handleV2(baseURL: string): string {
+export function handleV2(baseURL: string): string {
     SimbaConfig.log.debug(`:: ENTER : baseURL : ${baseURL}`)
     if (baseURL.endsWith("/v2/") || baseURL.endsWith("/v2")) {
         const extension = baseURL.endsWith("/v2") ? "/v2" : "/v2/";

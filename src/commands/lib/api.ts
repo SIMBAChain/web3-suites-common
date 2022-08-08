@@ -157,13 +157,38 @@ export const chooseOrganisationFromList = async (config: SimbaConfig, url?: stri
 /**
  * not implemented. doesn't fit with current login flow
  * @param config
- * @param url 
+ * @param orgName 
  */
-export async function chooseOrganisationFromInput(
+export async function chooseOrganisationFromName(
     config: SimbaConfig,
-    url?: string,
+    orgName: string,
 ): Promise<any> {
-    console.error("needs to be implemented");
+    SimbaConfig.log.debug(`:: ENTER : ${orgName}`);
+    const url = `organisations/${orgName}/`;
+    const authStore = await config.authStore();
+    if (authStore) {
+        try {
+            const res = await authStore.doGetRequest(url);
+            config.organisation = res;
+            SimbaConfig.log.info(`${chalk.cyanBright(`simba: logging in using organisation ${res.name}`)}`);
+            SimbaConfig.log.debug(`:: EXIT : res : ${JSON.stringify(res)}`);
+            return res;
+        } catch (error) {
+            if (axios.isAxiosError(error) && error.response) {
+                SimbaConfig.log.debug(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error.response.data)}`)}`)
+            } else {
+                SimbaConfig.log.debug(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error)}`)}`);
+            }
+            if (axios.isAxiosError(error) && error.message === "Request failed with status code 500") {
+                SimbaConfig.log.info(`${chalk.cyanBright('\nsimba: Auth token expired, please log in again')}`);
+                authStore.logout();
+                await authStore.loginAndGetAuthToken();
+            }
+        }
+    } else {
+        SimbaConfig.log.error(authErrors.badAuthProviderInfo)
+    }
+
 }
 
 /**
@@ -423,16 +448,32 @@ export async function writeAndReturnASTAndOtherInfo(
  * @param id 
  * @returns 
  */
-export async function getApp(config: SimbaConfig,
-    id: string,
+export async function chooseApplicationFromName(
+    config: SimbaConfig,
+    appName: string,
 ): Promise<any> {
-    SimbaConfig.log.debug(`:: ENTER : ${id}`);
-    const url = `organisations/${config.organisation.id}/applications/${id}`;
+    SimbaConfig.log.debug(`:: ENTER : ${appName}`);
+    const url = `organisations/${config.organisation.id}/applications/${appName}/`;
     const authStore = await config.authStore();
     if (authStore) {
-        const response = await authStore.doGetRequest(url, 'application/json');
-        SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(response)}`);
-        return response;
+        try {
+            const res = await authStore.doGetRequest(url, 'application/json');
+            SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(res)}`);
+            SimbaConfig.log.info(`${chalk.cyanBright(`simba: logging in using app ${res.name}`)}`);
+            config.application = res;
+            return res;
+        } catch (error) {
+            if (axios.isAxiosError(error) && error.response) {
+                SimbaConfig.log.debug(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error.response.data)}`)}`)
+            } else {
+                SimbaConfig.log.debug(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error)}`)}`);
+            }
+            if (axios.isAxiosError(error) && error.message === "Request failed with status code 500") {
+                SimbaConfig.log.info(`${chalk.cyanBright('\nsimba: Auth token expired, please log in again')}`);
+                authStore.logout();
+                await authStore.loginAndGetAuthToken();
+            }
+        }
     } else {
         SimbaConfig.log.error(authErrors.badAuthProviderInfo);
     }

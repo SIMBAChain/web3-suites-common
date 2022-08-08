@@ -1,7 +1,12 @@
 import Configstore from "configstore";
 import {
     SimbaConfig,
+    handleV2,
 } from "../lib";
+import {
+    chooseOrganisationFromName,
+    chooseApplicationFromName,
+} from "./api";
 import {default as cryptoRandomString} from 'crypto-random-string';
 import * as CryptoJS from 'crypto-js';
 import {default as chalk} from 'chalk';
@@ -14,6 +19,7 @@ import * as http from "http";
 import {
     URLSearchParams,
 } from "url";
+import utf8 from "utf8";
 
 export const AUTHKEY = 'SIMBAAUTH';
 
@@ -550,7 +556,7 @@ class KeycloakHandler {
      */
     public async accessTokenHeader(): Promise<Record<any, any> | void> {
         SimbaConfig.log.debug(`:: ENTER :`);
-        let authToken = this.getConfig("authToken");
+        let authToken = this.getConfig(AUTHKEY);
         if (!authToken) {
             authToken = await this.loginAndGetAuthToken(false);
         }
@@ -952,10 +958,12 @@ class AzureHandler {
         return this.hasConfig(AUTHKEY);
     }
 
-    public async performLogin(): Promise<any> {
+    public async performLogin(
+        interactive: boolean = true,
+        ): Promise<any> {
         this.state = cryptoRandomString({length: 24, type: 'url-safe'});
 
-        return this.loginAndGetAuthToken();
+        return this.loginAndGetAuthToken(interactive);
     }
 
     public closeServer(): void {
@@ -966,10 +974,67 @@ class AzureHandler {
         }, this.closeTimeout);
     }
 
-    public async loginAndGetAuthToken(): Promise<any> {
-        SimbaConfig.log.debug(`:: ENTER :`)
+    private async getAndSetAuthTokenFromClientCreds(): Promise<any> {
+        SimbaConfig.log.debug(`:: ENTER :`);
+        // all three of these will need to  be changed to gather
+        // these variables from ...ci.yml file
+        const clientID = process.env.SIMBA_PLUGIN_ID;
+        const clientSecret = process.env.SIMBA_PLUGIN_SECRET;
+        const authEndpoint = process.env.SIMBA_PLUGIN_AUTH_ENDPOINT ? process.env.SIMBA_PLUGIN_AUTH_ENDPOINT : "/o/";
+        const credential = `${clientID}:${clientSecret}`;
+        const utf8EncodedCred = utf8.encode(credential);
+        const base64EncodedCred = Buffer.from(utf8EncodedCred).toString('base64');
+        const params = new URLSearchParams();
+        params.append('grant_type', "client_credentials");
+        const headers = {
+            "content-type": "application/x-www-form-urlencoded",
+            "Cache-Control": "no-cache",
+            "Authorization": `Basic ${base64EncodedCred}`
+        };
+        const config = {
+            headers,
+        };
+        try {
+            const baseURL = handleV2(`${SimbaConfig.ProjectConfigStore.get("baseURL")}`);
+            const url = `${baseURL}${authEndpoint}token/`;
+            const res = await axios.post(url, params, config);
+            const access_token = res.data;
+            SimbaConfig.log.debug(`:: EXIT : res.data: ${JSON.stringify(res.data)}`);
+            this.setConfig(AUTHKEY, this.parseExpiry(access_token));
+        } catch (error)  {
+            if (axios.isAxiosError(error) && error.response) {
+                // console.log(`res info: ${JSON.stringify(error.response)}`)
+                // SimbaConfig.log.error(`request info: ${JSON.stringify(error.request)}`);
+                SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error.response.data)}`)}`);
+            } else {
+                SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error)}`)}`);
+            }
+            return;
+        }
+    }
+
+    public async loginAndGetAuthToken(
+        interactive: boolean = true,
+        ): Promise<any> {
+        SimbaConfig.log.debug(`:: ENTER :`);
         SimbaConfig.deleteAuthProviderInfo();
         await this.setAndGetAZAuthInfo();
+        if (!interactive) {
+            this.logout();
+            try {
+                const authToken = await this.getAndSetAuthTokenFromClientCreds();
+                SimbaConfig.log.debug(`:: EXIT : authToken : ${JSON.stringify(authToken)}`);
+                return authToken;
+            } catch (error)  {
+                if (axios.isAxiosError(error) && error.response) {
+                    SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error.response.data)}`)}`);
+                } else {
+                    SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error)}`)}`);
+                }
+                return error as Error;
+            }
+        }
+
         return new Promise<void>(async (resolve, reject) => {
             // clear out old auth
             this.logout();
@@ -1005,17 +1070,7 @@ class AzureHandler {
                         res.writeHead(302, {Location: `/?error=${Buffer.from(err as any).toString('base64')}`});
                         res.end();
                     }
-                    
 
-                    // this.receiveCode(code, state, error)
-                    //     .then(() => {
-                    //         res.writeHead(302, {Location: '/'});
-                    //         res.end();
-                    //     })
-                    //     .catch((err: Error) => {
-                    //         res.writeHead(302, {Location: `/?error=${Buffer.from(err as any).toString('base64')}`});
-                    //         res.end();
-                    //     });
                 })
                 .get('/', (_req: Request | any, res: http.ServerResponse) => {
                     res.writeHead(200, {
@@ -1041,16 +1096,29 @@ class AzureHandler {
         const auth = this.getConfig(AUTHKEY);
         await this.setAndGetAZAuthInfo();
         if (auth) {
-            if (!auth.refresh_token) {
-                this.deleteConfig(AUTHKEY);
-                SimbaConfig.log.debug(`${chalk.cyanBright(`simba: no refresh token detected; deleting auth info and exiting`)}`);
-                return;
-            }
+            // if (!auth.refresh_token) {
+            //     this.deleteConfig(AUTHKEY);
+            //     SimbaConfig.log.debug(`${chalk.cyanBright(`simba: no refresh token detected; deleting auth info and exiting`)}`);
+            //     return;
+            // }
             if ("expires_at" in auth) {
                 const expiresAt = new Date(auth.expires_at);
                 if (expiresAt <= new Date()) {
+                    if (!auth.refresh_token) {
+                        // this would mean our AZ token is for client creds
+                        const clientID = process.env.SIMBA_PLUGIN_ID;
+                        const clientSecret = process.env.SIMBA_PLUGIN_SECRET;
+                        const authEndpoint = process.env.SIMBA_PLUGIN_AUTH_ENDPOINT ? process.env.SIMBA_PLUGIN_AUTH_ENDPOINT : "/o/";
+                        if (!clientID || !clientSecret || !authEndpoint) {
+                            const message = "refresh_token not present in auth token, and SIMBA_PLUGIN_ID not present in environment variables. Please set SIMBA_PLUGIN_ID, SIMBA_PLUGIN_SECRET, and SIMBA_PLUGIN_AUTH_ENDPOINT in your environment variables.";
+                            SimbaConfig.log.error(`${chalk.redBright(`\nsimba: ${message}`)}`);
+                            return new Error(message);
+                        }
+                        await this.getAndSetAuthTokenFromClientCreds();
+                        SimbaConfig.log.debug(`:: EXIT :`);
+                        return;
+                    }
                     try {
-
                         const params = new URLSearchParams();
                         params.append('grant_type', 'refresh_token');
                         params.append('client_id', this.clientID);
@@ -1162,23 +1230,22 @@ class AzureHandler {
             url = this.baseURL + url;
         }
 
-        return this.refreshToken().then(() => {
-            const opts: request.Options = {
-                uri: url,
-                headers: {
-                    'Content-Type': contentType,
-                    Accept: 'application/json',
-                    Authorization: `${auth.token_type} ${auth.access_token}`,
-                },
-                json: true,
-            };
+        await this.refreshToken();
+        const opts: request.Options = {
+            uri: url,
+            headers: {
+                'Content-Type': contentType,
+                Accept: 'application/json',
+                Authorization: `${auth.token_type} ${auth.access_token}`,
+            },
+            json: true,
+        };
 
-            if (data) {
-                opts.body = data;
-            }
+        if (data) {
+            opts.body = data;
+        }
 
-            return opts;
-        });
+        return opts;
     }
 
     public async doGetRequest(url: string, contentType?: string, _buildURL: boolean = true): Promise<any> {
