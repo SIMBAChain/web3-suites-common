@@ -28,4 +28,5 @@ export {
     printAllContracts,
     addLib,
     SourceCodeComparer,
+    pullContractFromDesignId,
 } from "./commands/contract";

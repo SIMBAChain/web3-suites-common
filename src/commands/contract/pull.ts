@@ -17,7 +17,7 @@ import {
  * syncs contractX saved in simbachain.com with contractX in your project directory
  * @param {Promise<void>} designID 
  */
-async function pullContractFromDesignId(designID: string): Promise<void> {
+export async function pullContractFromDesignId(designID: string): Promise<void> {
     SimbaConfig.log.debug(`:: ENTER : ${designID}`);
     let contractDesign: ContractDesignWithCode;
     const authStore = await SimbaConfig.authStore();
@@ -41,7 +41,7 @@ async function pullContractFromDesignId(designID: string): Promise<void> {
     }
 }
 
-function pullContractFromContractDesign(contractDesign: ContractDesignWithCode): void {
+export function pullContractFromContractDesign(contractDesign: ContractDesignWithCode): void {
     SimbaConfig.log.debug(`:: ENTER : ${JSON.stringify(contractDesign)}`);
     const contractFileName = path.join(SimbaConfig.contractDirectory, `${contractDesign.name}.sol`);
     SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: pulling file ${chalk.greenBright(`${contractDesign.name}`)} ---> ${chalk.greenBright(`${contractFileName}`)}`)}`);

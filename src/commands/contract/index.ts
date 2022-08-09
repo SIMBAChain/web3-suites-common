@@ -22,6 +22,7 @@ export {
     pullAllMostRecentSolFilesAndSourceCode,
     pullMostRecentRecentSolFileFromContractName,
     pullMostRecentFromContractName,
+    pullContractFromDesignId,
 } from "./pull";
 
 export {
