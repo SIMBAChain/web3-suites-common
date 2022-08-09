@@ -19,7 +19,7 @@ export {
 export {
     pullContracts,
     pullAllMostRecentContracts,
-} from "./sync";
+} from "./pull";
 
 export {
     addLib,

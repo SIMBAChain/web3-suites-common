@@ -2,10 +2,10 @@ import fs from 'fs';
 import path from 'path';
 import {default as chalk} from 'chalk';
 import {SimbaConfig} from '../lib';
-import {ContractDesignWithCode} from './';
+import {ContractDesignWithCode} from '.';
 import {default as prompt} from 'prompts';
 import axios from "axios";
-import {ContractDesign} from "./"
+import {ContractDesign} from "."
 import {
     allContracts,
 } from "./list";
