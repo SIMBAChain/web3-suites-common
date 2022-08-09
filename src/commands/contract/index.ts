@@ -19,6 +19,9 @@ export {
 export {
     pullContractsInteractive,
     pullAllMostRecentContracts,
+    pullAllMostRecentSolFilesAndSourceCode,
+    pullMostRecentRecentSolFileFromContractName,
+    pullMostRecentFromContractName,
 } from "./pull";
 
 export {

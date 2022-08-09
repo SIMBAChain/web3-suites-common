@@ -21,6 +21,9 @@ export {
 export {
     pullContractsInteractive,
     pullAllMostRecentContracts,
+    pullAllMostRecentSolFilesAndSourceCode,
+    pullMostRecentRecentSolFileFromContractName,
+    pullMostRecentFromContractName,
     allContracts,
     printAllContracts,
     addLib,
