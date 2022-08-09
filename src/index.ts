@@ -19,7 +19,8 @@ export {
     authErrors,
 } from './commands/lib';
 export {
-    syncContract,
+    pullContracts,
+    pullAllMostRecentContracts,
     allContracts,
     printAllContracts,
     addLib,

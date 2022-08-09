@@ -17,7 +17,8 @@ export {
 } from "./list";
 
 export {
-    syncContract,
+    pullContracts,
+    pullAllMostRecentContracts,
 } from "./sync";
 
 export {
