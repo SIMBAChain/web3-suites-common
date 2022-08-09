@@ -19,7 +19,7 @@ export {
     authErrors,
 } from './commands/lib';
 export {
-    pullContracts,
+    pullContractsInteractive,
     pullAllMostRecentContracts,
     allContracts,
     printAllContracts,

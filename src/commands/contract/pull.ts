@@ -17,7 +17,7 @@ import {
  * syncs contractX saved in simbachain.com with contractX in your project directory
  * @param {Promise<void>} designID 
  */
-export async function _pullContract(designID: string): Promise<void> {
+export async function _pullContractFromDesignId(designID: string): Promise<void> {
     SimbaConfig.log.debug(`:: ENTER : ${designID}`);
     let contractDesign: ContractDesignWithCode;
     const authStore = await SimbaConfig.authStore();
@@ -41,8 +41,30 @@ export async function _pullContract(designID: string): Promise<void> {
     }
 }
 
-export async function pullContracts(designID?: string): Promise<void> {
-    SimbaConfig.log.debug(`:: ENTER : designID: ${designID}`);
+export async function _pullContractFromContractDesign(contractDesign: ContractDesignWithCode): Promise<void> {
+    SimbaConfig.log.debug(`:: ENTER : ${JSON.stringify(contractDesign)}`);
+    const simbaConfig = new SimbaConfig();
+    const authStore = await simbaConfig.authStore();
+    if (authStore) {
+        const contractFileName = path.join(SimbaConfig.contractDirectory, `${contractDesign.name}.sol`);
+        SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: pulling file ${chalk.greenBright(`${contractDesign.name}`)} ---> ${chalk.greenBright(`${contractFileName}`)}`)}`);
+        fs.writeFileSync(contractFileName, Buffer.from(contractDesign.code, 'base64').toString());
+        SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: finished pulling ${chalk.greenBright(`${contractDesign.name}`)} ---> ${chalk.greenBright(`${contractFileName}`)}`)}`);
+        SimbaConfig.log.debug(`:: EXIT :`);
+    } else {
+        SimbaConfig.log.error(authErrors.badAuthProviderInfo);
+    }
+}
+
+export async function pullContractsInteractive(
+    contractDesign?: ContractDesignWithCode | null,
+    designID?: string | null,
+    ): Promise<void> {
+    const entryParams = {
+        contractDesign,
+        designID,
+    }
+    SimbaConfig.log.debug(`:: ENTER : entryParams: ${JSON.stringify(entryParams)}`);
     const NO = "NO";
     const YES = "YES";
     const overWriteOK = [NO, YES];
@@ -70,8 +92,14 @@ export async function pullContracts(designID?: string): Promise<void> {
         return;
     }
 
+    if (contractDesign) {
+        await _pullContractFromContractDesign(contractDesign);
+        SimbaConfig.log.debug(`:: EXIT :`);
+        return;
+    }
+
     if (designID) {
-        await _pullContract(designID);
+        await _pullContractFromDesignId(designID);
         SimbaConfig.log.debug(`:: EXIT :`)
         return;
     }
@@ -84,7 +112,7 @@ export async function pullContracts(designID?: string): Promise<void> {
             for (let i = 0; i < contractDesigns.length; i++) {
                 const title = `${chalk.green(contractDesigns[i].name)} :: ${chalk.green("id")} ${
                     contractDesigns[i].id} :: ${chalk.green("created_on")} ${contractDesigns[i].created_on} ::${chalk.green("updated_on")} ${contractDesigns[i].updated_on}`;
-                const value = contractDesigns[i].id;
+                const value = contractDesigns[i];
                 choices.push({title: title, value: value});
             }
         } else {
@@ -97,8 +125,8 @@ export async function pullContracts(designID?: string): Promise<void> {
             choices,
         });
         for (let i = 0; i < chosen.contracts.length; i++) {
-            const id = chosen.contracts[i];
-            await _pullContract(id);
+            const contractDesign = chosen.contracts[i];
+            await _pullContractFromContractDesign(contractDesign);
         }
         return;
     } catch (error) {
@@ -112,19 +140,21 @@ export async function pullContracts(designID?: string): Promise<void> {
     }
 }
 
+
+
 export async function pullAllMostRecentContracts(): Promise<void> {
     SimbaConfig.log.debug(`:: ENTER :`);
     try {
         const contracts = await allContracts();
         const contractNames: string[] = [];
         if (contracts) {
-            const contractDesigns = contracts as ContractDesign[];
+            const contractDesigns = contracts as ContractDesignWithCode[];
             for (let i = 0; i < contractDesigns.length; i++) {
                 if (contractNames.includes(contractDesigns[i].name)) {
                     // this will avoid pulling old versions of contracts
                     continue;
                 }
-                await _pullContract(contractDesigns[i].id);
+                await _pullContractFromContractDesign(contractDesigns[i]);
                 contractNames.push(contractDesigns[i].name);
             }
             SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: all most recent .sol contract files pulled from SIMBA Chain.`)}`);
