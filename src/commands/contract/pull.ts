@@ -68,7 +68,7 @@ export async function pullContractsInteractive(
     const overWriteChoice = await prompt({
         type: 'select',
         name: 'over_write_ok',
-        message: '"simba pull" will overwrite local versions of .sol files in your contracts directory. Do you want to proceed?',
+        message: '"simba pull" will overwrite local versions of .sol files in your contracts directory. Also, all pulled contracts will be written to the top level of your /contracts/ directory. Do you want to proceed?',
         choices: overWriteChoices,
     });
     
@@ -234,7 +234,7 @@ export async function pullMostRecentFromContractName(
 
 export async function pullAllMostRecentSolFilesAndSourceCode(
     pullSourceCodeFiles: boolean = true,
-    pullSolcFiles: boolean = false,
+    pullSolFiles: boolean = false,
     interactive: boolean = false,
 ): Promise<void> {
     SimbaConfig.log.debug(`:: ENTER :`);
@@ -246,7 +246,7 @@ export async function pullAllMostRecentSolFilesAndSourceCode(
     if (pullSourceCodeFiles) {
         pullAllMostRecentSourceCodeForSimbaJson(contractDesigns);
     }
-    if (pullSolcFiles) {
+    if (pullSolFiles) {
         if (interactive) {
             await pullContractsInteractive(contractDesigns);
         } else {
