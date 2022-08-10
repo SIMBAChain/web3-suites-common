@@ -95,6 +95,7 @@ export async function pullContractsInteractive(
             }
         } else {
             SimbaConfig.log.error(`\nsimba: error obtaining contracts`);
+            return;
         }
         const chosen = await prompt({
             type: 'multiselect',
@@ -151,6 +152,7 @@ function pullSourceCodeForSimbaJson(contractDesign: ContractDesignWithCode): voi
 
 export function pullAllMostRecentSourceCodeForSimbaJson(contractDesigns: ContractDesignWithCode[]): void {
     SimbaConfig.log.debug(`:: ENTER :`);
+    SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: now pulling source code ---> simba.json`)}`);
     const contractNames: string[] = [];
     for (let i = 0; i < contractDesigns.length; i++) {
         if (contractNames.includes(contractDesigns[i].name)) {

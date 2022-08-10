@@ -15,10 +15,10 @@ export async function allContracts(): Promise<ContractDesignWithCode[] | void> {
     const url = `organisations/${SimbaConfig.organisation.id}/contract_designs/`;
     const authStore = await SimbaConfig.authStore();
     if (authStore) {
+        SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: retrieving all contracts for organisation ${chalk.greenBright(`${SimbaConfig.organisation.name}`)}`)}`);
         let resp = await authStore.doGetRequest(url);
         SimbaConfig.log.debug(`resp: ${JSON.stringify(resp)}`);
         if (resp && !(resp instanceof Error)) {
-            SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: retrieving all contracts for organisation ${chalk.greenBright(`${SimbaConfig.organisation.name}`)}`)}`);
             let res = resp as any;
             contractDesigns = contractDesigns.concat(res.results as ContractDesignWithCode[]);
             while (res.next !== null) {

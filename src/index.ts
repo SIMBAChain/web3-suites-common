@@ -24,6 +24,7 @@ export {
     pullAllMostRecentSolFilesAndSourceCode,
     pullMostRecentRecentSolFileFromContractName,
     pullMostRecentFromContractName,
+    pullMostRecentSourceCodeFromContractName,
     allContracts,
     printAllContracts,
     addLib,
