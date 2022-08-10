@@ -89,7 +89,7 @@ export async function pullContractsInteractive(
         if (contractDesigns) {
             for (let i = 0; i < contractDesigns.length; i++) {
                 const title = `${chalk.green(contractDesigns[i].name)} :: ${chalk.green("id")} ${
-                    contractDesigns[i].id} :: ${chalk.green("created_on")} ${contractDesigns[i].created_on} ::${chalk.green("updated_on")} ${contractDesigns[i].updated_on}`;
+                    contractDesigns[i].id} :: ${chalk.green("created_on")} ${contractDesigns[i].created_on} :: ${chalk.green("updated_on")} ${contractDesigns[i].updated_on}`;
                 const value = contractDesigns[i];
                 choices.push({title: title, value: value});
             }
