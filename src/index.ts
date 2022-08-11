@@ -19,9 +19,15 @@ export {
     authErrors,
 } from './commands/lib';
 export {
-    syncContract,
+    pullContractsInteractive,
+    pullAllMostRecentContracts,
+    pullAllMostRecentSolFilesAndSourceCode,
+    pullMostRecentRecentSolFileFromContractName,
+    pullMostRecentFromContractName,
+    pullMostRecentSourceCodeFromContractName,
     allContracts,
     printAllContracts,
     addLib,
     SourceCodeComparer,
+    pullContractFromDesignId,
 } from "./commands/contract";

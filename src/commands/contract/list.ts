@@ -1,6 +1,6 @@
 import {default as chalk} from 'chalk';
 import {SimbaConfig} from '../lib';
-import {ContractDesign} from './';
+import {ContractDesignWithCode} from '.';
 import {
     authErrors,
 } from "../lib/authentication";
@@ -9,23 +9,23 @@ import {
  * Returns data on contract name, version, and design_id
  * @return {Promise<any>}
  */
-export async function allContracts(): Promise<ContractDesign[] | void> {
+export async function allContracts(): Promise<ContractDesignWithCode[] | void> {
     SimbaConfig.log.debug(`:: ENTER :`);
-    let contractDesigns: ContractDesign[] = [];
+    let contractDesigns: ContractDesignWithCode[] = [];
     const url = `organisations/${SimbaConfig.organisation.id}/contract_designs/`;
     const authStore = await SimbaConfig.authStore();
     if (authStore) {
+        SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: retrieving all contracts for organisation ${chalk.greenBright(`${SimbaConfig.organisation.name}`)}`)}`);
         let resp = await authStore.doGetRequest(url);
         SimbaConfig.log.debug(`resp: ${JSON.stringify(resp)}`);
         if (resp && !(resp instanceof Error)) {
-            SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: retrieving all contracts for organisation ${chalk.greenBright(`${SimbaConfig.organisation.name}`)}`)}`);
             let res = resp as any;
-            contractDesigns = contractDesigns.concat(res.results as ContractDesign[]);
+            contractDesigns = contractDesigns.concat(res.results as ContractDesignWithCode[]);
             while (res.next !== null) {
                 const q: string = res.next.split('?').pop();
                 SimbaConfig.log.debug(`\nsimba: retrieving contract ${JSON.stringify(q)}`);
                 res = await authStore.doGetRequest(`${url}?${q}`);
-                contractDesigns = contractDesigns.concat(res.results as ContractDesign[]);
+                contractDesigns = contractDesigns.concat(res.results as ContractDesignWithCode[]);
             }
             SimbaConfig.log.debug(`contractDesigns: ${JSON.stringify(contractDesigns)}`);
             SimbaConfig.log.debug(`:: EXIT :`);
@@ -45,7 +45,7 @@ export async function allContracts(): Promise<ContractDesign[] | void> {
  * Prints data on contract name, version, and design_id
  */
 export async function printAllContracts(): Promise<void> {
-    let contractDesigns: ContractDesign[];
+    let contractDesigns: ContractDesignWithCode[];
     const _allContracts = await allContracts();
     if (_allContracts && !(_allContracts instanceof Error)) {
         contractDesigns = _allContracts;

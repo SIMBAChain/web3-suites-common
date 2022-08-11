@@ -17,8 +17,14 @@ export {
 } from "./list";
 
 export {
-    syncContract,
-} from "./sync";
+    pullContractsInteractive,
+    pullAllMostRecentContracts,
+    pullAllMostRecentSolFilesAndSourceCode,
+    pullMostRecentRecentSolFileFromContractName,
+    pullMostRecentSourceCodeFromContractName,
+    pullMostRecentFromContractName,
+    pullContractFromDesignId,
+} from "./pull";
 
 export {
     addLib,
