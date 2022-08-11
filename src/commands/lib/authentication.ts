@@ -665,7 +665,7 @@ class KeycloakHandler {
                     SimbaConfig.log.error(`${chalk.redBright(`\nsimba: ${JSON.stringify(error)}`)}`);
                 }
                 SimbaConfig.log.debug(`err: ${JSON.stringify(error)}`);
-                if (axios.isAxiosError(error) && error.response && error.response.status === 401)  {
+                if (axios.isAxiosError(error) && error.response && error.response.status === 401) {
                     SimbaConfig.log.debug(`:: received 401 response, attempting to refresh token`);
                     // if 401 from Simba, then try refreshing token.
                     try {
@@ -1003,8 +1003,6 @@ class AzureHandler {
             this.setConfig(AUTHKEY, this.parseExpiry(access_token));
         } catch (error)  {
             if (axios.isAxiosError(error) && error.response) {
-                // console.log(`res info: ${JSON.stringify(error.response)}`)
-                // SimbaConfig.log.error(`request info: ${JSON.stringify(error.request)}`);
                 SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error.response.data)}`)}`);
             } else {
                 SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error)}`)}`);
@@ -1091,17 +1089,33 @@ class AzureHandler {
         });
     }
 
-    public async refreshToken(): Promise<any> {
+    public async refreshToken(forceRefresh: boolean = false): Promise<any> {
         SimbaConfig.log.debug(":: ENTER :")
         const auth = this.getConfig(AUTHKEY);
         await this.setAndGetAZAuthInfo();
         if (auth) {
-            // if (!auth.refresh_token) {
-            //     this.deleteConfig(AUTHKEY);
-            //     SimbaConfig.log.debug(`${chalk.cyanBright(`simba: no refresh token detected; deleting auth info and exiting`)}`);
-            //     return;
-            // }
             if ("expires_at" in auth) {
+                // we use forceRefresh if we've tried a request
+                // and got back a 401
+                if (forceRefresh) {
+                    const params = new URLSearchParams();
+                    params.append('grant_type', 'refresh_token');
+                    params.append('client_id', this.clientID);
+                    params.append('refresh_token', auth.refresh_token);
+                    const headers = {
+                        'content-type': 'application/x-www-form-urlencoded;charset=utf-8'
+                    };
+                    const config = {
+                        headers: headers,
+                    }
+                    const resp = await axios.post(
+                        this.tokenURL,
+                        params,
+                        config,
+                    )
+                    await this.setConfig(AUTHKEY, this.parseExpiry(resp.data));
+                    return;
+                }
                 const expiresAt = new Date(auth.expires_at);
                 if (expiresAt <= new Date()) {
                     if (!auth.refresh_token) {
@@ -1134,7 +1148,7 @@ class AzureHandler {
                             params,
                             config,
                         )
-                        this.setConfig(AUTHKEY, this.parseExpiry(resp.data));
+                        await this.setConfig(AUTHKEY, this.parseExpiry(resp.data));
                         return;
                     } catch (error)  {
                         if (axios.isAxiosError(error) && error.response) {
@@ -1225,12 +1239,12 @@ class AzureHandler {
 
     public async getClientOptions(url: string, contentType = 'application/json', data?: any): Promise<any> {
         SimbaConfig.log.debug(`:: ENTER :`)
+        await this.refreshToken();
         const auth = this.getConfig(AUTHKEY);
         if (!url.startsWith('http')) {
             url = this.baseURL + url;
         }
 
-        await this.refreshToken();
         const opts: request.Options = {
             uri: url,
             headers: {
@@ -1373,10 +1387,14 @@ class AzureHandler {
                 return resData;
             }
         } catch (error) {
+                if (axios.isAxiosError(error)) {
+                }
                 if (axios.isAxiosError(error) && error.response) {
                     SimbaConfig.log.debug(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error.response.data)}`)}`);
-                    if (axios.isAxiosError(error) && error.response && error.response.status === 403) {
-                        await this.refreshToken();
+                    if (axios.isAxiosError(error) && error.response && error.response.status === 401) {
+                        // expired authtoken, so we'll force refresh
+                        const forceRefresh: boolean = true;
+                        await this.refreshToken(forceRefresh);
                         opts = await this.getClientOptions(url, contentType, data);
                         const headers = opts.headers;
                         const uri = opts.uri;
