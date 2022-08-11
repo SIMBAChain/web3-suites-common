@@ -122,13 +122,17 @@ export const chooseOrganisationFromList = async (config: SimbaConfig, url?: stri
     }
 
     if (orgs.next) {
-        choices.push({title: '->', description: 'Next choices', value: 'next'});
+        choices.push({title: '-> Next Page', description: 'Next choices', value: 'next'});
     }
-
+    
     for (const [key, val] of Object.entries(orgs.data)) {
         choices.push({title: key, value: val});
     }
 
+    if (orgs.next) {
+        choices.push({title: '-> Next Page', description: 'Next choices', value: 'next'});
+    }
+    
     const response = await prompt({
         type: 'select',
         name: 'organisation',
@@ -531,13 +535,17 @@ export async function chooseApplicationFromList(
             value: 'prev'
         });
     }
-
+    
     if (apps.next) {
-        choices.push({title: '->', description: 'Next choices', value: 'next'});
+        choices.push({title: '-> Next Page', description: 'Next choices', value: 'next'});
     }
 
     for (const [key, val] of Object.entries(apps.data)) {
         choices.push({title: key, value: val});
+    }
+
+    if (apps.next) {
+        choices.push({title: '-> Next Page', description: 'Next choices', value: 'next'});
     }
 
     const response = await prompt({
