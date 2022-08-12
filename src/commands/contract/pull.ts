@@ -1,11 +1,14 @@
 import fs from 'fs';
 import path from 'path';
 import {default as chalk} from 'chalk';
-import {SimbaConfig} from '../lib';
+import {
+    SimbaConfig,
+    absolutePaths,
+    contractSimbaPath,
+} from '../lib';
 import {ContractDesignWithCode} from '.';
 import {default as prompt} from 'prompts';
 import axios from "axios";
-import {ContractDesign} from "."
 import {
     allContracts,
 } from "./list";
@@ -17,7 +20,11 @@ import {
  * syncs contractX saved in simbachain.com with contractX in your project directory
  * @param {Promise<void>} designID 
  */
-export async function pullContractFromDesignId(designID: string): Promise<void> {
+export async function pullContractFromDesignId(
+    designID: string,
+    useSimbaPath: boolean = true,
+    absPaths?: Record<any, any>,
+): Promise<void> {
     SimbaConfig.log.debug(`:: ENTER : ${designID}`);
     let contractDesign: ContractDesignWithCode;
     const authStore = await SimbaConfig.authStore();
@@ -28,7 +35,15 @@ export async function pullContractFromDesignId(designID: string): Promise<void> 
         SimbaConfig.log.debug(`resp: ${JSON.stringify(resp)}`);
         if (resp && !(resp instanceof Error)) {
             contractDesign = resp as ContractDesignWithCode;
-            const contractFileName = path.join(SimbaConfig.contractDirectory, `${contractDesign.name}.sol`);
+            let contractFileName;
+            if (useSimbaPath) {
+                if (!absPaths) {
+                    absPaths = await absolutePaths() as any;
+                }
+                contractFileName = contractSimbaPath(absPaths as any, contractDesign.name);
+            } else {
+                contractFileName = path.join(SimbaConfig.contractDirectory, `${contractDesign.name}.sol`);
+            }
             SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: pulling file ${chalk.greenBright(`${contractDesign.name}`)} ---> ${chalk.greenBright(`${contractFileName}`)}`)}`);
             fs.writeFileSync(contractFileName, Buffer.from(contractDesign.code, 'base64').toString());
             SimbaConfig.log.info(`${chalk.cyanBright(`simba: finished pulling ${chalk.greenBright(`${contractDesign.name}`)} ---> ${chalk.greenBright(`${contractFileName}`)}`)}`);
@@ -41,9 +56,21 @@ export async function pullContractFromDesignId(designID: string): Promise<void> 
     }
 }
 
-export function pullContractFromContractDesign(contractDesign: ContractDesignWithCode): void {
+export async function pullContractFromContractDesign(
+    contractDesign: ContractDesignWithCode,
+    useSimbaPath: boolean = true,
+    absPaths?: Record<any, any>,
+): Promise<void> {
     SimbaConfig.log.debug(`:: ENTER : ${JSON.stringify(contractDesign)}`);
-    const contractFileName = path.join(SimbaConfig.contractDirectory, `${contractDesign.name}.sol`);
+    let contractFileName;
+    if (useSimbaPath) {
+        if (!absPaths) {
+            absPaths = await absolutePaths() as any;
+        }
+        contractFileName = contractSimbaPath(absPaths as any, contractDesign.name);
+    } else {
+        contractFileName = path.join(SimbaConfig.contractDirectory, `${contractDesign.name}.sol`);
+    }
     SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: pulling file ${chalk.greenBright(`${contractDesign.name}`)} ---> ${chalk.greenBright(`${contractFileName}`)}`)}`);
     fs.writeFileSync(contractFileName, Buffer.from(contractDesign.code, 'base64').toString());
     SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: finished pulling ${chalk.greenBright(`${contractDesign.name}`)} ---> ${chalk.greenBright(`${contractFileName}`)}`)}`);
@@ -51,8 +78,10 @@ export function pullContractFromContractDesign(contractDesign: ContractDesignWit
 }
 
 export async function pullContractsInteractive(
-    contractDesignArray?: ContractDesignWithCode[] | null,
-    ): Promise<void> {
+    contractDesignArray?: ContractDesignWithCode[],
+    useSimbaPath: boolean = true,
+    absPaths?: Record<any, any>,
+): Promise<void> {
     SimbaConfig.log.debug(`:: ENTER : entryParams: ${JSON.stringify(contractDesignArray)}`);
     const NO = "NO";
     const YES = "YES";
@@ -82,6 +111,11 @@ export async function pullContractsInteractive(
     }
 
     try {
+        if (useSimbaPath) {
+            if (!absPaths) {
+                absPaths = await absolutePaths() as any;
+            }
+        }
         const contractDesigns = contractDesignArray ?
             contractDesignArray :
             await allContracts();
@@ -105,7 +139,7 @@ export async function pullContractsInteractive(
         });
         for (let i = 0; i < chosen.contracts.length; i++) {
             const contractDesign = chosen.contracts[i];
-            pullContractFromContractDesign(contractDesign);
+            await pullContractFromContractDesign(contractDesign, useSimbaPath, absPaths);
         }
         return;
     } catch (error) {
@@ -119,15 +153,24 @@ export async function pullContractsInteractive(
     }
 }
 
-export function pullAllMostRecentContracts(contractDesigns: ContractDesignWithCode[]): void {
+export async function pullAllMostRecentContracts(
+    contractDesigns: ContractDesignWithCode[],
+    useSimbaPath: boolean = true,
+    absPaths?: Record<any, any>,
+): Promise<void> {
     SimbaConfig.log.debug(`:: ENTER :`);
     const contractNames: string[] = [];
+    if (useSimbaPath) {
+        if (!absPaths) {
+            absPaths = await absolutePaths() as any;
+        }
+    }
     for (let i = 0; i < contractDesigns.length; i++) {
         if (contractNames.includes(contractDesigns[i].name)) {
             // this will avoid pulling old versions of contracts
             continue;
         }
-        pullContractFromContractDesign(contractDesigns[i]);
+        await pullContractFromContractDesign(contractDesigns[i], useSimbaPath, absPaths);
         contractNames.push(contractDesigns[i].name);
     }
     SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: all source code in simba.json up to date.`)}`);
@@ -169,15 +212,22 @@ export function pullAllMostRecentSourceCodeForSimbaJson(contractDesigns: Contrac
 export async function pullMostRecentRecentSolFileFromContractName(
     contractName: string,
     contractDesignArray: ContractDesignWithCode[] | null = null,
+    useSimbaPath: boolean = true,
+    absPaths?: Record<any, any>,
 ): Promise<void> {
     SimbaConfig.log.debug(`:: ENTER :`);
     const contractDesigns = contractDesignArray ?
         contractDesignArray :
         await allContracts();
+    if (useSimbaPath) {
+        if (!absPaths) {
+            absPaths = await absolutePaths() as any;
+        }
+    }
     if (contractDesigns) {
         for (let i = 0; i < contractDesigns.length; i++) {
             if (contractDesigns[i].name === contractName) {
-                pullContractFromContractDesign(contractDesigns[i]);
+                await pullContractFromContractDesign(contractDesigns[i], useSimbaPath, absPaths);
                 SimbaConfig.log.debug(`:: EXIT :`);
                 return;
             }
@@ -216,15 +266,22 @@ export async function pullMostRecentSourceCodeFromContractName(
 
 export async function pullMostRecentFromContractName(
     contractName: string,
-    contractDesignArray: ContractDesignWithCode[] | null = null,
+    contractDesignArray?: ContractDesignWithCode[],
+    useSimbaPath: boolean = true,
+    absPaths?: Record<any, any>,
 ): Promise<void> {
     SimbaConfig.log.debug(`:: ENTER :`);
     const contractDesigns = contractDesignArray ?
         contractDesignArray :
         await allContracts();
+    if (useSimbaPath) {
+        if (!absPaths) {
+            absPaths = await absolutePaths() as any;
+        }
+    }
     if (contractDesigns) {
         await pullMostRecentSourceCodeFromContractName(contractName, contractDesigns);
-        await pullMostRecentRecentSolFileFromContractName(contractName, contractDesigns);
+        await pullMostRecentRecentSolFileFromContractName(contractName, contractDesigns, useSimbaPath, absPaths);
         SimbaConfig.log.debug(`:: EXIT :`);
         return;
     } else {
@@ -238,9 +295,16 @@ export async function pullAllMostRecentSolFilesAndSourceCode(
     pullSourceCodeFiles: boolean = true,
     pullSolFiles: boolean = false,
     interactive: boolean = false,
+    useSimbaPath: boolean = true,
+    absPaths?: Record<any, any>,
 ): Promise<void> {
     SimbaConfig.log.debug(`:: ENTER :`);
     const contractDesigns = await allContracts();
+    if (useSimbaPath) {
+        if (!absPaths) {
+            absPaths = await absolutePaths() as any;
+        }
+    }
     if (!contractDesigns) {
         SimbaConfig.log.debug(`no contract designs found. exiting.`);
         return;
@@ -250,9 +314,9 @@ export async function pullAllMostRecentSolFilesAndSourceCode(
     }
     if (pullSolFiles) {
         if (interactive) {
-            await pullContractsInteractive(contractDesigns);
+            await pullContractsInteractive(contractDesigns, useSimbaPath, absPaths);
         } else {
-            pullAllMostRecentContracts(contractDesigns);
+            await pullAllMostRecentContracts(contractDesigns, useSimbaPath, absPaths);
         }
     }
 }

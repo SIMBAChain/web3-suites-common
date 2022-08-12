@@ -1,6 +1,4 @@
-// import {
-//     log,
-// } from "../lib";
+import * as fs from "fs";
 import {
     LogLevel,
 } from "./logger";
@@ -317,10 +315,14 @@ export class SimbaConfig {
      * not used in standard flow
      */
     public static get contractDirectory(): string {
-        const contractDir = this.ProjectConfigStore.get("contractDirectory");
+        let contractDir = this.ProjectConfigStore.get("contractDirectory");
         if (contractDir) {
             this.log.debug(`${chalk.cyanBright(`simba: contractDirectory path obtained from simba.json. If you wish to have Simba obtain your build artifacts from the default location for your web3 project, then please remove the 'contractDirectory' field from simba.json.`)}`);
             return contractDir;
+        }
+        contractDir = path.join(cwd(), 'contracts');
+        if (!fs.existsSync(contractDir)) {
+            fs.mkdirSync(contractDir, { recursive: true });
         }
         return path.join(cwd(), 'contracts');
     }

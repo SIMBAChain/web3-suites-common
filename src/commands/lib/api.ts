@@ -29,12 +29,12 @@ interface Response {
 
 interface ASTAndOtherInfo {
     ast: Record<any, any>;
-    source: Record<any, any>;
-    compiler: string;
-    language: string;
-    isLib: boolean;
-    contractName: string;
-    contractSourceName: string;
+    source?: Record<any, any>;
+    compiler?: string;
+    language?: string;
+    isLib?: boolean;
+    contractName?: string;
+    contractSourceName?: string;
 }
 
 /**
@@ -233,7 +233,7 @@ async function buildInfoJsonName(
     } catch (e) {
         const err = e as any;
         if (err.code === 'ENOENT') {
-            SimbaConfig.log.error(`${chalk.redBright('\nsimba: EXIT : Simba was not able to find any build info artifacts.\nDid you forget to run: "npx hardhat compile" ?\n')}`);
+            SimbaConfig.log.error(`${chalk.redBright('\nsimba: EXIT : Simba was not able to find any build info artifacts.\nDid you forget to compile?\n')}`);
             return "";
         }
         SimbaConfig.log.error(`:: EXIT : ERROR : ${JSON.stringify(err)}`);
@@ -312,8 +312,8 @@ export function isLibrary(
  */
 async function astAndOtherInfo(
     contractName: string,
-    contractSourceName: string,
-    _buildInfoJsonName: string,
+    contractSourceName?: string,
+    _buildInfoJsonName?: string,
 ): Promise<ASTAndOtherInfo> {
     const params = {
         contractName,
@@ -321,6 +321,7 @@ async function astAndOtherInfo(
     };
     SimbaConfig.log.debug(`:: ENTER : ${JSON.stringify(params)}`);
     const buildInfoDir = SimbaConfig.buildInfoDirectory;
+    const buildDir = SimbaConfig.buildDirectory;
     let files: string[] = [];
 
     let _astAndOtherInfo: ASTAndOtherInfo = {
@@ -333,48 +334,90 @@ async function astAndOtherInfo(
         contractSourceName,
     };
 
-    try {
-        files = await walkDirForContracts(buildInfoDir, ".json");
-        SimbaConfig.log.debug(`:: files : ${JSON.stringify(files)}`);
-    } catch (e) {
-        const err = e as any;
-        if (err.code === 'ENOENT') {
-            SimbaConfig.log.error(`${chalk.redBright('\nsimba: EXIT : Simba was not able to find any build info artifacts.\nDid you forget to run: "npx hardhat compile" ?\n')}`);
+    const web3Suite = SimbaConfig.ProjectConfigStore.get("web3Suite").toLocaleLowerCase();
+
+    if (web3Suite === "hardhat") {
+        try {
+            files = await walkDirForContracts(buildInfoDir, ".json");
+            SimbaConfig.log.debug(`:: files : ${JSON.stringify(files)}`);
+        } catch (e) {
+            const err = e as any;
+            if (err.code === 'ENOENT') {
+                SimbaConfig.log.error(`${chalk.redBright('\nsimba: EXIT : Simba was not able to find any build info artifacts.\nDid you forget to compile?\n')}`);
+                return _astAndOtherInfo;
+            }
+            SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(err)}`)}`);
             return _astAndOtherInfo;
         }
-        SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(err)}`)}`);
+    }
+
+    if (web3Suite === "truffle") {
+        try {
+            files = await walkDirForContracts(buildDir, ".json");
+            SimbaConfig.log.debug(`:: files : ${JSON.stringify(files)}`);
+        } catch (e) {
+            const err = e as any;
+            if (err.code === 'ENOENT') {
+                SimbaConfig.log.error(`${chalk.redBright('\nsimba: EXIT : Simba was not able to find any build info artifacts.\nDid you forget to compile?\n')}`);
+                return _astAndOtherInfo;
+            }
+            SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(err)}`)}`);
+            return _astAndOtherInfo;
+        }
+    }
+
+    if (web3Suite === "hardhat") {
+        for (const file of files) {
+            if (!(file.endsWith(_buildInfoJsonName as string))) {
+                continue;
+            } else {
+                const buf = await promisifiedReadFile(file, {flag: 'r'});
+                const parsed = JSON.parse(buf.toString());
+                const output = parsed.output;
+                const outputSources = output.sources;
+                const outputContractSource = outputSources[contractSourceName as string];
+                const ast = outputContractSource.ast;
+                _astAndOtherInfo.ast = ast;
+                _astAndOtherInfo.isLib = isLibrary(contractName, ast);
+    
+                const solcVersion = parsed.solcVersion;
+                _astAndOtherInfo.compiler = solcVersion;
+    
+                const input = parsed.input;
+                const language = parsed.language;
+                const inputSources = input.sources;
+                const inputContractSource = inputSources[contractSourceName as string];
+                const contractSourceCode = inputContractSource.content;
+                _astAndOtherInfo.source = contractSourceCode;
+                _astAndOtherInfo.language = language;
+                SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(_astAndOtherInfo)}`);
+                return _astAndOtherInfo;
+            }
+        }
+        SimbaConfig.log.error(`:: EXIT : ERROR : no contract info found`);
         return _astAndOtherInfo;
     }
 
-    for (const file of files) {
-        if (!(file.endsWith(_buildInfoJsonName))) {
-            continue;
-        } else {
-            const buf = await promisifiedReadFile(file, {flag: 'r'});
-            const parsed = JSON.parse(buf.toString());
-            const output = parsed.output;
-            const outputSources = output.sources;
-            const outputContractSource = outputSources[contractSourceName];
-            const ast = outputContractSource.ast;
-            _astAndOtherInfo.ast = ast;
-            _astAndOtherInfo.isLib = isLibrary(contractName, ast);
-
-            const solcVersion = parsed.solcVersion;
-            _astAndOtherInfo.compiler = solcVersion;
-
-            const input = parsed.input;
-            const language = parsed.language;
-            const inputSources = input.sources;
-            const inputContractSource = inputSources[contractSourceName];
-            const contractSourceCode = inputContractSource.content;
-            _astAndOtherInfo.source = contractSourceCode;
-            _astAndOtherInfo.language = language;
-            SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(_astAndOtherInfo)}`);
-            return _astAndOtherInfo;
+    if (web3Suite === "truffle") {
+        for (const file of files) {
+            if (!(file.endsWith(`${contractName}.json`))) {
+                continue;
+            } else {
+                const buf = await promisifiedReadFile(file, {flag: 'r'});
+                const parsed = JSON.parse(buf.toString());
+                const ast = parsed.ast;
+                _astAndOtherInfo.ast = ast;
+                SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(_astAndOtherInfo)}`);
+                return _astAndOtherInfo;
+            }
         }
+        SimbaConfig.log.error(`:: EXIT : ERROR : no contract info found`);
+        return _astAndOtherInfo;
     }
+
     SimbaConfig.log.error(`:: EXIT : ERROR : no contract info found`);
     return _astAndOtherInfo;
+
 }
 
 /**
@@ -385,14 +428,18 @@ async function astAndOtherInfo(
  */
 export async function getASTAndOtherInfo(
     contractName: string,
-    contractSourceName: string,
+    contractSourceName?: string,
 ): Promise<ASTAndOtherInfo | Error> {
     const entryParams = {
         contractName,
         contractSourceName,
     }
     SimbaConfig.log.debug(`:: ENTER : ${JSON.stringify(entryParams)}`);
-    const _buildInfoJsonName = await buildInfoJsonName(contractName, contractSourceName);
+    let _buildInfoJsonName;
+    const web3Suite = SimbaConfig.ProjectConfigStore.get("web3Suite").toLocaleLowerCase();
+    if (web3Suite === "hardhat") {
+        const _buildInfoJsonName = await buildInfoJsonName(contractName, contractSourceName as string);
+    }
     const _astAndOtherInfo = await astAndOtherInfo(
         contractName,
         contractSourceName,

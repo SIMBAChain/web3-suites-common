@@ -6,6 +6,9 @@ export {
 export {
     promisifiedReadFile,
     walkDirForContracts,
+    absolutePaths,
+    contractAbsolutePath,
+    contractSimbaPath,
 } from "./contractfinder";
 export {
     chooseApplicationFromList,
