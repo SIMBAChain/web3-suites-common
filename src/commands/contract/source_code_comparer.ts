@@ -25,9 +25,9 @@ export class SourceCodeComparer {
         } catch (e) {
             const err = e as any;
             if (err.code === 'ENOENT') {
-                SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : Simba was not able to find any build artifacts.\nDid you forget to run: "npx hardhat compile" ?\n`)}`);
+                SimbaConfig.log.error(`${chalk.redBright(`\nsimba: Simba was not able to find any build artifacts.\nDid you forget to compile?\n`)}`);
             }
-            SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(err)}`)}`);
+            SimbaConfig.log.error(`${chalk.redBright(`\nsimba: ${JSON.stringify(err)}`)}`);
             this.sourceCodeFromArtifacts = sourceCodeMap;
             return sourceCodeMap;
         }
@@ -255,7 +255,7 @@ export class SourceCodeComparer {
         } catch (e) {
             const err = e as any;
             if (err.code === 'ENOENT') {
-                SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : Simba was not able to find any build artifacts.\nDid you forget to run: "npx hardhat compile" ?\n`)}`);
+                SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : Simba was not able to find any build artifacts.\nDid you forget to compile?\n`)}`);
             }
             SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(err)}`)}`);
             return importedContracts;

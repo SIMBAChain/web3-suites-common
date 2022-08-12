@@ -70,10 +70,11 @@ export async function absolutePaths(): Promise<Record<any, any> | void> {
     } catch (e) {
         const err = e as any;
         if (err.code === 'ENOENT') {
-            SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : Simba was not able to find any build artifacts.\nDid you forget to run: "npx hardhat compile" ?\n`)}`);
+            // not logging as an error because it's not an error in this particular context
+            // the user may not have compiled yet, and that's OK
+            SimbaConfig.log.debug(`${chalk.redBright(`\nsimba: Simba was not able to find any build artifacts.\nDid you forget to compile?\n`)}`);
         }
-        SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(err)}`)}`);
-        return;
+        return absolutePathMap;
     }
     for (const file of files) {
         if (file.endsWith('Migrations.json') || file.endsWith('dbg.json')) {
@@ -107,7 +108,9 @@ export function contractAbsolutePath(
         contractName,
     }
     SimbaConfig.log.debug(`:: ENTER : ${JSON.stringify(entryParams)}`);
-    const contractPath = _absolutePaths[contractName];
+    const contractPath = _absolutePaths[contractName] ?
+        _absolutePaths[contractName] :
+        `contracts/${contractName}.sol`;
     SimbaConfig.log.debug(`:: EXIT : ${contractPath}`);
     return contractPath;
 }
@@ -117,9 +120,7 @@ export function contractSimbaPath(
     contractName: string,
 ): string {
     SimbaConfig.log.debug(`:: ENTER : }`);
-    const contractPath = contractAbsolutePath(_absolutePaths, contractName) ?
-        contractAbsolutePath(_absolutePaths, contractName) :
-        `contracts/${contractName}.sol`;
+    const contractPath = contractAbsolutePath(_absolutePaths, contractName);
     const base = contractPath.split("/")[0];
     const newPathWithSimba = base + SimbaPath + contractPath.slice(base.length);
     const newAbsoluteSimbaPath = path.join(cwd(), newPathWithSimba);

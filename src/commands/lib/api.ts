@@ -343,7 +343,7 @@ async function astAndOtherInfo(
         } catch (e) {
             const err = e as any;
             if (err.code === 'ENOENT') {
-                SimbaConfig.log.error(`${chalk.redBright('\nsimba: EXIT : Simba was not able to find any build info artifacts.\nDid you forget to run: "npx hardhat compile" ?\n')}`);
+                SimbaConfig.log.error(`${chalk.redBright('\nsimba: EXIT : Simba was not able to find any build info artifacts.\nDid you forget to compile?\n')}`);
                 return _astAndOtherInfo;
             }
             SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(err)}`)}`);
@@ -358,7 +358,7 @@ async function astAndOtherInfo(
         } catch (e) {
             const err = e as any;
             if (err.code === 'ENOENT') {
-                SimbaConfig.log.error(`${chalk.redBright('\nsimba: EXIT : Simba was not able to find any build info artifacts.\nDid you forget to run: "npx hardhat compile" ?\n')}`);
+                SimbaConfig.log.error(`${chalk.redBright('\nsimba: EXIT : Simba was not able to find any build info artifacts.\nDid you forget to compile?\n')}`);
                 return _astAndOtherInfo;
             }
             SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(err)}`)}`);
