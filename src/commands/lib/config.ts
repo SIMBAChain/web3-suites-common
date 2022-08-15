@@ -385,7 +385,7 @@ export class SimbaConfig {
      * how we set loglevel throughout our plugins
      */
     public static set logLevel(level: LogLevel) {
-        const lowerLevel = level.toLocaleLowerCase() as any;
+        const lowerLevel = level.toLowerCase() as any;
         if (!Object.values(LogLevel).includes(lowerLevel)) {
             this.log.error(`${chalk.redBright(`simba: log level can only be one of: 'error', 'debug', 'info', 'warn', 'fatal', 'silly', 'trace'`)}`);
             return

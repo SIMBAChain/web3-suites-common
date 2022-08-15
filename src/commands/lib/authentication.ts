@@ -997,6 +997,7 @@ class AzureHandler {
         try {
             const baseURL = handleV2(`${SimbaConfig.ProjectConfigStore.get("baseURL")}`);
             const url = `${baseURL}${authEndpoint}token/`;
+            SimbaConfig.log.debug(`:: url : ${url}`);
             const res = await axios.post(url, params, config);
             const access_token = res.data;
             SimbaConfig.log.debug(`:: EXIT : res.data: ${JSON.stringify(res.data)}`);

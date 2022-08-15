@@ -334,7 +334,7 @@ async function astAndOtherInfo(
         contractSourceName,
     };
 
-    const web3Suite = SimbaConfig.ProjectConfigStore.get("web3Suite").toLocaleLowerCase();
+    const web3Suite = SimbaConfig.ProjectConfigStore.get("web3Suite").toLowerCase();
 
     if (web3Suite === "hardhat") {
         try {
@@ -436,9 +436,9 @@ export async function getASTAndOtherInfo(
     }
     SimbaConfig.log.debug(`:: ENTER : ${JSON.stringify(entryParams)}`);
     let _buildInfoJsonName;
-    const web3Suite = SimbaConfig.ProjectConfigStore.get("web3Suite").toLocaleLowerCase();
+    const web3Suite = SimbaConfig.ProjectConfigStore.get("web3Suite").toLowerCase();
     if (web3Suite === "hardhat") {
-        const _buildInfoJsonName = await buildInfoJsonName(contractName, contractSourceName as string);
+        _buildInfoJsonName = await buildInfoJsonName(contractName, contractSourceName as string);
     }
     const _astAndOtherInfo = await astAndOtherInfo(
         contractName,
