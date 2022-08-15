@@ -177,8 +177,9 @@ export class SourceCodeComparer {
         if (!this.imports) {
             await this.getAndSetimports();
         }
-        const nonExportMessage = "No changes detected; not exported.";
-        const exportMessage = "Exported";
+        const nonExportMessage = "No changes detected; not exported";
+        const attemptedExportMessage = "Error encountered with one or more contracts before export";
+        // const exportMessage = "Exported";
         const isDependencyMessage = "Contract is a dependency; not exported"
         let statusAndMessage;
 
@@ -194,9 +195,11 @@ export class SourceCodeComparer {
                     message: `${chalk.gray(`${nonExportMessage}`)}`,
                 }
             } else {
+                // by default, we set export message to error, and then
+                // let the plugins handle updating the message to success
                 statusAndMessage = {
                     newOrChanged: true,
-                    message: `${chalk.greenBright(`${exportMessage}`)}`,
+                    message: `${chalk.redBright(`${attemptedExportMessage}`)}`,
                 }
             }
         }

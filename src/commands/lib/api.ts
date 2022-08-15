@@ -394,7 +394,7 @@ async function astAndOtherInfo(
                 return _astAndOtherInfo;
             }
         }
-        SimbaConfig.log.error(`:: EXIT : ERROR : no contract info found`);
+        SimbaConfig.log.error(`:: EXIT : ERROR : no contract info found for ${contractName}`);
         return _astAndOtherInfo;
     }
 
@@ -411,11 +411,11 @@ async function astAndOtherInfo(
                 return _astAndOtherInfo;
             }
         }
-        SimbaConfig.log.error(`:: EXIT : ERROR : no contract info found`);
+        SimbaConfig.log.error(`:: EXIT : ERROR : no contract info found for ${contractName}`);
         return _astAndOtherInfo;
     }
 
-    SimbaConfig.log.error(`:: EXIT : ERROR : no contract info found`);
+    SimbaConfig.log.error(`:: EXIT : ERROR : no contract info found for ${contractName}`);
     return _astAndOtherInfo;
 
 }
