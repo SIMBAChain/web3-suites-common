@@ -149,6 +149,20 @@ export class SimbaConfig {
         return SimbaConfig.ProjectConfigStore;
     }
 
+    public static resetSimbaJson(): void {
+        const defaultUserState = {
+            baseURL: SimbaConfig.ProjectConfigStore.get("baseURL"),
+            web3Suite: SimbaConfig.ProjectConfigStore.get("web3Suite"),
+            logLevel: SimbaConfig.ProjectConfigStore.get("logLevel") ?
+                SimbaConfig.ProjectConfigStore.get("logLevel") :
+                "info",
+        };
+        // clear simba.json
+        SimbaConfig.ProjectConfigStore.clear();
+        // set simba.json to basic settings
+        SimbaConfig.ProjectConfigStore.set(defaultUserState);
+    }
+
     public static deleteSimbaJsonField(key: string) {
         SimbaConfig.log.debug(`:: ENTER : key : ${key}`)
         if (this.ProjectConfigStore.get(key)) {
