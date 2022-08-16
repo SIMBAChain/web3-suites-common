@@ -82,6 +82,8 @@ export class SimbaConfig {
     public static _configStore: Configstore;
     // Project config, such as app ID, etc
     public static _projectConfigStore: Configstore;
+    // user config, which stores state for org/app
+    public static _userConfigStore: Configstore;
     public static help = false;
     public static _authStore: KeycloakHandler | AzureHandler;
     public static _application: any;
@@ -147,6 +149,240 @@ export class SimbaConfig {
 
     public get ProjectConfigStore(): Configstore {
         return SimbaConfig.ProjectConfigStore;
+    }
+
+    /**
+     * handles our user info for different org/app configs
+     */
+    public static get UserConfigStore(): Configstore {
+        if (!this._userConfigStore) {
+            this._userConfigStore = new Configstore(`@simbachain/${this._web3Suite}`, null, {
+                configPath: path.join(cwd(), 'simbausers.json'),
+            });
+        }
+        return this._userConfigStore;
+    }
+
+    public get UserConfigStore(): Configstore {
+        return SimbaConfig.UserConfigStore;
+    }
+
+    public static resetSimbaJson(): void {
+        const defaultUserState = {
+            baseURL: SimbaConfig.ProjectConfigStore.get("baseURL"),
+            web3Suite: SimbaConfig.ProjectConfigStore.get("web3Suite"),
+            logLevel: SimbaConfig.ProjectConfigStore.get("logLevel") ?
+                SimbaConfig.ProjectConfigStore.get("logLevel") :
+                "info",
+        };
+        // clear simba.json
+        SimbaConfig.ProjectConfigStore.clear();
+        // set simba.json to basic settings
+        SimbaConfig.ProjectConfigStore.set(defaultUserState);
+    }
+
+    public static userIsChanging(org?: string, app?: string, currentUserState?: Record<any, any>): boolean {
+        const entryParams = {
+            org,
+            app,
+            currentUserState,
+        };
+        SimbaConfig.log.debug(`:: ENTER : entryParams : ${JSON.stringify(entryParams)}`);
+        if (!org) {
+            SimbaConfig.log.debug(`:: EXIT : false`);
+            return false;
+        }
+        const _currentUserState = currentUserState ? currentUserState : SimbaConfig.getCurrentUserState();
+        if (!_currentUserState) {
+            SimbaConfig.log.debug(`:: EXIT : false`);
+            return false;
+        }
+        if (_currentUserState.organisation.name !== org) {
+            SimbaConfig.log.debug(`:: EXIT : true`);
+            return true;
+        }
+        if (_currentUserState.application.name !== app) {
+            SimbaConfig.log.debug(`:: EXIT : true`);
+            return true;
+        }
+        if (_currentUserState.application.name === app && _currentUserState.organisation.name === org) {
+            if (_currentUserState.application.name !== app) {
+                SimbaConfig.log.debug(`:: EXIT : false`);
+                return false;
+            }
+        }
+        SimbaConfig.log.debug(`:: EXIT : false`);
+        return false;
+    }
+
+    public userIsChanging(org: string, app: string, currentUserState: Record<any, any>): boolean {
+        const entryParams = {
+            org,
+            app,
+            currentUserState,
+        };
+        SimbaConfig.log.debug(`:: ENTER : entryParams : ${JSON.stringify(entryParams)}`);
+        SimbaConfig.log.debug(`:: EXIT :`);
+        return SimbaConfig.userIsChanging(org, app, currentUserState);
+    }
+
+    public static getCurrentUserState(): Record<any, any> | void {
+        SimbaConfig.log.debug(`:: ENTER : `);
+        const currentUserState = this.ProjectConfigStore.all;
+        SimbaConfig.log.debug(`:: currentUserState : ${JSON.stringify(currentUserState)}`);
+        const currentOrg = currentUserState.organisation;
+        const currentApp = currentUserState.application;
+        if (currentOrg) {
+            if (currentApp) {
+                SimbaConfig.log.debug(`:: org ${JSON.stringify(currentOrg.name)} and app ${JSON.stringify(currentApp.name)} found in simba.json`);
+                SimbaConfig.log.debug(`:: EXIT :`);
+                return currentUserState;
+            } else {
+                SimbaConfig.log.debug(`:: no application in current simba.json. Nothing to set in simbausers.json.`);
+                return;
+            }
+        } else {
+            SimbaConfig.log.debug(`:: no organisation in current simba.json. Nothing to set in simbausers.json.`);
+            SimbaConfig.log.debug(`:: EXIT :`);
+            return;
+        }
+    }
+
+    public getCurrentUserState(): Record<any, any> | void {
+        SimbaConfig.log.debug(`:: ENTER : `);
+        SimbaConfig.log.debug(`:: EXIT :`);
+        return SimbaConfig.getCurrentUserState();
+    }
+
+    public static saveUserState(currentUserState?: Record<any, any>): void {
+        SimbaConfig.log.debug(`:: ENTER : currentUserState : ${JSON.stringify(currentUserState)}`);
+        const _currentUserState = currentUserState? currentUserState : SimbaConfig.getCurrentUserState();
+        if (!_currentUserState) {
+            SimbaConfig.log.debug(`:: no organisation and/or application in current simba.json. Nothing to set in simbausers.json`);
+            SimbaConfig.log.debug(`:: EXIT :`);
+            return;
+        }
+        const userConfigStore = SimbaConfig.UserConfigStore;
+        const orgName = _currentUserState.organisation.name;
+        const appName = _currentUserState.application.name;
+        const orgEntry = userConfigStore.get(orgName) ? userConfigStore.get(orgName) : {};
+        orgEntry[appName] = _currentUserState;
+        userConfigStore.set(orgName, orgEntry);
+        SimbaConfig.log.debug(`user info set for org ${orgName} and app ${appName} in simbausers.json`);
+        SimbaConfig.log.debug(`:: EXIT :`);
+        return;
+
+    }
+
+    public saveUserState(currentUserState?: Record<any, any>): void {
+        SimbaConfig.log.debug(`:: ENTER : `);
+        SimbaConfig.log.debug(`:: EXIT :`);
+        return SimbaConfig.saveUserState(currentUserState);
+    }
+
+    public static switchUserState(org?: string, app?: string, currentUserState?: Record<any, any>): void {
+        const entryParams = {
+            org,
+            app,
+            currentUserState,
+        };
+        SimbaConfig.log.debug(`:: ENTER : entryParams : ${JSON.stringify(entryParams)}`);
+        if (!app) {
+            SimbaConfig.log.debug(`:: no app specified, no user state switch needed`);
+            return;
+        }
+        const userIsChanging = SimbaConfig.userIsChanging(org, app, currentUserState);
+        if (!userIsChanging) {
+            SimbaConfig.log.debug(`:: no change in user`);
+            SimbaConfig.log.debug(`:: EXIT :`);
+            return;
+        }
+        const defaultUserState = {
+            baseURL: SimbaConfig.ProjectConfigStore.get("baseURL"),
+            web3Suite: SimbaConfig.ProjectConfigStore.get("web3Suite"),
+            logLevel: SimbaConfig.ProjectConfigStore.get("logLevel") ?
+                SimbaConfig.ProjectConfigStore.get("logLevel") :
+                "info",
+        }
+        // save current state to simbausers.json
+        SimbaConfig.saveUserState(currentUserState);
+        // get saved state:
+        const userConfig = SimbaConfig.getUserConfigByOrgAndApp(org, app) ?
+            SimbaConfig.getUserConfigByOrgAndApp(org, app) :
+            defaultUserState;
+        // clear out simba.json
+        SimbaConfig.ProjectConfigStore.clear();
+        // set simba.json to old simba.json
+        SimbaConfig.ProjectConfigStore.set(userConfig);
+        SimbaConfig.log.debug(`:: EXIT :`);
+        return;
+    }
+
+    public switchUserState(org?: string, app?: string, currentUserState?: Record<any, any>): void {
+        const entryParams = {
+            org,
+            app,
+            currentUserState,
+        };
+        SimbaConfig.log.debug(`:: ENTER : entryParams : ${JSON.stringify(entryParams)}`);
+        SimbaConfig.log.debug(`:: EXIT :`);
+        return SimbaConfig.switchUserState(org, app, currentUserState);
+    }
+
+    public static getUserConfigByOrg(org: string): Record<any, any> | void {
+        SimbaConfig.log.debug(`:: ENTER : ${org}`);
+        const savedOrgState = SimbaConfig.UserConfigStore.get(org);
+        if (savedOrgState) {
+            SimbaConfig.log.debug(`:: savedOrgState : ${JSON.stringify(savedOrgState)}`);
+            SimbaConfig.log.debug(`:: EXIT :`);
+            return savedOrgState;
+        } else {
+            SimbaConfig.log.debug(`:: no entry for org ${org} stored in simbausers.json`);
+            SimbaConfig.log.debug(`:: EXIT :`);
+            return;
+        }
+    }
+
+    public getUserConfigByOrg(org: string): Record<any, any> | void {
+        SimbaConfig.log.debug(`:: ENTER : ${org}`);
+        SimbaConfig.log.debug(`:: EXIT :`);
+        return SimbaConfig.getUserConfigByOrg(org);
+    }
+
+    public static getUserConfigByOrgAndApp(org?: string, app?: string): Record<any, any> | void {
+        const entryParams = {
+            org,
+            app,
+        }
+        SimbaConfig.log.debug(`:: ENTER : entryParams : ${JSON.stringify(entryParams)}`);
+        if (!org || !app) {
+            SimbaConfig.log.debug(`:: no app and/or org specified. no state to retrieve from simbausers.json`);
+            SimbaConfig.log.debug(`:: EXIT :`);
+            return;
+        }
+        const savedOrgState = SimbaConfig.getUserConfigByOrg(org);
+        if (savedOrgState) {
+            const savedAppState = savedOrgState[app];
+            if (savedAppState) {
+                SimbaConfig.log.debug(`:: savedAppState : ${JSON.stringify(savedAppState)}`);
+                SimbaConfig.log.debug(`:: EXIT :`);
+                return savedAppState;
+            } else {
+                SimbaConfig.log.debug(`:: no entry for org ${org} and app ${app} in simbausers.json.`);
+                SimbaConfig.log.debug(`:: EXIT :`);
+                return;
+            }
+        }
+    }
+
+    public getUserConfigByOrgAndApp(org?: string, app?: string): Record<any, any> | void {
+        const entryParams = {
+            org,
+            app,
+        }
+        SimbaConfig.log.debug(`:: ENTER : entryParams : ${JSON.stringify(entryParams)}`);
+        SimbaConfig.log.debug(`:: EXIT :`);
+        return SimbaConfig.getUserConfigByOrgAndApp(org, app);
     }
 
     public static deleteSimbaJsonField(key: string) {
