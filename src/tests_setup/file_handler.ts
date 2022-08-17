@@ -1,11 +1,11 @@
 import {
     promisifiedReadFile,
     SimbaConfig,
-} from "../.."
+} from ".."
 import * as fs from "fs";
 import * as path from 'path';
 
-class FileHandler {
+export class FileHandler {
     public static async transferFile(
         inputPath: string,
         outputPath: string,
@@ -34,3 +34,4 @@ class FileHandler {
         }
     }
 }
+

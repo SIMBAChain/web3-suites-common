@@ -394,7 +394,7 @@ async function astAndOtherInfo(
                 return _astAndOtherInfo;
             }
         }
-        SimbaConfig.log.error(`:: EXIT : ERROR : no contract info found for ${contractName}`);
+        SimbaConfig.log.error(`:: EXIT : ERROR : no contract info found for ${contractName}. please clean your build files by running 'npx hardhat clean' and then compile again with 'npx hardhat compile'`);
         return _astAndOtherInfo;
     }
 

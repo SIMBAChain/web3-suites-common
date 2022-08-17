@@ -21,7 +21,8 @@
     "blockchain"
   ],
   "scripts": {
-    "test": "env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register 'src/tests/**/*.ts'"
+    "buildtest": "ts-node src/tests_setup/build/build.ts",
+    "test": "cd src/tests/hardhat/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register './**/*.ts' && cd ../truffle/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register './**/*.ts'"
   },
   "repository": {
     "type": "git",

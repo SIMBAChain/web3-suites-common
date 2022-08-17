@@ -1,19 +1,19 @@
 import {
     SimbaConfig,
-} from "../../../../commands/lib/config";
+} from "../../../../../commands/lib/config";
 import {
     AzureHandler,
-} from "../../../../commands/lib/authentication";
+} from "../../../../../commands/lib/authentication";
 import {
     pullContractsInteractive,
     pullAllMostRecentContracts,
     pullAllMostRecentSolFilesAndSourceCode,
     pullMostRecentRecentSolFileFromContractName,
     pullMostRecentFromContractName
-} from "../../../../commands/contract";
+} from "../../../../../commands/contract";
 import {
     printAllContracts,
-} from "../../../../commands/contract/list"
+} from "../../../../../commands/contract/list"
 import { expect } from 'chai';
 import 'mocha';
 
