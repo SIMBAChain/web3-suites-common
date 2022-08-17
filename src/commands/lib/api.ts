@@ -531,6 +531,96 @@ export async function chooseApplicationFromName(
 };
 
 /**
+ * select a name for a new SIMBA app
+ * @param config
+ * @returns
+**/
+async function selectNewApplicationName(
+    config: SimbaConfig,
+): Promise<any> {
+    const appName = await prompt({
+        type: 'text',
+        name: 'app_name',
+        message: 'Please enter the name of your app', 
+    });
+    if (!appName.app_name) {
+        SimbaConfig.log.error(`${chalk.redBright('\nsimba: EXIT : no application name specified!')}`);
+        return await selectNewApplicationName(config);
+    }
+    
+    const authStore = await config.authStore();
+    const url = `organisations/${config.organisation.id}/applications/validate/${appName.app_name}/`;
+    if (authStore) {
+        try {
+            const appNameResponse = await authStore.doGetRequest(url, 'application/json');
+            return appName.app_name;
+        } catch (error) {
+            if (axios.isAxiosError(error) && error.response) {
+                if (error.response.data.errors[0].code == 1400) {
+                    SimbaConfig.log.error(`\nsimba: Invalid app name: ${error.response.data.errors[0].detail}`);
+                    return await selectNewApplicationName(config);
+                } else {
+                    SimbaConfig.log.debug(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error.response.data)}`)}`)
+                }
+            } else {
+                SimbaConfig.log.debug(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error)}`)}`);
+            }
+            if (axios.isAxiosError(error) && error.message === "Request failed with status code 500") {
+                SimbaConfig.log.info(`${chalk.cyanBright('\nsimba: Auth token expired, please log in again')}`);
+                authStore.logout();
+                await authStore.loginAndGetAuthToken();
+                return await selectNewApplicationName(config);
+            }
+        }
+    } else {
+        SimbaConfig.log.error(authErrors.badAuthProviderInfo);
+    }
+};
+
+
+/**
+ * create SIMBA app
+ * @param config
+ * @returns
+**/
+async function createApplicationForOrg(
+    config: SimbaConfig,
+): Promise<any> {
+    const entryParams = {config};
+
+    const authStore = await config.authStore();
+    const url = `organisations/${config.organisation.id}/applications/`;
+    const appName = await selectNewApplicationName(config);
+    const postData = {
+        name: appName,
+        display_name: appName,
+    }
+
+    if (authStore) {
+        try {
+            const response = await authStore.doPostRequest(url, postData, 'application/json');
+            return response.data;
+        } catch (error) {
+            if (axios.isAxiosError(error) && error.response) {
+                SimbaConfig.log.debug(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error.response.data)}`)}`)
+            } else {
+                SimbaConfig.log.debug(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error)}`)}`);
+            }
+            if (axios.isAxiosError(error) && error.message === "Request failed with status code 500") {
+                SimbaConfig.log.info(`${chalk.cyanBright('\nsimba: Auth token expired, please log in again')}`);
+                authStore.logout();
+                await authStore.loginAndGetAuthToken();
+                return await createApplicationForOrg(config);
+            }
+        }
+    } else {
+        SimbaConfig.log.error(authErrors.badAuthProviderInfo);
+    }
+};
+
+
+
+/**
  * choose SIMBA app from list
  * @param config 
  * @param url 
@@ -561,7 +651,8 @@ export async function chooseApplicationFromList(
         SimbaConfig.log.debug(`appResponse.results: ${JSON.stringify(appResponse.results)}`);
     }
     if (!appResponse.results || !appResponse.results.length) {
-        SimbaConfig.log.error(`${chalk.redBright(`\nsimba: Your organisation does not have any apps. Go to the UI and create an app. This app can remain empty - your org just needs an app present to use the plugin.`)}`);
+        SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: Your organisation does not have any apps. Please create one:`)}`);
+        return await createApplicationForOrg(config);
     }
 
     const apps: Response = {
