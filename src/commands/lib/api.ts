@@ -37,6 +37,13 @@ interface ASTAndOtherInfo {
     contractSourceName?: string;
 }
 
+function WindowsOrMacFileName (filePath: string) {
+    SimbaConfig.log.debug(`:: ENTER : ${filePath}`);
+    const fileName = filePath.split('\\').pop()!.split('/').pop();
+    SimbaConfig.log.debug(`:: EXIT : ${fileName}`);
+    return fileName;
+}
+
 /**
  * used to retrieve lists of applications and organisations, mainly
  * @param config 
@@ -793,15 +800,22 @@ async function getABIForPrimaryContract(
     const files = await walkDirForContracts(buildDir, ".json");
     for (const file of files) {
         SimbaConfig.log.debug(`:: file : ${JSON.stringify(file)}`);
-        if (!(file.endsWith(`/${contractName}.json`))) {
+        const fileName = WindowsOrMacFileName(file);
+        if (fileName !== `${contractName}.json`) {
             continue;
         }
+        // if (!(file.endsWith(`/${contractName}.json`)) && !(file.endsWith(`\\${contractName}.json`))) {
+        //     continue;
+        // }
         const buf = await promisifiedReadFile(file, {flag: 'r'});
         const parsed = JSON.parse(buf.toString());
         const abi = parsed.abi;
         SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(abi)}`);
         return abi;
     }
+    SimbaConfig.log.debug(`:: no abi found for contract ${contractName}`);
+    SimbaConfig.log.debug(`:: EXIT :`);
+    return;
 }
 
 /**
