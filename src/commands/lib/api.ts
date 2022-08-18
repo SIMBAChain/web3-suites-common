@@ -37,6 +37,13 @@ interface ASTAndOtherInfo {
     contractSourceName?: string;
 }
 
+function WindowsOrMacFileName (filePath: string) {
+    SimbaConfig.log.debug(`:: ENTER : ${filePath}`);
+    const fileName = filePath.split('\\').pop()!.split('/').pop();
+    SimbaConfig.log.debug(`:: EXIT : ${fileName}`);
+    return fileName;
+}
+
 /**
  * used to retrieve lists of applications and organisations, mainly
  * @param config 
@@ -531,6 +538,96 @@ export async function chooseApplicationFromName(
 };
 
 /**
+ * select a name for a new SIMBA app
+ * @param config
+ * @returns
+**/
+async function selectNewApplicationName(
+    config: SimbaConfig,
+): Promise<any> {
+    const appName = await prompt({
+        type: 'text',
+        name: 'app_name',
+        message: 'Please enter the name of your app', 
+    });
+    if (!appName.app_name) {
+        SimbaConfig.log.error(`${chalk.redBright('\nsimba: EXIT : no application name specified!')}`);
+        return
+    }
+    
+    const authStore = await config.authStore();
+    const url = `organisations/${config.organisation.id}/applications/validate/${appName.app_name}/`;
+    if (authStore) {
+        try {
+            const appNameResponse = await authStore.doGetRequest(url, 'application/json');
+            return appName.app_name;
+        } catch (error) {
+            if (axios.isAxiosError(error) && error.response) {
+                if (error.response.data.errors[0].code == 1400) {
+                    SimbaConfig.log.error(`\nsimba: Invalid app name: ${error.response.data.errors[0].detail}`);
+                    return await selectNewApplicationName(config);
+                } else {
+                    SimbaConfig.log.debug(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error.response.data)}`)}`)
+                }
+            } else {
+                SimbaConfig.log.debug(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error)}`)}`);
+            }
+            if (axios.isAxiosError(error) && error.message === "Request failed with status code 500") {
+                SimbaConfig.log.info(`${chalk.cyanBright('\nsimba: Auth token expired, please log in again')}`);
+                authStore.logout();
+                await authStore.loginAndGetAuthToken();
+                return await selectNewApplicationName(config);
+            }
+        }
+    } else {
+        SimbaConfig.log.error(authErrors.badAuthProviderInfo);
+    }
+};
+
+
+/**
+ * create SIMBA app
+ * @param config
+ * @returns
+**/
+async function createApplicationForOrg(
+    config: SimbaConfig,
+): Promise<any> {
+    const entryParams = {config};
+
+    const authStore = await config.authStore();
+    const url = `organisations/${config.organisation.id}/applications/`;
+    const appName = await selectNewApplicationName(config);
+    const postData = {
+        name: appName,
+        display_name: appName,
+    }
+
+    if (authStore) {
+        try {
+            const response = await authStore.doPostRequest(url, postData, 'application/json');
+            return response.data;
+        } catch (error) {
+            if (axios.isAxiosError(error) && error.response) {
+                SimbaConfig.log.debug(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error.response.data)}`)}`)
+            } else {
+                SimbaConfig.log.debug(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error)}`)}`);
+            }
+            if (axios.isAxiosError(error) && error.message === "Request failed with status code 500") {
+                SimbaConfig.log.info(`${chalk.cyanBright('\nsimba: Auth token expired, please log in again')}`);
+                authStore.logout();
+                await authStore.loginAndGetAuthToken();
+                return await createApplicationForOrg(config);
+            }
+        }
+    } else {
+        SimbaConfig.log.error(authErrors.badAuthProviderInfo);
+    }
+};
+
+
+
+/**
  * choose SIMBA app from list
  * @param config 
  * @param url 
@@ -561,7 +658,8 @@ export async function chooseApplicationFromList(
         SimbaConfig.log.debug(`appResponse.results: ${JSON.stringify(appResponse.results)}`);
     }
     if (!appResponse.results || !appResponse.results.length) {
-        SimbaConfig.log.error(`${chalk.redBright(`\nsimba: Your organisation does not have any apps. Go to the UI and create an app. This app can remain empty - your org just needs an app present to use the plugin.`)}`);
+        SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: Your organisation does not have any apps. Please create one:`)}`);
+        return await createApplicationForOrg(config);
     }
 
     const apps: Response = {
@@ -698,17 +796,26 @@ async function getABIForPrimaryContract(
         return "";
     }
     const buildDir = SimbaConfig.buildDirectory;
+    SimbaConfig.log.debug(`buildDir: ${buildDir}`);
     const files = await walkDirForContracts(buildDir, ".json");
     for (const file of files) {
-        if (!(file.endsWith(`/${contractName}.json`))) {
+        SimbaConfig.log.debug(`:: file : ${JSON.stringify(file)}`);
+        const fileName = WindowsOrMacFileName(file);
+        if (fileName !== `${contractName}.json`) {
             continue;
         }
+        // if (!(file.endsWith(`/${contractName}.json`)) && !(file.endsWith(`\\${contractName}.json`))) {
+        //     continue;
+        // }
         const buf = await promisifiedReadFile(file, {flag: 'r'});
         const parsed = JSON.parse(buf.toString());
         const abi = parsed.abi;
         SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(abi)}`);
         return abi;
     }
+    SimbaConfig.log.debug(`:: no abi found for contract ${contractName}`);
+    SimbaConfig.log.debug(`:: EXIT :`);
+    return;
 }
 
 /**
@@ -739,6 +846,7 @@ export async function getFieldFromPrimaryContractABI(
 async function primaryContractConstructor() {
     SimbaConfig.log.debug(`:: ENTER :`);
     const abi = await getABIForPrimaryContract();
+    SimbaConfig.log.debug(`:: abi for primary contract: ${JSON.stringify(abi)}`);
     for (let i = 0; i < abi.length; i++) {
         const entry = abi[i];
         if (entry.type === "constructor") {
