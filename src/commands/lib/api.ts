@@ -789,8 +789,10 @@ async function getABIForPrimaryContract(
         return "";
     }
     const buildDir = SimbaConfig.buildDirectory;
+    SimbaConfig.log.debug(`buildDir: ${buildDir}`);
     const files = await walkDirForContracts(buildDir, ".json");
     for (const file of files) {
+        SimbaConfig.log.debug(`:: file : ${JSON.stringify(file)}`);
         if (!(file.endsWith(`/${contractName}.json`))) {
             continue;
         }
@@ -830,6 +832,7 @@ export async function getFieldFromPrimaryContractABI(
 async function primaryContractConstructor() {
     SimbaConfig.log.debug(`:: ENTER :`);
     const abi = await getABIForPrimaryContract();
+    SimbaConfig.log.debug(`:: abi for primary contract: ${JSON.stringify(abi)}`);
     for (let i = 0; i < abi.length; i++) {
         const entry = abi[i];
         if (entry.type === "constructor") {

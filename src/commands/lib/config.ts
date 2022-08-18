@@ -149,18 +149,54 @@ export class SimbaConfig {
         return SimbaConfig.ProjectConfigStore;
     }
 
-    public static resetSimbaJson(): void {
-        const defaultUserState = {
-            baseURL: SimbaConfig.ProjectConfigStore.get("baseURL"),
-            web3Suite: SimbaConfig.ProjectConfigStore.get("web3Suite"),
-            logLevel: SimbaConfig.ProjectConfigStore.get("logLevel") ?
-                SimbaConfig.ProjectConfigStore.get("logLevel") :
-                "info",
-        };
-        // clear simba.json
-        SimbaConfig.ProjectConfigStore.clear();
-        // set simba.json to basic settings
-        SimbaConfig.ProjectConfigStore.set(defaultUserState);
+    public static resetSimbaJson(
+        previousSimbaJson: Record<any, any>,
+        newOrg?: string | Record<any, any> | unknown,
+        forceReset: boolean = false,
+     ) {
+        const entryParams = {
+            previousSimbaJson,
+            newOrg,
+            forceReset,
+        }
+        SimbaConfig.log.debug(`:: ENTER : entryParams : ${JSON.stringify(entryParams)}`);
+        if (forceReset) {
+            SimbaConfig.log.debug(`:: forcing reset`)
+            const newSimbaJson: any = {
+                baseURL: previousSimbaJson.baseURL,
+                web3Suite: previousSimbaJson.web3Suite,
+                logLevel: previousSimbaJson.logLevel ? previousSimbaJson.logLevel : "info",
+            }
+            if (previousSimbaJson.authProviderInfo) {
+                newSimbaJson["authProviderInfo"] = previousSimbaJson.authProviderInfo;
+            }
+            SimbaConfig.log.debug(`:: EXIT :`);
+            return;
+        }
+        const previousOrg = previousSimbaJson.organisation;
+        if (!newOrg) {
+            SimbaConfig.log.debug(`:: EXIT : no new org name specified; no action required`);
+            return;
+        }
+        const previousOrgName = previousSimbaJson.organisation.name;
+        const newOrgName = (typeof newOrg === "string") ?
+            newOrg :
+            (newOrg as any).name;
+        if (!previousOrg) {
+            SimbaConfig.log.debug(`:: EXIT : organisation was not previously set; no action required`);
+            return;
+        }
+
+        if (previousOrgName !== newOrgName) {
+            SimbaConfig.log.info(`\nsimba: ${previousOrgName} !== ${newOrgName}; switching orgs, deleting contracts_info`);
+            SimbaConfig.ProjectConfigStore.set("contracts_info", {});
+            SimbaConfig.log.debug(`:: EXIT :`);
+            return;
+        } else {
+            SimbaConfig.log.info(`\nsimba: ${previousOrgName} === ${newOrgName}; not switching orgs, no action needed`);
+            SimbaConfig.log.debug(`:: EXIT :`);
+            return;
+        }
     }
 
     public static deleteSimbaJsonField(key: string) {
@@ -302,7 +338,7 @@ export class SimbaConfig {
      * used for Hardhat, since some build info is stored in separate file from main artifact info
      */
     public static get buildInfoDirectory(): string {
-        return SimbaConfig.artifactDirectory + "/build-info";
+        return path.join(SimbaConfig.artifactDirectory, "/build-info");
     }
 
     public get buildInfoDirectory(): string {
@@ -318,7 +354,7 @@ export class SimbaConfig {
             this.log.debug(`${chalk.cyanBright(`simba: buildDirectory path obtained from simba.json. If you wish to have Simba obtain your build artifacts from the default location for your web3 project, then please remove the 'buildDirectory' field from simba.json.`)}`);
             return buildDir;
         }
-        return SimbaConfig.artifactDirectory + "/contracts";
+        return path.join(SimbaConfig.artifactDirectory, "contracts");
     }
 
     public get buildDirectory(): string {
