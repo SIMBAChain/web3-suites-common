@@ -545,7 +545,7 @@ async function selectNewApplicationName(
     });
     if (!appName.app_name) {
         SimbaConfig.log.error(`${chalk.redBright('\nsimba: EXIT : no application name specified!')}`);
-        return await selectNewApplicationName(config);
+        return
     }
     
     const authStore = await config.authStore();
