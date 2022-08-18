@@ -15,7 +15,8 @@ import {
 } from "../../../../../commands/contract";
 import {
     printAllContracts,
-} from "../../../../../commands/contract/list"
+} from "../../../../../commands/contract/list";
+import {default as chalk} from 'chalk';
 import { expect } from 'chai';
 import 'mocha';
 
@@ -48,5 +49,31 @@ describe('testing comparison of source code between build files and simba.json',
         const contractName = "TestContractChanged";
         let changed = await scc.sourceCodeExistsInArtifacts(contractName);
         expect(changed).to.equal(true);
+    });
+});
+
+describe('testing generation of export status messages', () => { // the tests container
+    const choices = [
+        {
+            title: "TestContractVT20",
+            value: null,
+        },
+        {
+            title: "TestContractChanged",
+            value: null,
+        },
+    ]
+    it('should be false and no changes detected for TestContractVT20', async () => {
+        const scc = new SourceCodeComparer();
+        let statuses = await scc.exportStatuses(choices);
+        expect(statuses["TestContractVT20"].newOrChanged).to.equal(false);
+        expect(statuses["TestContractVT20"].message).to.equal(`${chalk.grey(`No changes detected; not exported`)}`);
+    });
+
+    it('should be true and Error encountered with one or more contracts before export for TestContractChanged', async () => {
+        const scc = new SourceCodeComparer();
+        let statuses = await scc.exportStatuses(choices);
+        expect(statuses["TestContractChanged"].newOrChanged).to.equal(true);
+        expect(statuses["TestContractChanged"].message).to.equal(`${chalk.redBright(`Error encountered with one or more contracts before export`)}`);
     });
 });

@@ -1,7 +1,7 @@
 import {
     promisifiedReadFile,
     SimbaConfig,
-} from ".."
+} from "../.."
 import * as fs from "fs";
 import * as path from 'path';
 
@@ -26,9 +26,15 @@ export class FileHandler {
         }
     }
 
+    public static removeFile(filePath: string) {
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+        }
+    }
+
     public static removeDirectory(filePath: string) {
         try {
-            fs.rmdirSync(filePath, { recursive: true });
+            fs.rmSync(filePath, { recursive: true });
         } catch (err) {
             console.error(`Error while deleting ${filePath}.`);
         }

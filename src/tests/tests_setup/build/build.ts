@@ -1,7 +1,7 @@
 import {
     FileHandler,
     filePaths,
-} from "../";
+} from "..";
 
 async function main() {
     for (const item in filePaths) {

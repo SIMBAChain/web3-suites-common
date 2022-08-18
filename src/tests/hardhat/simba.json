@@ -2,13 +2,6 @@
 	"baseURL": "https://simba-dev-api.platform.simbachain.com/v2/",
 	"web3Suite": "hardhat",
 	"logLevel": "info",
-	"authProviderInfo": {
-		"type": "azureb2c",
-		"baseurl": "https://simbadevblocks.b2clogin.com/simbadevblocks.onmicrosoft.com",
-		"client_id": "3906ab4c-b1fd-43f8-95e5-ab95efee26cf",
-		"tenant": "simbadevblocks",
-		"policy": "B2C_1A_FORCEPASSWORDRESET_SIGNUP_SIGNIN"
-	},
 	"organisation": {
 		"id": "20e69814-43d0-42b4-8499-d13a9d1afb23",
 		"display_name": "brendan_birch_simbachain_com",

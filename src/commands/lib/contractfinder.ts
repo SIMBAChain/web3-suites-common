@@ -86,13 +86,11 @@ export async function absolutePaths(): Promise<Record<any, any> | void> {
         }
         const parsed = JSON.parse(buf.toString());
         const contractName = parsed.contractName;
-        console.log('contractName: ', contractName);
         const contractSourceName = parsed.sourceName;
         const astAndOtherInfo = await getASTAndOtherInfo(contractName, contractSourceName) as any;
         let absPath = astAndOtherInfo.ast.absolutePath ?
             astAndOtherInfo.ast.absolutePath :
             `contracts/${contractName}.sol`;
-        console.log('absPath: ', absPath);
         absolutePathMap[contractName] = absPath;
     }
     SimbaConfig.log.debug(`:: EXIT : absolutePathMap : ${JSON.stringify(absolutePathMap)}`);

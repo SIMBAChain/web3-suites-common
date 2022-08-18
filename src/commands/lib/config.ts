@@ -150,13 +150,16 @@ export class SimbaConfig {
     }
 
     public static resetSimbaJson(): void {
-        const defaultUserState = {
+        const defaultUserState: Record<any, any> = {
             baseURL: SimbaConfig.ProjectConfigStore.get("baseURL"),
             web3Suite: SimbaConfig.ProjectConfigStore.get("web3Suite"),
             logLevel: SimbaConfig.ProjectConfigStore.get("logLevel") ?
                 SimbaConfig.ProjectConfigStore.get("logLevel") :
                 "info",
         };
+        if (SimbaConfig.ProjectConfigStore.get("authProviderInfo")) {
+            defaultUserState["authProviderInfo"] = SimbaConfig.ProjectConfigStore.get("authProviderInfo");
+        }
         // clear simba.json
         SimbaConfig.ProjectConfigStore.clear();
         // set simba.json to basic settings
