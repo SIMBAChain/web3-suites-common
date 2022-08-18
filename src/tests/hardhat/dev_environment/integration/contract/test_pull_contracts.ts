@@ -108,30 +108,30 @@ describe('testing pulling .sol files using contractDesigns and other params', ()
     }).timeout(100000);
 });
 
-// // pick up with this one tomorrow
-// describe('testing pulling source code to simba.json', () => { // the tests container
-//     it('source code should be in simba.json after function calls', async () => {
-//         const simbaConfig = new SimbaConfig();
-//         const authStore = await simbaConfig.authStore();
-//         const originalSimbaJson = SimbaConfig.ProjectConfigStore.all;
-//         SimbaConfig.resetSimbaJson();
-//         const contractsInfo = SimbaConfig.ProjectConfigStore.get("contracts_info");
-//         expect(contractsInfo).to.eq(undefined);
-//         // expect(contractsInfo).to.eq(undefined || null);
+// pick up with this one tomorrow
+describe('testing pulling source code to simba.json', () => { // the tests container
+    it('source code should be in simba.json after function calls', async () => {
+        const simbaConfig = new SimbaConfig();
+        const authStore = await simbaConfig.authStore();
+        const originalSimbaJson = SimbaConfig.ProjectConfigStore.all;
+        SimbaConfig.resetSimbaJson();
+        const contractsInfo = SimbaConfig.ProjectConfigStore.get("contracts_info");
+        expect(contractsInfo).to.eq(undefined);
+        // expect(contractsInfo).to.eq(undefined || null);
 
-//         if (authStore instanceof AzureHandler) {
-//             await authStore.performLogin(false);
-//             // now set one contract's source code in simba.json:
-//             await pullMostRecentSourceCodeFromContractName(contractName);
-//             let contractsInfo = SimbaConfig.ProjectConfigStore.get("contracts_info");
-//             let entry = contractsInfo[contractName];
-//             expect(entry).to.not.eq(undefined);
-//             expect(entry).to.not.eq(null);
-//             SimbaConfig.resetSimbaJson();
+        if (authStore instanceof AzureHandler) {
+            await authStore.performLogin(false);
+            // now set one contract's source code in simba.json:
+            await pullMostRecentSourceCodeFromContractName(contractName);
+            let contractsInfo = SimbaConfig.ProjectConfigStore.get("contracts_info");
+            let entry = contractsInfo[contractName];
+            expect(entry).to.not.eq(undefined);
+            expect(entry).to.not.eq(null);
+            SimbaConfig.resetSimbaJson();
 
-//             // now pull using contractDesign
+            // now pull using contractDesign
 
-//         }
-//         SimbaConfig.ProjectConfigStore.set(originalSimbaJson)
-//     }).timeout(100000);
-// });
+        }
+        SimbaConfig.ProjectConfigStore.set(originalSimbaJson)
+    }).timeout(100000);
+});
