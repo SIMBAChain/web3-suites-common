@@ -178,6 +178,7 @@ export async function pullAllMostRecentContracts(
 }
 
 function pullSourceCodeForSimbaJson(contractDesign: ContractDesignWithCode): void {
+    console.log("we are entinering pullSourceCodeForSimbaJson");
     SimbaConfig.log.debug(`:: ENTER :`);
     const contractsInfo: Record<any, any> = SimbaConfig.ProjectConfigStore.get("contracts_info") ?
         SimbaConfig.ProjectConfigStore.get("contracts_info") :
@@ -188,6 +189,7 @@ function pullSourceCodeForSimbaJson(contractDesign: ContractDesignWithCode): voi
     singleContractInfo.design_id = contractDesign.id;
     singleContractInfo.source_code = Buffer.from(contractDesign.code, 'base64').toString();
     contractsInfo[contractDesign.name] = singleContractInfo;
+    console.log(`contracts_info from pull: ${JSON.stringify(contractsInfo)}`);
     SimbaConfig.ProjectConfigStore.set("contracts_info", contractsInfo);
     SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: pulling source code for ${chalk.greenBright(`${contractDesign.name}`)} ---> simba.json`)}`);
     SimbaConfig.log.debug(`:: EXIT :`);
@@ -242,7 +244,7 @@ export async function pullMostRecentRecentSolFileFromContractName(
 
 export async function pullMostRecentSourceCodeFromContractName(
     contractName: string,
-    contractDesignArray: ContractDesignWithCode[] | null = null,
+    contractDesignArray?: ContractDesignWithCode[] | null,
 ): Promise<void> {
     SimbaConfig.log.debug(`:: ENTER :`);
     const contractDesigns = contractDesignArray ?
@@ -251,6 +253,7 @@ export async function pullMostRecentSourceCodeFromContractName(
     if (contractDesigns) {
         for (let i = 0; i < contractDesigns.length; i++) {
             if (contractDesigns[i].name === contractName) {
+                console.log("we found one!");
                 pullSourceCodeForSimbaJson(contractDesigns[i]);
                 SimbaConfig.log.debug(`:: EXIT :`);
                 return;

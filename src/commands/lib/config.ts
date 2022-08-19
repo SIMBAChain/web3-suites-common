@@ -153,11 +153,13 @@ export class SimbaConfig {
         previousSimbaJson: Record<any, any>,
         newOrg?: string | Record<any, any> | unknown,
         forceReset: boolean = false,
+        keepOrgAndApp: boolean = true,
      ) {
         const entryParams = {
             previousSimbaJson,
             newOrg,
             forceReset,
+            keepOrgAndApp,
         }
         SimbaConfig.log.debug(`:: ENTER : entryParams : ${JSON.stringify(entryParams)}`);
         if (forceReset) {
@@ -166,10 +168,21 @@ export class SimbaConfig {
                 baseURL: previousSimbaJson.baseURL,
                 web3Suite: previousSimbaJson.web3Suite,
                 logLevel: previousSimbaJson.logLevel ? previousSimbaJson.logLevel : "info",
+                contracts_info: {},
             }
             if (previousSimbaJson.authProviderInfo) {
                 newSimbaJson["authProviderInfo"] = previousSimbaJson.authProviderInfo;
             }
+            if (keepOrgAndApp) {
+                if (previousSimbaJson.organisation) {
+                    newSimbaJson["organisation"] = previousSimbaJson.organisation;
+                }
+                if (previousSimbaJson.application) {
+                    newSimbaJson["application"] = previousSimbaJson.application;
+                }
+            }
+            SimbaConfig.ProjectConfigStore.clear();
+            SimbaConfig.ProjectConfigStore.set(newSimbaJson);
             SimbaConfig.log.debug(`:: EXIT :`);
             return;
         }
@@ -190,6 +203,10 @@ export class SimbaConfig {
         if (previousOrgName !== newOrgName) {
             SimbaConfig.log.info(`\nsimba: ${previousOrgName} !== ${newOrgName}; switching orgs, deleting contracts_info`);
             SimbaConfig.ProjectConfigStore.set("contracts_info", {});
+            if (!keepOrgAndApp) {
+                SimbaConfig.ProjectConfigStore.delete("organisation");
+                SimbaConfig.ProjectConfigStore.delete("application");
+            }
             SimbaConfig.log.debug(`:: EXIT :`);
             return;
         } else {
