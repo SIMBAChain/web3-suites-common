@@ -804,9 +804,6 @@ async function getABIForPrimaryContract(
         if (fileName !== `${contractName}.json`) {
             continue;
         }
-        // if (!(file.endsWith(`/${contractName}.json`)) && !(file.endsWith(`\\${contractName}.json`))) {
-        //     continue;
-        // }
         const buf = await promisifiedReadFile(file, {flag: 'r'});
         const parsed = JSON.parse(buf.toString());
         const abi = parsed.abi;
