@@ -166,9 +166,9 @@ export const chooseOrganisationFromList = async (config: SimbaConfig, url?: stri
 };
 
 /**
- * not implemented. doesn't fit with current login flow
  * @param config
  * @param orgName 
+ * @returns
  */
 export async function chooseOrganisationFromName(
     config: SimbaConfig,
@@ -180,7 +180,6 @@ export async function chooseOrganisationFromName(
     if (authStore) {
         try {
             const res = await authStore.doGetRequest(url);
-            config.organisation = res;
             SimbaConfig.log.info(`${chalk.cyanBright(`simba: logging in using organisation ${res.name}`)}`);
             SimbaConfig.log.debug(`:: EXIT : res : ${JSON.stringify(res)}`);
             return res;
@@ -501,7 +500,6 @@ export async function writeAndReturnASTAndOtherInfo(
 }
 
 /**
- * Not currently used anywhere
  * @param config 
  * @param id 
  * @returns 
@@ -518,7 +516,6 @@ export async function chooseApplicationFromName(
             const res = await authStore.doGetRequest(url, 'application/json');
             SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(res)}`);
             SimbaConfig.log.info(`${chalk.cyanBright(`simba: logging in using app ${res.name}`)}`);
-            config.application = res;
             return res;
         } catch (error) {
             if (axios.isAxiosError(error) && error.response) {
@@ -605,8 +602,7 @@ async function createApplicationForOrg(
 
     if (authStore) {
         try {
-            const response = await authStore.doPostRequest(url, postData, 'application/json');
-            return response.data;
+            return await authStore.doPostRequest(url, postData, 'application/json');
         } catch (error) {
             if (axios.isAxiosError(error) && error.response) {
                 SimbaConfig.log.debug(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error.response.data)}`)}`)
@@ -624,8 +620,6 @@ async function createApplicationForOrg(
         SimbaConfig.log.error(authErrors.badAuthProviderInfo);
     }
 };
-
-
 
 /**
  * choose SIMBA app from list
