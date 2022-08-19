@@ -37,6 +37,13 @@ interface ASTAndOtherInfo {
     contractSourceName?: string;
 }
 
+function WindowsOrMacFileName (filePath: string) {
+    SimbaConfig.log.debug(`:: ENTER : ${filePath}`);
+    const fileName = filePath.split('\\').pop()!.split('/').pop();
+    SimbaConfig.log.debug(`:: EXIT : ${fileName}`);
+    return fileName;
+}
+
 /**
  * used to retrieve lists of applications and organisations, mainly
  * @param config 
@@ -789,9 +796,12 @@ async function getABIForPrimaryContract(
         return "";
     }
     const buildDir = SimbaConfig.buildDirectory;
+    SimbaConfig.log.debug(`buildDir: ${buildDir}`);
     const files = await walkDirForContracts(buildDir, ".json");
     for (const file of files) {
-        if (!(file.endsWith(`/${contractName}.json`))) {
+        SimbaConfig.log.debug(`:: file : ${JSON.stringify(file)}`);
+        const fileName = WindowsOrMacFileName(file);
+        if (fileName !== `${contractName}.json`) {
             continue;
         }
         const buf = await promisifiedReadFile(file, {flag: 'r'});
@@ -800,6 +810,9 @@ async function getABIForPrimaryContract(
         SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(abi)}`);
         return abi;
     }
+    SimbaConfig.log.debug(`:: no abi found for contract ${contractName}`);
+    SimbaConfig.log.debug(`:: EXIT :`);
+    return;
 }
 
 /**
@@ -830,6 +843,7 @@ export async function getFieldFromPrimaryContractABI(
 async function primaryContractConstructor() {
     SimbaConfig.log.debug(`:: ENTER :`);
     const abi = await getABIForPrimaryContract();
+    SimbaConfig.log.debug(`:: abi for primary contract: ${JSON.stringify(abi)}`);
     for (let i = 0; i < abi.length; i++) {
         const entry = abi[i];
         if (entry.type === "constructor") {
