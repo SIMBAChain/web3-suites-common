@@ -355,7 +355,7 @@ export class SimbaConfig {
      * used for Hardhat, since some build info is stored in separate file from main artifact info
      */
     public static get buildInfoDirectory(): string {
-        return path.join(SimbaConfig.artifactDirectory, "/build-info");
+        return path.join(SimbaConfig.artifactDirectory, "build-info");
     }
 
     public get buildInfoDirectory(): string {

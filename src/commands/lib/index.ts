@@ -23,6 +23,12 @@ export {
     getASTAndOtherInfo,
     isLibrary,
     getContractKind,
+    WindowsOrMacFileName,
+    parseBuildInfoJsonName,
+    buildInfoJsonName,
+    getASTNodes,
+    ASTAndOtherInfo,
+    astAndOtherInfo,
 } from './api';
 export {
     AuthProviders,

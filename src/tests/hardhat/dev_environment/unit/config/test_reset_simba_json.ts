@@ -53,4 +53,5 @@ describe('resetSimbaJson test', () => { // the tests container
         SimbaConfig.ProjectConfigStore.clear();
         SimbaConfig.ProjectConfigStore.set(originalSimbaJson);
     });
+    
 });

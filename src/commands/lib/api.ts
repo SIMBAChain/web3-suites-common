@@ -27,7 +27,7 @@ interface Response {
     data: Dictionary<any>;
 }
 
-interface ASTAndOtherInfo {
+export interface ASTAndOtherInfo {
     ast: Record<any, any>;
     source?: Record<any, any>;
     compiler?: string;
@@ -37,7 +37,7 @@ interface ASTAndOtherInfo {
     contractSourceName?: string;
 }
 
-function WindowsOrMacFileName (filePath: string) {
+export function WindowsOrMacFileName (filePath: string) {
     SimbaConfig.log.debug(`:: ENTER : ${filePath}`);
     const fileName = filePath.split('\\').pop()!.split('/').pop();
     SimbaConfig.log.debug(`:: EXIT : ${fileName}`);
@@ -50,7 +50,7 @@ function WindowsOrMacFileName (filePath: string) {
  * @param url 
  * @returns
  */
-const getList = async (config: SimbaConfig, url?: string): Promise<Record<any, any> | void> => {
+export const getList = async (config: SimbaConfig, url?: string): Promise<Record<any, any> | void> => {
     SimbaConfig.log.debug(`:: ENTER :`);
     if (!url) {
         url = 'v2/organisations/';
@@ -207,7 +207,7 @@ export async function chooseOrganisationFromName(
  * @param location 
  * @returns 
  */
-function parseBuildInfoJsonName(
+export function parseBuildInfoJsonName(
     location: string,
 ): string {
     SimbaConfig.log.debug(`:: ENTER : ${location}`);
@@ -216,10 +216,16 @@ function parseBuildInfoJsonName(
         const jsonName = idArr[idArr.length-1];
         SimbaConfig.log.debug(`:: EXIT : ${jsonName}`);
         return jsonName;
-    } else {
-        SimbaConfig.log.debug(`:: EXIT : ${location}`);
-        return location;
     }
+    if (location.includes("\\")) {
+        const idArr = location.split("\\");
+        const jsonName = idArr[idArr.length-1];
+        SimbaConfig.log.debug(`:: EXIT : ${jsonName}`);
+        return jsonName;
+    }
+    SimbaConfig.log.debug(`:: EXIT : ${location}`);
+    return location;
+
 }
 
 /**
@@ -228,7 +234,7 @@ function parseBuildInfoJsonName(
  * @param contractSourceName 
  * @returns 
  */
-async function buildInfoJsonName(
+export async function buildInfoJsonName(
     contractName: string,
     contractSourceName: string,
 ): Promise<string> {
@@ -247,7 +253,8 @@ async function buildInfoJsonName(
         return "";
     }
     for (const file of files) {
-        if (!(file.endsWith(`${contractSourceName}/${contractName}.dbg.json`))) {
+        if (!(file.endsWith(`${contractSourceName}/${contractName}.dbg.json`))
+            && !(file.endsWith(`${contractSourceName}\\${contractName}.dbg.json`))) {
             continue;
         } else {
             const buf = await promisifiedReadFile(file, {flag: 'r'});
@@ -267,7 +274,7 @@ async function buildInfoJsonName(
  * @param ast 
  * @returns 
  */
-function getASTNodes(
+export function getASTNodes(
     ast: any
 ): Array<Record<any, any>> {
     const astNodes = ast.nodes ? ast.nodes : [];
@@ -317,13 +324,14 @@ export function isLibrary(
  * @param _buildInfoJsonName 
  * @returns 
  */
-async function astAndOtherInfo(
+export async function astAndOtherInfo(
     contractName: string,
     contractSourceName?: string,
     _buildInfoJsonName?: string,
 ): Promise<ASTAndOtherInfo> {
     const params = {
         contractName,
+        contractSourceName,
         _buildInfoJsonName,
     };
     SimbaConfig.log.debug(`:: ENTER : ${JSON.stringify(params)}`);
@@ -372,7 +380,6 @@ async function astAndOtherInfo(
             return _astAndOtherInfo;
         }
     }
-
     if (web3Suite === "hardhat") {
         for (const file of files) {
             if (!(file.endsWith(_buildInfoJsonName as string))) {
@@ -389,7 +396,6 @@ async function astAndOtherInfo(
     
                 const solcVersion = parsed.solcVersion;
                 _astAndOtherInfo.compiler = solcVersion;
-    
                 const input = parsed.input;
                 const language = parsed.language;
                 const inputSources = input.sources;

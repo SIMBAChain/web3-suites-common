@@ -30,4 +30,5 @@ export {
     addLib,
     SourceCodeComparer,
     pullContractFromDesignId,
+    pullSourceCodeForSimbaJson,
 } from "./commands/contract";
