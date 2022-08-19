@@ -1,6 +1,6 @@
 {
   "name": "@simbachain/web3-suites",
-  "version": "2.2.9",
+  "version": "2.2.10",
   "description": "common code for web3 suite plugins. Code in this repo can be used for truffle or hardhat, but is designed to be applicable to future web3 suite plugins as well.",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
