@@ -19,6 +19,11 @@ export class FileHandler {
         fs.writeFileSync(outputPath, data);
     }
 
+    public static async parsedFile(filePath: string) {
+        const buf = await promisifiedReadFile(filePath, {flag: 'r'});
+        return JSON.parse(buf.toString());
+    }
+
     public static makeDirectory(filePath: string) {
         const dirName = path.dirname(filePath);
         if (!fs.existsSync(dirName)) {

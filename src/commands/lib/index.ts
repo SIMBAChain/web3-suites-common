@@ -29,6 +29,9 @@ export {
     getASTNodes,
     ASTAndOtherInfo,
     astAndOtherInfo,
+    selectNewApplicationName,
+    getABIForPrimaryContract,
+    primaryContractConstructor,
 } from './api';
 export {
     AuthProviders,

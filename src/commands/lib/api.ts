@@ -548,7 +548,7 @@ export async function chooseApplicationFromName(
  * @param config
  * @returns
 **/
-async function selectNewApplicationName(
+export async function selectNewApplicationName(
     config: SimbaConfig,
 ): Promise<any> {
     const appName = await prompt({
@@ -793,7 +793,7 @@ export async function getStorages(
  * Used for Hardhat, which stores AST separately from ABI
  * @returns 
  */
-async function getABIForPrimaryContract(
+export async function getABIForPrimaryContract(
 ) {
     SimbaConfig.log.debug(`:: ENTER :`);
     const contractName = SimbaConfig.ProjectConfigStore.get("primary");
@@ -849,7 +849,7 @@ export async function getFieldFromPrimaryContractABI(
  * get constructor for primary contract
  * @returns 
  */
-async function primaryContractConstructor() {
+export async function primaryContractConstructor() {
     SimbaConfig.log.debug(`:: ENTER :`);
     const abi = await getABIForPrimaryContract();
     SimbaConfig.log.debug(`:: abi for primary contract: ${JSON.stringify(abi)}`);
