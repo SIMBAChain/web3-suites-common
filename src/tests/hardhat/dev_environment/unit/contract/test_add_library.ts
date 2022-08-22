@@ -2,24 +2,13 @@ import {
     SimbaConfig,
 } from "../../../../../commands/lib/config";
 import {
-    AzureHandler,
-} from "../../../../../commands/lib/authentication";
-import {
-    pullContractsInteractive,
-    pullAllMostRecentContracts,
-    pullAllMostRecentSolFilesAndSourceCode,
-    pullMostRecentRecentSolFileFromContractName,
-    pullMostRecentFromContractName,
     addLib,
 } from "../../../../../commands/contract";
-import {
-    printAllContracts,
-} from "../../../../../commands/contract/list"
 import { expect } from 'chai';
 import 'mocha';
 
 
-describe('add library test', () => { // the tests container
+describe('add library test', () => {
     it('should be 0x', async () => {
         // grab full simba.json so we can use it to reset after
         const simbaJson = SimbaConfig.ProjectConfigStore.all;

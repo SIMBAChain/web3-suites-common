@@ -1,17 +1,4 @@
 import {
-    SimbaConfig,
-} from "../../../../../commands/lib/config";
-import {
-    AzureHandler,
-} from "../../../../../commands/lib/authentication";
-import {
-    pullContractsInteractive,
-    pullAllMostRecentContracts,
-    pullAllMostRecentSolFilesAndSourceCode,
-    pullMostRecentRecentSolFileFromContractName,
-    pullMostRecentFromContractName
-} from "../../../../../commands/contract";
-import {
     WindowsOrMacFileName,
     parseBuildInfoJsonName,
     getASTNodes,
@@ -178,7 +165,7 @@ describe('tests primaryContractConstructor', () => {
 });
 
 describe('tests primaryConstructorInputs', () => {
-    it('type, name for first two entries should be uint256, _outNum and string, _ourString', async () => {
+    it('type, name for first two entries should be uint256, _ourNum and string, _ourString', async () => {
         const constructorInputs = await primaryConstructorInputs();
         expect(constructorInputs[0].name).to.equal("_ourNum");
         expect(constructorInputs[1].name).to.equal("_ourString");

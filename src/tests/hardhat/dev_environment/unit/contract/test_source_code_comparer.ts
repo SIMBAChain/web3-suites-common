@@ -1,26 +1,11 @@
 import {
-    SimbaConfig,
-} from "../../../../../commands/lib/config";
-import {
-    AzureHandler,
-} from "../../../../../commands/lib/authentication";
-import {
-    pullContractsInteractive,
-    pullAllMostRecentContracts,
-    pullAllMostRecentSolFilesAndSourceCode,
-    pullMostRecentRecentSolFileFromContractName,
-    pullMostRecentFromContractName,
-    addLib,
     SourceCodeComparer,
 } from "../../../../../commands/contract";
-import {
-    printAllContracts,
-} from "../../../../../commands/contract/list";
 import {default as chalk} from 'chalk';
 import { expect } from 'chai';
 import 'mocha';
 
-describe('testing source code exists in build files', () => { // the tests container
+describe('testing source code exists in build files', () => {
     it('should be false', async () => {
         const scc = new SourceCodeComparer();
         const nonexistentContractName = "ThisDoesNotExist";
@@ -36,7 +21,7 @@ describe('testing source code exists in build files', () => { // the tests conta
     });
 });
 
-describe('testing comparison of source code between build files and simba.json', () => { // the tests container
+describe('testing comparison of source code between build files and simba.json', () => {
     it('should be false for TestContractVT20 - no change', async () => {
         const scc = new SourceCodeComparer();
         const contractName = "TestContractVT20"
@@ -52,7 +37,7 @@ describe('testing comparison of source code between build files and simba.json',
     });
 });
 
-describe('testing generation of export status messages', () => { // the tests container
+describe('testing generation of export status messages', () => {
     const choices = [
         {
             title: "TestContractVT20",

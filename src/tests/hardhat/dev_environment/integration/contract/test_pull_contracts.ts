@@ -5,40 +5,40 @@ import {
     AzureHandler,
 } from "../../../../../commands/lib/authentication";
 import {
-    pullContractsInteractive,
     pullAllMostRecentContracts,
     pullAllMostRecentSolFilesAndSourceCode,
     pullMostRecentRecentSolFileFromContractName,
     pullMostRecentFromContractName,
-    addLib,
-    SourceCodeComparer,
 } from "../../../../../commands/contract";
 import {
-    promisifiedReadFile,
-    walkDirForContracts,
     pullSourceCodeForSimbaJson
 } from "../../../../../"
 import {
     allContracts,
-    printAllContracts,
 } from "../../../../../commands/contract/list";
 import {
     FileHandler,
 } from "../../../../tests_setup"
 import * as fs from "fs";
-import {default as chalk} from 'chalk';
 import { expect } from 'chai';
 import 'mocha';
-import { pullContractFromContractDesign, pullContractFromDesignId, pullMostRecentSourceCodeFromContractName } from "../../../../../commands/contract/pull";
+import {
+    pullContractFromContractDesign,
+    pullContractFromDesignId,
+    pullMostRecentSourceCodeFromContractName,
+} from "../../../../../commands/contract/pull";
+import * as path from 'path';
+import {cwd} from 'process';
 
-const contractName = "TestContractVT3";
-const oldContractID = "cb3ad592-1ca2-43b3-a9d0-cd0d0f127b32";
-// filePaths should be relative to tests/hardhat/
-const simbaDir = `./contracts/SimbaImports/`;
-const filePath = `${simbaDir}${contractName}.sol`;
+const contractDesignsPath = "../tests_setup/contract_designs.json";
 
-describe('testing pulling .sol file from designID', () => { // the tests container
+describe('testing pulling .sol file from designID', () => {
     it('should exist in /contracts/simbaimports/ after', async () => {
+        let simbaDir = path.join(cwd(), "contracts");
+        simbaDir = path.join(simbaDir, "SimbaImports");
+        const contractName = "TestContractVT3";
+        const oldContractID = "cb3ad592-1ca2-43b3-a9d0-cd0d0f127b32";
+        const filePath = path.join(simbaDir, `${contractName}.sol`);
         const simbaConfig = new SimbaConfig();
         const authStore = await simbaConfig.authStore();
         if (authStore instanceof AzureHandler) {
@@ -54,8 +54,10 @@ describe('testing pulling .sol file from designID', () => { // the tests contain
     }).timeout(100000);
 });
 
-describe('testing pulling .sol files using contractDesigns and other params', () => { // the tests container
+describe('testing pulling .sol files using contractDesigns and other params', () => {
     it('contracts should exist in /contracts/simbaimports/ after', async () => {
+        let simbaDir = path.join(cwd(), "contracts");
+        simbaDir = path.join(simbaDir, "SimbaImports");
         const simbaConfig = new SimbaConfig();
         const authStore = await simbaConfig.authStore();
         const contractDesigns: any = await allContracts();
@@ -78,7 +80,7 @@ describe('testing pulling .sol files using contractDesigns and other params', ()
             expect(exists).to.equal(false);
 
             await pullContractFromContractDesign(firstContract);
-            let filePath = `${simbaDir}${firstContractName}.sol`;
+            let filePath = path.join(simbaDir, `${firstContractName}.sol`);
             exists = fs.existsSync(filePath);
             expect(exists).to.equal(true);
             
@@ -87,7 +89,7 @@ describe('testing pulling .sol files using contractDesigns and other params', ()
             exists = fs.existsSync(simbaDir);
             expect(exists).to.equal(false);
             await pullMostRecentRecentSolFileFromContractName(firstContractName, contractDesigns);
-            filePath = `${simbaDir}${firstContractName}.sol`;
+            filePath = path.join(simbaDir, `${firstContractName}.sol`);
             exists = fs.existsSync(filePath);
             expect(exists).to.equal(true);
             
@@ -98,7 +100,7 @@ describe('testing pulling .sol files using contractDesigns and other params', ()
             await pullAllMostRecentContracts(contractDesigns);
             // now make sure each contract's .sol file was pulled
             for (let i = 0; i < contractNames.length; i++) {
-                filePath = `${simbaDir}${contractNames[i]}.sol`;
+                filePath = path.join(simbaDir, `${contractNames[i]}.sol`);
                 let exists = fs.existsSync(filePath);
                 expect(exists).to.equal(true);
             }
@@ -111,9 +113,10 @@ describe('testing pulling .sol files using contractDesigns and other params', ()
 
 
 // pick up with this one tomorrow
-describe('testing pulling source code to simba.json', () => { // the tests container
+describe('testing pulling source code to simba.json', () => {
     it('source code should be in simba.json after function calls', async () => {
-        const contractDesigns: any = await allContracts();
+        const contractName = "TestContractVT3";
+        const contractDesigns = await FileHandler.parsedFile(contractDesignsPath);
         const simbaConfig = new SimbaConfig();
         const authStore = await simbaConfig.authStore();
         const originalSimbaJson = SimbaConfig.ProjectConfigStore.all;
@@ -121,7 +124,6 @@ describe('testing pulling source code to simba.json', () => { // the tests conta
         const contractsInfo = SimbaConfig.ProjectConfigStore.get("contracts_info");
         const currentKeysLength = Object.keys(contractsInfo).length
         expect(currentKeysLength).to.eq(0);
-        // expect(contractsInfo).to.eq(undefined || null);
 
         if (authStore instanceof AzureHandler) {
             await authStore.performLogin(false);
@@ -154,12 +156,14 @@ describe('testing pulling source code to simba.json', () => { // the tests conta
     }).timeout(100000);
 });
 
-describe('testing pulling .sol files to contracts/SimbaImports dir and soure code to simba.json', () => { // the tests container
+describe('testing pulling .sol files to contracts/SimbaImports dir and source code to simba.json', () => {
     it('contracts should exist in /contracts/simbaimports/ after', async () => {
         // resetting
         const simbaConfig = new SimbaConfig();
         const authStore = await simbaConfig.authStore();
-        const contractDesigns: any = await allContracts();
+        const contractDesigns = await FileHandler.parsedFile(contractDesignsPath);
+        let simbaDir = path.join(cwd(), "contracts");
+        simbaDir = path.join(simbaDir, "SimbaImports");
         const originalSimbaJson = SimbaConfig.ProjectConfigStore.all;
         let contractNames: any = [];
         for (let i = 0; i < contractDesigns.length; i++) {
@@ -174,7 +178,6 @@ describe('testing pulling .sol files to contracts/SimbaImports dir and soure cod
         FileHandler.removeDirectory(simbaDir);
 
         if (authStore instanceof AzureHandler) {
-            
             // prior conditions:
             await authStore.performLogin(false);
             let exists = fs.existsSync(simbaDir);
@@ -193,7 +196,7 @@ describe('testing pulling .sol files to contracts/SimbaImports dir and soure cod
             expect(entry).to.not.eq(undefined);
             expect(entry).to.not.eq(null);
 
-            let filePath = `${simbaDir}${firstContractName}.sol`;
+            let filePath = path.join(simbaDir, `${firstContractName}.sol`);
             exists = fs.existsSync(filePath);
             expect(exists).to.equal(true);
             
@@ -215,7 +218,7 @@ describe('testing pulling .sol files to contracts/SimbaImports dir and soure cod
             
             // posterior conditions
             for (let i = 0; i < contractNames.length; i++) {
-                filePath = `${simbaDir}${contractNames[i]}.sol`;
+                filePath = path.join(simbaDir, `${contractNames[i]}.sol`);
                 let exists = fs.existsSync(filePath);
                 expect(exists).to.equal(true);
             }

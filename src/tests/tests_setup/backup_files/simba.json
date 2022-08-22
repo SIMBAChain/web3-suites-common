@@ -2,6 +2,7 @@
 	"baseURL": "https://simba-dev-api.platform.simbachain.com/v2/",
 	"web3Suite": "hardhat",
 	"logLevel": "info",
+	"primary": "TestContractVT20",
 	"organisation": {
 		"id": "20e69814-43d0-42b4-8499-d13a9d1afb23",
 		"display_name": "brendan_birch_simbachain_com",
@@ -136,7 +137,6 @@
 		"metadata": null,
 		"openapi": "https://simba-dev-api.platform.simbachain.com/v2/apps/BrendanTestApp/"
 	},
-	"primary": "TestContractVT20",
 	"contracts_info": {
 		"TestContractVT20": {
 			"design_id": "40eb528a-e365-4a84-b945-44d82029a66b",
