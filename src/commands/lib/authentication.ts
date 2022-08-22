@@ -118,6 +118,15 @@ class KeycloakHandler {
     }
 
     /**
+     * To be compatible with AzureHandler
+     */
+    public async performLogin(
+        interactive: boolean = true,
+        ): Promise<any> {
+        return;
+    }
+
+    /**
      * used as field for our auth token
      * @returns 
      */
