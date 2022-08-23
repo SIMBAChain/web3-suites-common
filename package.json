@@ -22,7 +22,7 @@
   ],
   "scripts": {
     "buildtest": "ts-node src/tests_setup/build/build.ts",
-    "test": "cd src/tests/hardhat/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register './**/*.ts' && cd ../truffle/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register './**/*.ts'"
+    "test": "cd src/tests/tests_setup/build && ts-node build.ts && cd ../../hardhat/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register './**/*.ts' && cd ../truffle/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register './**/*.ts' && cd ../tests_setup/clean/ && ts-node clean.ts"
   },
   "repository": {
     "type": "git",

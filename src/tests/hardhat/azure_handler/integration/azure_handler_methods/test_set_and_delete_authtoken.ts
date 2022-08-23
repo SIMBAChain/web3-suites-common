@@ -46,5 +46,5 @@ describe('tests performLogin with non-interactive login', () => {
         SimbaConfig.ProjectConfigStore.set(originalSimbaJson);
         SimbaConfig.ConfigStore.clear();
         SimbaConfig.ConfigStore.set(originalAuthConfig);
-    });
+    }).timeout(10000);
 });

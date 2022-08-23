@@ -1431,8 +1431,8 @@ class AzureHandler {
                     return;
                 }
                 throw error;
-            }
         }
+    }
 
     private base64URL(str: string): string {
         return str
