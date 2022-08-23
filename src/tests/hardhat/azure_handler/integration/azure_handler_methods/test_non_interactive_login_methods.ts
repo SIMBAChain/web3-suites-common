@@ -50,7 +50,7 @@ describe('tests performLogin with non-interactive login', () => {
         SimbaConfig.ProjectConfigStore.set(originalSimbaJson);
         SimbaConfig.ConfigStore.clear();
         SimbaConfig.ConfigStore.set(originalAuthConfig);
-    });
+    }).timeout(10000);
 });
 
 describe('tests loginAndGetAuthToken with non-interactive login', () => {
@@ -92,7 +92,7 @@ describe('tests loginAndGetAuthToken with non-interactive login', () => {
         SimbaConfig.ProjectConfigStore.set(originalSimbaJson);
         SimbaConfig.ConfigStore.clear();
         SimbaConfig.ConfigStore.set(originalAuthConfig);
-    });
+    }).timeout(10000);
 });
 
 describe('tests getAndSetAuthTokenFromClientCreds', () => {
@@ -129,5 +129,5 @@ describe('tests getAndSetAuthTokenFromClientCreds', () => {
         SimbaConfig.ProjectConfigStore.set(originalSimbaJson);
         SimbaConfig.ConfigStore.clear();
         SimbaConfig.ConfigStore.set(originalAuthConfig);
-    });
+    }).timeout(10000);
 });
