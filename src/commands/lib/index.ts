@@ -36,4 +36,6 @@ export {
 export {
     AuthProviders,
     authErrors,
+    AzureHandler,
+    KeycloakHandler,
 } from "./authentication";

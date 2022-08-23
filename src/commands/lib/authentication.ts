@@ -3,10 +3,6 @@ import {
     SimbaConfig,
     handleV2,
 } from "../lib";
-import {
-    chooseOrganisationFromName,
-    chooseApplicationFromName,
-} from "./api";
 import {default as cryptoRandomString} from 'crypto-random-string';
 import * as CryptoJS from 'crypto-js';
 import {default as chalk} from 'chalk';
