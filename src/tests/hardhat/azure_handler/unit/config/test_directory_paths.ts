@@ -1,28 +1,28 @@
-import {
-    SimbaConfig,
-} from "../../../../../commands/lib/config";
-import { expect } from 'chai';
-import 'mocha';
-import * as path from 'path';
-import {cwd} from 'process';
+// import {
+//     SimbaConfig,
+// } from "../../../../../commands/lib/config";
+// import { expect } from 'chai';
+// import 'mocha';
+// import * as path from 'path';
+// import {cwd} from 'process';
 
-describe('tests artifactDirectory', () => {
-    it('should be path.join(cwd(), "artifacts")', async () => {
-        const artifactDirectory = SimbaConfig.artifactDirectory;
-        expect(artifactDirectory).to.equal(path.join(cwd(), "artifacts"));
-    });
-});
+// describe('tests artifactDirectory', () => {
+//     it('should be path.join(cwd(), "artifacts")', async () => {
+//         const artifactDirectory = SimbaConfig.artifactDirectory;
+//         expect(artifactDirectory).to.equal(path.join(cwd(), "artifacts"));
+//     });
+// });
 
-describe('tests buildInfoDirectory', () => {
-    it('should be path.join(cwd(), "artifacts/build-info")', async () => {
-        const artifactDirectory = SimbaConfig.buildInfoDirectory;
-        expect(artifactDirectory).to.equal(path.join(cwd(), "artifacts/build-info"));
-    });
-});
+// describe('tests buildInfoDirectory', () => {
+//     it('should be path.join(cwd(), "artifacts/build-info")', async () => {
+//         const artifactDirectory = SimbaConfig.buildInfoDirectory;
+//         expect(artifactDirectory).to.equal(path.join(cwd(), "artifacts/build-info"));
+//     });
+// });
 
-describe('tests buildDirectory', () => {
-    it('should be path.join(cwd(), "artifacts/contracts")', async () => {
-        const artifactDirectory = SimbaConfig.buildDirectory;
-        expect(artifactDirectory).to.equal(path.join(cwd(), "artifacts/contracts"));
-    });
-});
+// describe('tests buildDirectory', () => {
+//     it('should be path.join(cwd(), "artifacts/contracts")', async () => {
+//         const artifactDirectory = SimbaConfig.buildDirectory;
+//         expect(artifactDirectory).to.equal(path.join(cwd(), "artifacts/contracts"));
+//     });
+// });
