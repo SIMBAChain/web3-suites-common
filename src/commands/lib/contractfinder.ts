@@ -7,7 +7,7 @@ import {
 } from "./";
 import {default as chalk} from 'chalk';
 
-const SimbaPath = "/SimbaImports";
+const SimbaPath = "SimbaImports";
 
 /**
  * function used in many operations in this module. helps us find compiled contracts
@@ -70,7 +70,7 @@ export async function absolutePaths(): Promise<Record<any, any> | void> {
     } catch (e) {
         const err = e as any;
         if (err.code === 'ENOENT') {
-            // not logging as an error because it's not an error in this particular context
+            // not logging as an error because it's not an error in every instance
             // the user may not have compiled yet, and that's OK
             SimbaConfig.log.debug(`${chalk.redBright(`\nsimba: Simba was not able to find any build artifacts.\nDid you forget to compile?\n`)}`);
         }
@@ -86,13 +86,11 @@ export async function absolutePaths(): Promise<Record<any, any> | void> {
         }
         const parsed = JSON.parse(buf.toString());
         const contractName = parsed.contractName;
-        console.log('contractName: ', contractName);
         const contractSourceName = parsed.sourceName;
         const astAndOtherInfo = await getASTAndOtherInfo(contractName, contractSourceName) as any;
         let absPath = astAndOtherInfo.ast.absolutePath ?
             astAndOtherInfo.ast.absolutePath :
-            `contracts/${contractName}.sol`;
-        console.log('absPath: ', absPath);
+            path.join("contracts", `${contractName}.sol`);
         absolutePathMap[contractName] = absPath;
     }
     SimbaConfig.log.debug(`:: EXIT : absolutePathMap : ${JSON.stringify(absolutePathMap)}`);
@@ -110,7 +108,7 @@ export function contractAbsolutePath(
     SimbaConfig.log.debug(`:: ENTER : ${JSON.stringify(entryParams)}`);
     const contractPath = _absolutePaths[contractName] ?
         _absolutePaths[contractName] :
-        `contracts/${contractName}.sol`;
+        path.join("contracts", `${contractName}.sol`);
     SimbaConfig.log.debug(`:: EXIT : ${contractPath}`);
     return contractPath;
 }
@@ -121,8 +119,14 @@ export function contractSimbaPath(
 ): string {
     SimbaConfig.log.debug(`:: ENTER : }`);
     const contractPath = contractAbsolutePath(_absolutePaths, contractName);
-    const base = contractPath.split("/")[0];
-    const newPathWithSimba = base + SimbaPath + contractPath.slice(base.length);
+    let base;
+    if (contractPath.includes("/")) {
+        base = contractPath.split("/")[0];
+    } else {
+        base = contractPath.split("\\")[0];
+    }
+    let newPathWithSimba = path.join(base, SimbaPath);
+    newPathWithSimba = path.join(newPathWithSimba, contractPath.slice(base.length));
     const newAbsoluteSimbaPath = path.join(cwd(), newPathWithSimba);
     const newAbsoluteDir = path.dirname(newAbsoluteSimbaPath);
     if (!fs.existsSync(newAbsoluteDir)) {

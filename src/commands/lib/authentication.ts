@@ -3,10 +3,6 @@ import {
     SimbaConfig,
     handleV2,
 } from "../lib";
-import {
-    chooseOrganisationFromName,
-    chooseApplicationFromName,
-} from "./api";
 import {default as cryptoRandomString} from 'crypto-random-string';
 import * as CryptoJS from 'crypto-js';
 import {default as chalk} from 'chalk';
@@ -939,7 +935,7 @@ class AzureHandler {
         return `${this._authorizeUrl}?client_id=${this.clientID}&redirect_uri=${this.redirectURI}&response_type=code&state=${this.state}&scope=${this.scope}&code_challenge=${this.pkceChallenge}&code_challenge_method=S256`;
     }
 
-    protected deleteAuthInfo(): void {
+    private deleteAuthInfo(): void {
         SimbaConfig.log.debug(`:: ENTER :`);
         if (this.config.get(this.configBase)) {
             this.config.set(this.configBase, {});
@@ -947,7 +943,7 @@ class AzureHandler {
         }
     }
 
-    protected getConfigBase(): string {
+    public getConfigBase(): string {
         SimbaConfig.log.debug(`:: ENTER :`);
         if (!this.configBase) {
             this.configBase = this.baseURL.split(".").join("_");
@@ -983,7 +979,7 @@ class AzureHandler {
         }, this.closeTimeout);
     }
 
-    private async getAndSetAuthTokenFromClientCreds(): Promise<any> {
+    public async getAndSetAuthTokenFromClientCreds(): Promise<any> {
         SimbaConfig.log.debug(`:: ENTER :`);
         // all three of these will need to  be changed to gather
         // these variables from ...ci.yml file
@@ -1108,6 +1104,20 @@ class AzureHandler {
                 // we use forceRefresh if we've tried a request
                 // and got back a 401
                 if (forceRefresh) {
+                    if (!auth.refresh_token) {
+                        // this would mean our AZ token is for client creds
+                        const clientID = process.env.SIMBA_PLUGIN_ID;
+                        const clientSecret = process.env.SIMBA_PLUGIN_SECRET;
+                        const authEndpoint = process.env.SIMBA_PLUGIN_AUTH_ENDPOINT ? process.env.SIMBA_PLUGIN_AUTH_ENDPOINT : "/o/";
+                        if (!clientID || !clientSecret || !authEndpoint) {
+                            const message = "refresh_token not present in auth token. To use client credentials, please set SIMBA_PLUGIN_ID, SIMBA_PLUGIN_SECRET, and SIMBA_PLUGIN_AUTH_ENDPOINT in your environment variables.";
+                            SimbaConfig.log.error(`${chalk.redBright(`\nsimba: ${message}`)}`);
+                            return new Error(message);
+                        }
+                        await this.getAndSetAuthTokenFromClientCreds();
+                        SimbaConfig.log.debug(`:: EXIT :`);
+                        return;
+                    }
                     const params = new URLSearchParams();
                     params.append('grant_type', 'refresh_token');
                     params.append('client_id', this.clientID);
@@ -1134,7 +1144,7 @@ class AzureHandler {
                         const clientSecret = process.env.SIMBA_PLUGIN_SECRET;
                         const authEndpoint = process.env.SIMBA_PLUGIN_AUTH_ENDPOINT ? process.env.SIMBA_PLUGIN_AUTH_ENDPOINT : "/o/";
                         if (!clientID || !clientSecret || !authEndpoint) {
-                            const message = "refresh_token not present in auth token, and SIMBA_PLUGIN_ID not present in environment variables. Please set SIMBA_PLUGIN_ID, SIMBA_PLUGIN_SECRET, and SIMBA_PLUGIN_AUTH_ENDPOINT in your environment variables.";
+                            const message = "refresh_token not present in auth token. To use client credentials, please set SIMBA_PLUGIN_ID, SIMBA_PLUGIN_SECRET, and SIMBA_PLUGIN_AUTH_ENDPOINT in your environment variables.";
                             SimbaConfig.log.error(`${chalk.redBright(`\nsimba: ${message}`)}`);
                             return new Error(message);
                         }
@@ -1295,7 +1305,7 @@ class AzureHandler {
         SimbaConfig.log.debug(`:: EXIT :`);
     }
 
-    protected hasConfig(key: string): boolean {
+    public hasConfig(key: string): boolean {
         SimbaConfig.log.debug(`:: ENTER :`)
         if (!this.config.has(this.configBase)) {
             return false;
@@ -1304,7 +1314,7 @@ class AzureHandler {
         return key in this.config.get(this.configBase);
     }
 
-    protected getConfig(key: string): any {
+    public getConfig(key: string): any {
         SimbaConfig.log.debug(`:: ENTER :`)
         if (!this.config.has(this.configBase)) {
             return;
@@ -1329,7 +1339,7 @@ class AzureHandler {
         return this.getConfig(key);
     }
 
-    protected setConfig(key: string, value: any): any {
+    public setConfig(key: string, value: any): any {
         SimbaConfig.log.debug(`:: ENTER :`)
         if (!this.config.has(this.configBase)) {
             // NOTE(Adam): This should never be the case since it is created in the constructor
@@ -1397,8 +1407,6 @@ class AzureHandler {
                 return resData;
             }
         } catch (error) {
-                if (axios.isAxiosError(error)) {
-                }
                 if (axios.isAxiosError(error) && error.response) {
                     SimbaConfig.log.debug(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error.response.data)}`)}`);
                     if (axios.isAxiosError(error) && error.response && error.response.status === 401) {
@@ -1423,8 +1431,8 @@ class AzureHandler {
                     return;
                 }
                 throw error;
-            }
         }
+    }
 
     private base64URL(str: string): string {
         return str

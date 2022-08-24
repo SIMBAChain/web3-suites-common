@@ -177,7 +177,7 @@ export async function pullAllMostRecentContracts(
     SimbaConfig.log.debug(`:: EXIT :`);
 }
 
-function pullSourceCodeForSimbaJson(contractDesign: ContractDesignWithCode): void {
+export function pullSourceCodeForSimbaJson(contractDesign: ContractDesignWithCode): void {
     SimbaConfig.log.debug(`:: ENTER :`);
     const contractsInfo: Record<any, any> = SimbaConfig.ProjectConfigStore.get("contracts_info") ?
         SimbaConfig.ProjectConfigStore.get("contracts_info") :
@@ -242,7 +242,7 @@ export async function pullMostRecentRecentSolFileFromContractName(
 
 export async function pullMostRecentSourceCodeFromContractName(
     contractName: string,
-    contractDesignArray: ContractDesignWithCode[] | null = null,
+    contractDesignArray?: ContractDesignWithCode[] | null,
 ): Promise<void> {
     SimbaConfig.log.debug(`:: ENTER :`);
     const contractDesigns = contractDesignArray ?

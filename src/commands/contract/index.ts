@@ -24,6 +24,7 @@ export {
     pullMostRecentSourceCodeFromContractName,
     pullMostRecentFromContractName,
     pullContractFromDesignId,
+    pullSourceCodeForSimbaJson
 } from "./pull";
 
 export {

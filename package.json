@@ -21,7 +21,8 @@
     "blockchain"
   ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "buildtest": "ts-node src/tests_setup/build/build.ts",
+    "test": "cd src/tests/tests_setup/build && ts-node build.ts && cd ../../hardhat/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register './**/*.ts' && cd ../truffle/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register './**/*.ts' && cd ../tests_setup/clean/ && ts-node clean.ts"
   },
   "repository": {
     "type": "git",
@@ -46,14 +47,18 @@
     "polka": "^0.5.2",
     "prompts": "^2.3.2",
     "request-promise": "^4.2.6",
-    "ts-node": "^10.7.0",
     "tslog": "^3.3.3",
     "typescript": "3.9.7",
     "utf8": "^3.0.0"
   },
   "devDependencies": {
+    "@types/chai": "^4.3.3",
     "@types/crypto-js": "3.1.44",
+    "@types/mocha": "^9.1.1",
     "@types/request-promise": "^4.1.48",
-    "@types/utf8": "^3.0.1"
+    "@types/utf8": "^3.0.1",
+    "chai": "^4.3.6",
+    "mocha": "^10.0.0",
+    "ts-node": "^10.9.1"
   }
 }

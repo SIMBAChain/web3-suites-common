@@ -23,8 +23,19 @@ export {
     getASTAndOtherInfo,
     isLibrary,
     getContractKind,
+    WindowsOrMacFileName,
+    parseBuildInfoJsonName,
+    buildInfoJsonName,
+    getASTNodes,
+    ASTAndOtherInfo,
+    astAndOtherInfo,
+    selectNewApplicationName,
+    getABIForPrimaryContract,
+    primaryContractConstructor,
 } from './api';
 export {
     AuthProviders,
     authErrors,
+    AzureHandler,
+    KeycloakHandler,
 } from "./authentication";

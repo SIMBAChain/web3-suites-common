@@ -14,7 +14,11 @@
     "allowJs": true,
     "skipLibCheck": true
   },
-  "exclude": ["dist", "node_modules"],
+  "exclude": [
+    "./dist",
+    "./node_modules",
+    "./src/tests"
+  ],
   "include": [
     "./test",
     "./src"
