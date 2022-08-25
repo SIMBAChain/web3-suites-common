@@ -102,7 +102,6 @@ class KeycloakHandler {
     private projectConfig: Configstore;
     private baseURL: string;
     private verificationInfo: KeycloakDeviceVerificationInfo;
-    private tokenExpirationPad: number;
     private configBase: string;
     private authErrors: AuthErrors;
     private _loggedIn: boolean;
@@ -119,7 +118,6 @@ class KeycloakHandler {
             SimbaConfig.log.error(`:: ${this.authErrors.noBaseURLError}`);
         }
         this.configBase = this.baseURL.split(".").join("_");
-        this.tokenExpirationPad = tokenExpirationPad;
     }
 
     /**
@@ -522,7 +520,7 @@ class KeycloakHandler {
         }
         // return true below, to pad for time required for operations
         if (authToken.expires_at <= new Date()) {
-            SimbaConfig.log.debug(`:: EXIT : access_token expiring within ${this.tokenExpirationPad} seconds, returning true`);
+            SimbaConfig.log.debug(`:: EXIT : access_token expired, returning true`);
             return true;
         }
         SimbaConfig.log.debug(`:: EXIT : false`);
@@ -547,7 +545,7 @@ class KeycloakHandler {
         }
         // return true below, to pad for time required for operations
         if (authToken.refresh_expires_at <= new Date()) {
-            SimbaConfig.log.debug(`:: EXIT : access_token expiring within ${this.tokenExpirationPad} seconds, returning true`);
+            SimbaConfig.log.debug(`:: EXIT : refresh_token expired, returning true`);
             return true;
         }
         SimbaConfig.log.debug(`:: EXIT : false`);
