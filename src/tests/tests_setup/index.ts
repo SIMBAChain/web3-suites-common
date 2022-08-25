@@ -5,3 +5,7 @@ export {
 export {
     filePaths,
 } from "./file_paths";
+
+export {
+    testContractVT20AST,
+} from "./sample_ast";
