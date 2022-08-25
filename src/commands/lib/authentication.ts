@@ -79,6 +79,15 @@ interface KeycloakAccessToken {
     scope: string;
 }
 
+interface ClientCredsToken {
+    access_token: string;
+    expires_in: number;
+    token_type: string;
+    scope: string;
+    retrieved_at?: string;
+    expires_at: number;
+}
+
 function addSlashToURL(baseURL: string): string {
     return baseURL.endsWith("/") ? baseURL : `${baseURL}/`
 }
@@ -93,7 +102,6 @@ class KeycloakHandler {
     private projectConfig: Configstore;
     private baseURL: string;
     private verificationInfo: KeycloakDeviceVerificationInfo;
-    private tokenExpirationPad: number;
     private configBase: string;
     private authErrors: AuthErrors;
     private _loggedIn: boolean;
@@ -110,7 +118,6 @@ class KeycloakHandler {
             SimbaConfig.log.error(`:: ${this.authErrors.noBaseURLError}`);
         }
         this.configBase = this.baseURL.split(".").join("_");
-        this.tokenExpirationPad = tokenExpirationPad;
     }
 
     /**
@@ -119,7 +126,10 @@ class KeycloakHandler {
     public async performLogin(
         interactive: boolean = true,
         ): Promise<any> {
-        return;
+        SimbaConfig.log.debug(`:: ENTER : interactive : ${interactive}`);
+        const authToken = await this.loginAndGetAuthToken(false, interactive);
+        SimbaConfig.log.debug(`:: EXIT :`);
+        return authToken;
     }
 
     /**
@@ -290,6 +300,60 @@ class KeycloakHandler {
         SimbaConfig.log.debug(`:: EXIT :`);
     }
 
+    public parseExpiry(auth: any): any {
+        if ('expires_in' in auth) {
+            const retrievedAt = new Date();
+            const expiresIn = parseInt(auth.expires_in, 10) * 1000;
+            const expiresAt = new Date(Date.parse(retrievedAt.toISOString()) + expiresIn);
+            auth.retrieved_at = retrievedAt.toISOString();
+            auth.expires_at = expiresAt.toISOString();
+            if (auth.refresh_expires_in) {
+                const refreshExpiresIn = parseInt(auth.refresh_expires_in, 10) * 1000;
+                const refreshExpiresAt = new Date(Date.parse(retrievedAt.toISOString()) + refreshExpiresIn);
+                auth.refresh_expires_at = refreshExpiresAt.toISOString();
+            }
+        }
+        return auth;
+    }
+
+    public async getAndSetAuthTokenFromClientCreds(): Promise<any> {
+        SimbaConfig.log.debug(`:: ENTER :`);
+        const clientID = process.env.SIMBA_PLUGIN_ID;
+        const clientSecret = process.env.SIMBA_PLUGIN_SECRET;
+        const authEndpoint = process.env.SIMBA_PLUGIN_AUTH_ENDPOINT ? process.env.SIMBA_PLUGIN_AUTH_ENDPOINT : "/o/";
+        const credential = `${clientID}:${clientSecret}`;
+        const utf8EncodedCred = utf8.encode(credential);
+        const base64EncodedCred = Buffer.from(utf8EncodedCred).toString('base64');
+        const params = new URLSearchParams();
+        params.append('grant_type', "client_credentials");
+        const headers = {
+            "content-type": "application/x-www-form-urlencoded",
+            "Cache-Control": "no-cache",
+            "Authorization": `Basic ${base64EncodedCred}`
+        };
+        const config = {
+            headers,
+        };
+        try {
+            const baseURL = handleV2(`${SimbaConfig.ProjectConfigStore.get("baseURL")}`);
+            const url = `${baseURL}${authEndpoint}token/`;
+            SimbaConfig.log.debug(`:: url : ${url}`);
+            const res = await axios.post(url, params, config);
+            let authToken = res.data;
+            authToken = this.parseExpiry(authToken);
+            this.setConfig(AUTHKEY, authToken);
+            SimbaConfig.log.debug(`:: EXIT : authToken: ${JSON.stringify(authToken)}`);
+            return authToken;
+        } catch (error)  {
+            if (axios.isAxiosError(error) && error.response) {
+                SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error.response.data)}`)}`);
+            } else {
+                SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error)}`)}`);
+            }
+            return;
+        }
+    }
+
     /**
      * first step in logging in. returns verification info, including a URI,
      * to allow user to login.
@@ -391,10 +455,9 @@ class KeycloakHandler {
                 await new Promise(resolve => setTimeout(resolve, interval));
                 try {
                     let response = await axios.post(url, params, config);
-                    const authToken: KeycloakAccessToken = response.data
-                    authToken.expires_at = Math.floor(Date.now() / 1000) + authToken.expires_in;
-                    authToken.refresh_expires_at = Math.floor(Date.now() / 1000) + authToken.refresh_expires_in;
-                    this.setConfig("authToken", authToken);
+                    let authToken: KeycloakAccessToken = response.data
+                    authToken = this.parseExpiry(authToken);
+                    this.setConfig(AUTHKEY, authToken);
                     SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(authToken)}`);
                     return authToken;
                 } catch (error) {
@@ -413,7 +476,7 @@ class KeycloakHandler {
             return
         } else {
             SimbaConfig.log.debug(`:: entering refresh logic`);
-            const authToken = this.getConfig("authToken");
+            const authToken = this.getConfig(AUTHKEY);
             SimbaConfig.log.debug(`:: auth : ${JSON.stringify(authToken)}`);
             const _refreshToken = authToken.refresh_token;
             params.append("client_id", clientID);
@@ -422,10 +485,9 @@ class KeycloakHandler {
             await new Promise(resolve => setTimeout(resolve, interval));
             try {
                 let response = await axios.post(url, params, config);
-                const newAuthToken: KeycloakAccessToken = response.data;
-                newAuthToken.expires_at = Math.floor(Date.now() / 1000) + newAuthToken.expires_in;
-                newAuthToken.refresh_expires_at = Math.floor(Date.now() / 1000) + newAuthToken.refresh_expires_in;
-                this.setConfig("authToken", newAuthToken);
+                let newAuthToken: KeycloakAccessToken = response.data;
+                newAuthToken = this.parseExpiry(newAuthToken);
+                this.setConfig(AUTHKEY, newAuthToken);
                 SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(newAuthToken)}`);
                 return newAuthToken;
             } catch (error) {
@@ -446,18 +508,18 @@ class KeycloakHandler {
      */
     public tokenExpired(): boolean {
         SimbaConfig.log.debug(`:: ENTER :`);
-        if (!this.hasConfig("authToken")) {
+        if (!this.hasConfig(AUTHKEY)) {
             SimbaConfig.log.debug(`:: EXIT : no authToken exists, exiting with true`);
             return true;
         }
-        const authToken = this.getConfig("authToken");
+        const authToken = this.getConfig(AUTHKEY);
         if (!authToken.expires_at) {
             SimbaConfig.log.debug(`:: EXIT : true`);
             return true;
         }
         // return true below, to pad for time required for operations
-        if (authToken.expires_at < Math.floor(Date.now()/1000) - this.tokenExpirationPad) {
-            SimbaConfig.log.debug(`:: EXIT : access_token expiring within ${this.tokenExpirationPad} seconds, returning true`);
+        if (authToken.expires_at <= new Date()) {
+            SimbaConfig.log.debug(`:: EXIT : access_token expired, returning true`);
             return true;
         }
         SimbaConfig.log.debug(`:: EXIT : false`);
@@ -471,18 +533,18 @@ class KeycloakHandler {
      */
     public refreshTokenExpired(): boolean {
         SimbaConfig.log.debug(`:: ENTER :`);
-        if (!this.hasConfig("authToken")) {
+        if (!this.hasConfig(AUTHKEY)) {
             SimbaConfig.log.debug(`:: EXIT : true`);
             return true;
         }
-        const authToken = this.getConfig("authToken");
+        const authToken = this.getConfig(AUTHKEY);
         if (!authToken.refresh_expires_at) {
             SimbaConfig.log.debug(`:: EXIT : true`);
             return true;
         }
         // return true below, to pad for time required for operations
-        if (authToken.refresh_expires_at <= Math.floor(Date.now()/1000) - this.tokenExpirationPad) {
-            SimbaConfig.log.debug(`:: EXIT : access_token expiring within ${this.tokenExpirationPad} seconds, returning true`);
+        if (authToken.refresh_expires_at <= new Date()) {
+            SimbaConfig.log.debug(`:: EXIT : refresh_token expired, returning true`);
             return true;
         }
         SimbaConfig.log.debug(`:: EXIT : false`);
@@ -493,11 +555,18 @@ class KeycloakHandler {
      * refresh auth token using refresh token
      * @returns 
      */
-    public async refreshToken(): Promise<KeycloakAccessToken | void> {
+    public async refreshToken(): Promise<KeycloakAccessToken | ClientCredsToken | void> {
         SimbaConfig.log.debug(`:: ENTER :`);
+        let interactive: boolean = true;
+        const currentAuthToken = this.getConfig(AUTHKEY);
+        // if there isn't a refresh_token, then it's a client credentials token
+        // so we grab a new auth token from client creds
+        if (currentAuthToken && !currentAuthToken.refresh_token) {
+            interactive = false;
+        }
         if (this.refreshTokenExpired()) {
             this.deleteAuthInfo();
-            const authToken = await this.loginAndGetAuthToken();
+            const authToken = await this.loginAndGetAuthToken(false, interactive);
             if (authToken) {
                 SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(authToken)}`);
                 return authToken;
@@ -532,9 +601,15 @@ class KeycloakHandler {
      */
     public async loginAndGetAuthToken(
         refreshing: boolean = false,
-    ): Promise<KeycloakAccessToken | void> {
+        interactive: boolean = true,
+    ): Promise<KeycloakAccessToken | ClientCredsToken | void> {
         SimbaConfig.log.debug(`:: ENTER :`);
         let verificationCompleteURI;
+        if (!interactive) {
+            const authToken = await this.getAndSetAuthTokenFromClientCreds();
+            SimbaConfig.log.debug(`:: EXIT :`);
+            return authToken;
+        }
         if (!refreshing) {
             this.logout();
             verificationCompleteURI = await this.loginUser();
@@ -981,8 +1056,6 @@ class AzureHandler {
 
     public async getAndSetAuthTokenFromClientCreds(): Promise<any> {
         SimbaConfig.log.debug(`:: ENTER :`);
-        // all three of these will need to  be changed to gather
-        // these variables from ...ci.yml file
         const clientID = process.env.SIMBA_PLUGIN_ID;
         const clientSecret = process.env.SIMBA_PLUGIN_SECRET;
         const authEndpoint = process.env.SIMBA_PLUGIN_AUTH_ENDPOINT ? process.env.SIMBA_PLUGIN_AUTH_ENDPOINT : "/o/";
@@ -1197,9 +1270,13 @@ class AzureHandler {
             const retrievedAt = new Date();
             const expiresIn = parseInt(auth.expires_in, 10) * 1000;
             const expiresAt = new Date(Date.parse(retrievedAt.toISOString()) + expiresIn);
-
             auth.retrieved_at = retrievedAt.toISOString();
             auth.expires_at = expiresAt.toISOString();
+            if (auth.refresh_expires_in) {
+                const refreshExpiresIn = parseInt(auth.expires_in, 10) * 1000;
+                const refreshExpiresAt = new Date(Date.parse(retrievedAt.toISOString()) + refreshExpiresIn);
+                auth.refresh_expires_at = refreshExpiresAt.toISOString();
+            }
         }
         return auth;
     }
