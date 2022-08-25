@@ -1186,7 +1186,7 @@ export class AzureHandler {
                         const clientSecret = await SimbaConfig.retrieveEnvVar(EnvVariableKeys.SECRET);
                         const authEndpoint = await SimbaConfig.retrieveEnvVar(EnvVariableKeys.AUTHENDPOINT);
                         if (!clientID || !clientSecret || !authEndpoint) {
-                            const message = "refresh_token not present in auth token. To use client credentials, please set SIMBA_ID, SIMBA_SECRET, and SIMBA_AUTH_ENDPOINT in your environment variables.";
+                            const message = "refresh_token not present in auth token. To use client credentials, please set SIMBA_AUTH_CLIENT_ID, SIMBA_AUTH_CLIENT_SECRET, and SIMBA_AUTH_CLIENT_ENDPOINT in your environment variables.";
                             SimbaConfig.log.error(`${chalk.redBright(`\nsimba: ${message}`)}`);
                             return new Error(message);
                         }
@@ -1220,7 +1220,7 @@ export class AzureHandler {
                         const clientSecret = await SimbaConfig.retrieveEnvVar(EnvVariableKeys.SECRET);
                         const authEndpoint = await SimbaConfig.retrieveEnvVar(EnvVariableKeys.AUTHENDPOINT);
                         if (!clientID || !clientSecret || !authEndpoint) {
-                            const message = "refresh_token not present in auth token. To use client credentials, please set SIMBA_ID, SIMBA_SECRET, and SIMBA_AUTH_ENDPOINT in your environment variables.";
+                            const message = "refresh_token not present in auth token. To use client credentials, please set SIMBA_AUTH_CLIENT_ID, SIMBA_AUTH_CLIENT_SECRET, and SIMBA_AUTH_CLIENT_ENDPOINT in your environment variables.";
                             SimbaConfig.log.error(`${chalk.redBright(`\nsimba: ${message}`)}`);
                             return new Error(message);
                         }

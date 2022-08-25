@@ -29,9 +29,9 @@ enum CompiledDirs {
 }
 
 export enum EnvVariableKeys {
-    ID = "id",
-    SECRET = "secret",
-    AUTHENDPOINT = "authendpoint"
+    ID = "ID",
+    SECRET = "SECRET",
+    AUTHENDPOINT = "ENDPOINT"
 }
 
 export function handleV2(baseURL: string): string {
@@ -159,67 +159,19 @@ export class SimbaConfig {
         SimbaConfig.log.debug(`:: ENTER : envVarKey : ${envVarKey}`);
         const authProviderInfo = await SimbaConfig.setAndGetAuthProviderInfo();
         const authType = authProviderInfo.type;
-        switch(envVarKey) {
-            case EnvVariableKeys.ID: {
-                if (authType === AuthProviders.AZUREB2C) {
-                    const id = process.env.SIMBA_AZURE_ID || process.env.SIMBA_ID || process.env.SIMBA_PLUGIN_ID;
-                    SimbaConfig.log.debug(`:: EXIT : ID : ${id}`);
-                    return id;
-                }
-                if (authType === AuthProviders.KEYCLOAK) {
-                    const id = process.env.SIMBA_KEYCLOAK_ID || process.env.SIMBA_ID || process.env.SIMBA_PLUGIN_ID;
-                    SimbaConfig.log.debug(`:: EXIT : ID : ${id}`);
-                    return id;
-                }
-                if (authType === AuthProviders.KEYCLOAKOAUTH2) {
-                    const id = process.env.SIMBA_KEYCLOAK_ID || process.env.SIMBA_ID || process.env.SIMBA_PLUGIN_ID;
-                    SimbaConfig.log.debug(`:: EXIT : ID : ${id}`);
-                    return id;
-                }
-                break; 
-            }
-            case EnvVariableKeys.SECRET: {
-                if (authType === AuthProviders.AZUREB2C) {
-                    const secret = process.env.SIMBA_AZURE_SECRET || process.env.SIMBA_SECRET || process.env.SIMBA_PLUGIN_SECRET;
-                    SimbaConfig.log.debug(`:: EXIT : secret : ${secret}`);
-                    return secret;
-                }
-                if (authType === AuthProviders.KEYCLOAK) {
-                    const secret = process.env.SIMBA_KEYCLOAK_SECRET || process.env.SIMBA_SECRET || process.env.SIMBA_PLUGIN_SECRET;
-                    SimbaConfig.log.debug(`:: EXIT : secret : ${secret}`);
-                    return secret;
-                }
-                if (authType === AuthProviders.KEYCLOAKOAUTH2) {
-                    const secret = process.env.SIMBA_KEYCLOAK_SECRET || process.env.SIMBA_SECRET || process.env.SIMBA_PLUGIN_SECRET;
-                    SimbaConfig.log.debug(`:: EXIT : secret : ${secret}`);
-                    return secret;
-                }
-                break;
-            }
-            case EnvVariableKeys.AUTHENDPOINT: {
-                if (authType === AuthProviders.AZUREB2C) {
-                    const authEndpoint = process.env.SIMBA_AUTH_ENDPOINT || process.env.SIMBA_PLUGIN_AUTH_ENDPOINT || "/o/";
-                    SimbaConfig.log.debug(`:: EXIT : authEndpoint : ${authEndpoint}`);
-                    return authEndpoint;
-                }
-                if (authType === AuthProviders.KEYCLOAK) {
-                    const authEndpoint = process.env.SIMBA_AUTH_ENDPOINT || process.env.SIMBA_PLUGIN_AUTH_ENDPOINT || "/o/";
-                    SimbaConfig.log.debug(`:: EXIT : authEndpoint : ${authEndpoint}`);
-                    return authEndpoint;
-                }
-                if (authType === AuthProviders.KEYCLOAKOAUTH2) {
-                    const authEndpoint = process.env.SIMBA_AUTH_ENDPOINT || process.env.SIMBA_PLUGIN_AUTH_ENDPOINT || "/o/";
-                    SimbaConfig.log.debug(`:: EXIT : authEndpoint : ${authEndpoint}`);
-                    return authEndpoint;
-                }
-                SimbaConfig.log.debug(`:: EXIT : authEndpoint : "/o/"`);
-                return "/o/";
-            }
-            default: { 
-                SimbaConfig.log.error(`${chalk.redBright(`\nsimba: unrecognized environment variable key: ${envVarKey}`)}`);
-                break; 
-            }
+
+        const authMap: any = {
+            "azureb2c": "AZURE",
+            "keycloak": "KEYCLOAK",
+            "KeycloakOAuth2": "KEYCLOAK",
         }
+
+        const val = process.env[`SIMBA_${authMap[authType]}_${envVarKey}`] || 
+            process.env[`SIMBA_AUTH_CLIENT_${envVarKey}`] ||
+            process.env[`SIMBA_PLUGIN_${envVarKey}`];
+        
+        SimbaConfig.log.debug(`:: EXIT :`);
+        return val;
     }
 
     public async retrieveEnvVar(envVarKey: EnvVariableKeys): Promise<string | void> {
