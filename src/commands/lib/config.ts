@@ -28,6 +28,12 @@ enum CompiledDirs {
     BUILD = "build",
 }
 
+export enum EnvVariableKeys {
+    ID = "ID",
+    SECRET = "SECRET",
+    AUTHENDPOINT = "ENDPOINT"
+}
+
 export function handleV2(baseURL: string): string {
     SimbaConfig.log.debug(`:: ENTER : baseURL : ${baseURL}`)
     if (baseURL.endsWith("/v2/") || baseURL.endsWith("/v2")) {
@@ -149,6 +155,32 @@ export class SimbaConfig {
         return SimbaConfig.ProjectConfigStore;
     }
 
+    public static async retrieveEnvVar(envVarKey: EnvVariableKeys): Promise<string | void> {
+        SimbaConfig.log.debug(`:: ENTER : envVarKey : ${envVarKey}`);
+        const authProviderInfo = await SimbaConfig.setAndGetAuthProviderInfo();
+        const authType = authProviderInfo.type;
+
+        const authMap: any = {
+            "azureb2c": "AZURE",
+            "keycloak": "KEYCLOAK",
+            "KeycloakOAuth2": "KEYCLOAK",
+        }
+
+        const val = process.env[`SIMBA_${authMap[authType]}_${envVarKey}`] || 
+            process.env[`SIMBA_AUTH_CLIENT_${envVarKey}`] ||
+            process.env[`SIMBA_PLUGIN_${envVarKey}`];
+        
+        SimbaConfig.log.debug(`:: EXIT :`);
+        return val;
+    }
+
+    public async retrieveEnvVar(envVarKey: EnvVariableKeys): Promise<string | void> {
+        SimbaConfig.log.debug(`:: ENTER : envVarKey : ${envVarKey}`);
+        const val = await SimbaConfig.retrieveEnvVar(envVarKey);
+        SimbaConfig.log.debug(`:: EXIT : `);
+        return val;
+    }
+
     public static resetSimbaJson(
         previousSimbaJson: Record<any, any>,
         newOrg?: string | Record<any, any> | unknown,
@@ -259,6 +291,7 @@ export class SimbaConfig {
                 _authProviderInfo = handleAlternativeAuthJSON(_authProviderInfo);
                 SimbaConfig.log.debug(`${chalk.cyanBright(`\n_authProviderInfo: ${JSON.stringify(_authProviderInfo)}`)}`);
                 SimbaConfig.ProjectConfigStore.set("authProviderInfo", _authProviderInfo);
+                return _authProviderInfo;
             } catch (error) {
                 if (axios.isAxiosError(error) && error.response) {
                     SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error.response.data)}`)}`)
