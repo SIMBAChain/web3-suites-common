@@ -7,6 +7,10 @@ import 'mocha';
 
 describe('tests retrieveEnvVar', () => {
     it('vals from retrieveEnvVar should be same as from process.env', async () => {
+        // for this test, you need to have env vars set for:
+            // SIMBA_AZURE_ID
+            // SIMBA_AZURE_SECRET
+            // SIMBA_AUTH_CLIENT_ENDPOINT
         const IDFromMethod = await SimbaConfig.retrieveEnvVar(EnvVariableKeys.ID);
         const IDFromEnv = process.env.SIMBA_AZURE_ID;
         expect(IDFromMethod).to.equal(IDFromEnv);
