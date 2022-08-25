@@ -308,7 +308,7 @@ class KeycloakHandler {
             auth.retrieved_at = retrievedAt.toISOString();
             auth.expires_at = expiresAt.toISOString();
             if (auth.refresh_expires_in) {
-                const refreshExpiresIn = parseInt(auth.expires_in, 10) * 1000;
+                const refreshExpiresIn = parseInt(auth.refresh_expires_in, 10) * 1000;
                 const refreshExpiresAt = new Date(Date.parse(retrievedAt.toISOString()) + refreshExpiresIn);
                 auth.refresh_expires_at = refreshExpiresAt.toISOString();
             }
@@ -337,7 +337,6 @@ class KeycloakHandler {
         try {
             const baseURL = handleV2(`${SimbaConfig.ProjectConfigStore.get("baseURL")}`);
             const url = `${baseURL}${authEndpoint}token/`;
-            console.log(`url: ${url}`)
             SimbaConfig.log.debug(`:: url : ${url}`);
             const res = await axios.post(url, params, config);
             let authToken = res.data;
