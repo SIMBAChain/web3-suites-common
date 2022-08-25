@@ -15,6 +15,9 @@ import * as http from "http";
 import {
     URLSearchParams,
 } from "url";
+import {
+    EnvVariableKeys,
+} from "./config";
 import utf8 from "utf8";
 
 export const AUTHKEY = 'SIMBAAUTH';
@@ -24,7 +27,7 @@ interface PollingConfig {
     interval: number;
 }
 
-enum AuthProviders {
+export enum AuthProviders {
     KEYCLOAK = "keycloak",
     KEYCLOAKOAUTH2 = "KeycloakOAuth2",
     AZUREB2C = "azureb2c",
@@ -54,7 +57,7 @@ interface AuthErrors {
 
 const SIMBAERROR = "SIMBAERROR";
 
-const authErrors: AuthErrors = {
+export const authErrors: AuthErrors = {
     headersError: `${chalk.red('simba: Error acquiring auth headers. Please make sure your OAuth provider certs are not expired.')}`,
     keycloakCertsError: `${chalk.red('simba: Error obtaining auth creds. Please make sure your OAuth provider certs are not expired.')}`,
     verificationInfoError: `${chalk.red('simba: Error acquiring verification info. Please make sure OAuth provider certs are not expired.')}`,
@@ -97,7 +100,7 @@ function addSlashToURL(baseURL: string): string {
  * In the future, when we decide to introduce other auth flows,
  * then we should have a similar class for other auth flows
  */
-class KeycloakHandler {
+export class KeycloakHandler {
     private config: Configstore;
     private projectConfig: Configstore;
     private baseURL: string;
@@ -318,9 +321,9 @@ class KeycloakHandler {
 
     public async getAndSetAuthTokenFromClientCreds(): Promise<any> {
         SimbaConfig.log.debug(`:: ENTER :`);
-        const clientID = process.env.SIMBA_PLUGIN_ID;
-        const clientSecret = process.env.SIMBA_PLUGIN_SECRET;
-        const authEndpoint = process.env.SIMBA_PLUGIN_AUTH_ENDPOINT ? process.env.SIMBA_PLUGIN_AUTH_ENDPOINT : "/o/";
+        const clientID = await SimbaConfig.retrieveEnvVar(EnvVariableKeys.ID);
+        const clientSecret = await SimbaConfig.retrieveEnvVar(EnvVariableKeys.SECRET);
+        const authEndpoint = await SimbaConfig.retrieveEnvVar(EnvVariableKeys.AUTHENDPOINT);
         const credential = `${clientID}:${clientSecret}`;
         const utf8EncodedCred = utf8.encode(credential);
         const base64EncodedCred = Buffer.from(utf8EncodedCred).toString('base64');
@@ -950,7 +953,7 @@ class KeycloakHandler {
     }
 }
 
-class AzureHandler {
+export class AzureHandler {
     private readonly closeTimeout: number = 5 * 1000;
     private port = 22315;
     private server: http.Server | null = null;
@@ -1056,9 +1059,9 @@ class AzureHandler {
 
     public async getAndSetAuthTokenFromClientCreds(): Promise<any> {
         SimbaConfig.log.debug(`:: ENTER :`);
-        const clientID = process.env.SIMBA_PLUGIN_ID;
-        const clientSecret = process.env.SIMBA_PLUGIN_SECRET;
-        const authEndpoint = process.env.SIMBA_PLUGIN_AUTH_ENDPOINT ? process.env.SIMBA_PLUGIN_AUTH_ENDPOINT : "/o/";
+        const clientID = await SimbaConfig.retrieveEnvVar(EnvVariableKeys.ID);
+        const clientSecret = await SimbaConfig.retrieveEnvVar(EnvVariableKeys.SECRET);
+        const authEndpoint = await SimbaConfig.retrieveEnvVar(EnvVariableKeys.AUTHENDPOINT);
         const credential = `${clientID}:${clientSecret}`;
         const utf8EncodedCred = utf8.encode(credential);
         const base64EncodedCred = Buffer.from(utf8EncodedCred).toString('base64');
@@ -1179,11 +1182,11 @@ class AzureHandler {
                 if (forceRefresh) {
                     if (!auth.refresh_token) {
                         // this would mean our AZ token is for client creds
-                        const clientID = process.env.SIMBA_PLUGIN_ID;
-                        const clientSecret = process.env.SIMBA_PLUGIN_SECRET;
-                        const authEndpoint = process.env.SIMBA_PLUGIN_AUTH_ENDPOINT ? process.env.SIMBA_PLUGIN_AUTH_ENDPOINT : "/o/";
+                        const clientID = await SimbaConfig.retrieveEnvVar(EnvVariableKeys.ID);
+                        const clientSecret = await SimbaConfig.retrieveEnvVar(EnvVariableKeys.SECRET);
+                        const authEndpoint = await SimbaConfig.retrieveEnvVar(EnvVariableKeys.AUTHENDPOINT);
                         if (!clientID || !clientSecret || !authEndpoint) {
-                            const message = "refresh_token not present in auth token. To use client credentials, please set SIMBA_PLUGIN_ID, SIMBA_PLUGIN_SECRET, and SIMBA_PLUGIN_AUTH_ENDPOINT in your environment variables.";
+                            const message = "refresh_token not present in auth token. To use client credentials, please set SIMBA_ID, SIMBA_SECRET, and SIMBA_AUTH_ENDPOINT in your environment variables.";
                             SimbaConfig.log.error(`${chalk.redBright(`\nsimba: ${message}`)}`);
                             return new Error(message);
                         }
@@ -1213,11 +1216,11 @@ class AzureHandler {
                 if (expiresAt <= new Date()) {
                     if (!auth.refresh_token) {
                         // this would mean our AZ token is for client creds
-                        const clientID = process.env.SIMBA_PLUGIN_ID;
-                        const clientSecret = process.env.SIMBA_PLUGIN_SECRET;
-                        const authEndpoint = process.env.SIMBA_PLUGIN_AUTH_ENDPOINT ? process.env.SIMBA_PLUGIN_AUTH_ENDPOINT : "/o/";
+                        const clientID = await SimbaConfig.retrieveEnvVar(EnvVariableKeys.ID);
+                        const clientSecret = await SimbaConfig.retrieveEnvVar(EnvVariableKeys.SECRET);
+                        const authEndpoint = await SimbaConfig.retrieveEnvVar(EnvVariableKeys.AUTHENDPOINT);
                         if (!clientID || !clientSecret || !authEndpoint) {
-                            const message = "refresh_token not present in auth token. To use client credentials, please set SIMBA_PLUGIN_ID, SIMBA_PLUGIN_SECRET, and SIMBA_PLUGIN_AUTH_ENDPOINT in your environment variables.";
+                            const message = "refresh_token not present in auth token. To use client credentials, please set SIMBA_ID, SIMBA_SECRET, and SIMBA_AUTH_ENDPOINT in your environment variables.";
                             SimbaConfig.log.error(`${chalk.redBright(`\nsimba: ${message}`)}`);
                             return new Error(message);
                         }
@@ -1517,11 +1520,4 @@ class AzureHandler {
             .replace(/\+/g, '-')
             .replace(/\//g, '_');
     }
-}
-
-export {
-    KeycloakHandler,
-    AzureHandler,
-    AuthProviders,
-    authErrors,
 }
