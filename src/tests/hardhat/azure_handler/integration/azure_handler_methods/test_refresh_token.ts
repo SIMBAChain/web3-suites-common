@@ -7,10 +7,6 @@ import {
 import { expect } from 'chai';
 import 'mocha';
 
-// These tests test non-interactive login
-// perfomLogin(false) contains pretty much all of the functionality
-// that the others do, but we're testing them separately as well here
-
 describe('tests refreshToken with new authToken', () => {
     it('authtoken should stay the same, since it is new', async () => {
         // original settings

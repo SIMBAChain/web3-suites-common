@@ -2,9 +2,6 @@ import {
     SimbaConfig,
 } from "../../../../../commands/lib/config";
 import {
-    AzureHandler,
-} from "../../../../../commands/lib/authentication";
-import {
     pullAllMostRecentContracts,
     pullAllMostRecentSolFilesAndSourceCode,
     pullMostRecentRecentSolFileFromContractName,
@@ -30,14 +27,14 @@ import {
 import * as path from 'path';
 import {cwd} from 'process';
 
-const contractDesignsPath = "../tests_setup/contract_designs/hardhat_az/contract_designs.json";
+const contractDesignsPath = "../tests_setup/contract_designs/truffle_kc/contract_designs.json";
 
 describe('testing pulling .sol file from designID', () => {
     it('should exist in /contracts/simbaimports/ after', async () => {
         let simbaDir = path.join(cwd(), "contracts");
         simbaDir = path.join(simbaDir, "SimbaImports");
-        const contractName = "TestContractVT3";
-        const oldContractID = "cb3ad592-1ca2-43b3-a9d0-cd0d0f127b32";
+        const contractName = "TestContractVT20";
+        const oldContractID = "a01b28b7-0ac5-466a-95d2-f04295a6f38d";
         const filePath = path.join(simbaDir, `${contractName}.sol`);
         const simbaConfig = new SimbaConfig();
         const authStore = await simbaConfig.authStore();
@@ -108,7 +105,7 @@ describe('testing pulling .sol files using contractDesigns and other params', ()
 // pick up with this one tomorrow
 describe('testing pulling source code to simba.json', () => {
     it('source code should be in simba.json after function calls', async () => {
-        const contractName = "TestContractVT3";
+        const contractName = "TestContractVT20";
         const contractDesigns = await FileHandler.parsedFile(contractDesignsPath);
         const simbaConfig = new SimbaConfig();
         const authStore = await simbaConfig.authStore();

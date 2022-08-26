@@ -22,7 +22,7 @@ describe('tests buildInfoDirectory', () => {
 
 describe('tests buildDirectory', () => {
     it('should be path.join(cwd(), "artifacts/contracts")', async () => {
-        const artifactDirectory = SimbaConfig.buildDirectory;
-        expect(artifactDirectory).to.equal(path.join(cwd(), "artifacts/contracts"));
+        const buildDirectory = SimbaConfig.buildDirectory;
+        expect(buildDirectory).to.equal(path.join(cwd(), "artifacts/contracts"));
     });
 });

@@ -4,7 +4,6 @@ import {
 import { expect } from 'chai';
 import 'mocha';
 
-
 describe('tests getAndSetAuthProviderInfo', () => {
     it('authProviderInfo should exist in simba.json after call', async () => {
         const originalSimbaJson = SimbaConfig.ProjectConfigStore.all;
@@ -14,7 +13,7 @@ describe('tests getAndSetAuthProviderInfo', () => {
         expect(authInfo).to.exist;
         expect(authInfo.client_id).to.equal(returnedAuthInfo.client_id);
         const authType = authInfo.type;
-        expect(authType).to.equal("azureb2c");
+        expect(authType).to.equal("keycloak");
         // now reset simba.json to its original state
         SimbaConfig.ProjectConfigStore.clear();
         SimbaConfig.ProjectConfigStore.set(originalSimbaJson);

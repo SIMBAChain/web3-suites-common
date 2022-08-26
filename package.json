@@ -22,11 +22,13 @@
   ],
   "scripts": {
     "buildtest": "cd src/tests/tests_setup/build/ && ts-node build.ts",
+    "trufflecleantest": "npm run buildtest && npm run truffletest && npm run cleantest",
     "truffletest": "cd src/tests/truffle/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register './**/*.ts'",
+    "hardhatcleantest": "npm run buildtest && npm run hardhattest && npm run cleantest",
     "hardhattest": "cd src/tests/hardhat/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register './**/*.ts'",
     "test": "cd src/tests/truffle/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register './**/*.ts'",
     "cleantest": "cd src/tests/tests_setup/clean/ && ts-node clean.ts",
-    "alltests": "npm run buildtest && npm run truffletest && npm run hardhattest && npm run cleantest"
+    "allcleantests": "npm run buildtest && npm run truffletest && npm run hardhattest && npm run cleantest"
   },
   "repository": {
     "type": "git",
