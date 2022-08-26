@@ -8,7 +8,7 @@ import * as CryptoJS from 'crypto-js';
 import {default as chalk} from 'chalk';
 import {Request, default as polka} from 'polka';
 import * as request from 'request-promise';
-import axios from "axios";
+import axios, {AxiosResponse} from "axios";
 import * as fs from 'fs';
 import * as path from 'path';
 import * as http from "http";
@@ -754,12 +754,53 @@ class KeycloakHandler {
         contentType?: string,
         _buildURL: boolean = true,
     ): Promise<Record<any, any> | void> {
+        return await this.doPutPostRequest("POST", url, _postData, contentType, _buildURL)
+    }
+
+    /**
+     * do put request
+     * @param url
+     * @param _postData
+     * @param contentType
+     * @param _buildURL
+     * @returns
+     */
+    public async doPutRequest(
+        url: string,
+        _postData?: Record<any, any>,
+        contentType?: string,
+        _buildURL: boolean = true,
+    ): Promise<Record<any, any> | void> {
+        return await this.doPutPostRequest("PUT", url, _postData, contentType, _buildURL)
+    }
+
+    /**
+     * do put or post request. uses axios library
+     * @param method
+     * @param url
+     * @param _postData
+     * @param contentType
+     * @param _buildURL
+     * @returns
+     */
+    async doPutPostRequest(
+        method: string,
+        url: string,
+        _postData?: Record<any, any>,
+        contentType?: string,
+        _buildURL: boolean = true,
+    ): Promise<Record<any, any> | void> {
         const funcParams = {
             url,
             _postData,
             contentType,
         };
         SimbaConfig.log.debug(`:: ENTER : ${JSON.stringify(funcParams)}`);
+
+        if (!(method in ['POST', 'PUT'])) {
+            SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : Invalid method, must be 'POST' or 'PUT'`)}`);
+        }
+
         if (this.tokenExpired()) {
             SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: auth token expired`)}`);
             if (this.refreshTokenExpired()) {
@@ -794,8 +835,13 @@ class KeycloakHandler {
                 if (_buildURL) {
                     url = this.buildURL(url);
                 }
-                const res = await axios.post(url, postData, config);
-                const resData: Record<any, any> = res.data;
+                let res: AxiosResponse;
+                if (method == "POST") {
+                    res = await axios.post(url, postData, config);
+                } else if (method == "PUT") {
+                    res = await axios.put(url, postData, config);
+                }
+                const resData: Record<any, any> = res!.data;
                 SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(resData)}`);
                 return resData;
             } catch (error) {
@@ -1298,6 +1344,14 @@ class AzureHandler {
         return await this.retryAfterTokenRefresh(url, "POST", contentType, data);
     }
 
+    public async doPutRequest(url: string, data: any, contentType?: string, _buildURL: boolean = true): Promise<any> {
+        SimbaConfig.log.debug(`:: ENTER :`)
+        // the _buildURL param here does not get used. It's strictly been
+        // added because the interface call in the truffle and hardhat suites
+        // for authStore.doPutRequest expects it.
+        return await this.retryAfterTokenRefresh(url, "PUT", contentType, data);
+    }
+
     public logout(): void {
         SimbaConfig.log.debug(`:: ENTER :`);
         this.deleteAuthInfo();
@@ -1398,6 +1452,11 @@ class AzureHandler {
         try {
             if (requestType === "POST") {
                 const res = await axios.post(uri, data, config);
+                const resData: Record<any, any> = res.data;
+                return resData;
+            }
+            if (requestType === "PUT") {
+                const res = await axios.put(uri, data, config);
                 const resData: Record<any, any> = res.data;
                 return resData;
             }
