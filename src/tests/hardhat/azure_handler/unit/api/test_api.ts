@@ -16,12 +16,10 @@ import {
 } from "../../../../../commands/lib";
 import {
     FileHandler,
+    testContractVT20AST,
 } from "../../../../tests_setup"
 import { expect } from 'chai';
 import 'mocha';
-import {
-    testContractVT20AST,
-} from "./sample_ast";
 import * as path from 'path';
 import {cwd} from 'process';
 
