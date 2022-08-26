@@ -226,7 +226,7 @@ export class KeycloakHandler {
      * @param key 
      * @returns 
      */
-    protected getConfig(key: string): any {
+    public getConfig(key: string): any {
         SimbaConfig.log.debug(`:: ENTER :`);
         if (!this.config.has(this.configBase)) {
             SimbaConfig.log.debug(`:: EXIT :`);
