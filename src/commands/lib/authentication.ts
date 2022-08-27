@@ -269,7 +269,7 @@ export class KeycloakHandler {
      * @param value 
      * @returns 
      */
-    protected setConfig(key: string, value: any): any {
+    public setConfig(key: string, value: any): any {
         SimbaConfig.log.debug(`:: ENTER : KEY: ${key}, VALUE: ${JSON.stringify(value)}`);
         if (!this.config.has(this.configBase)) {
             this.config.set(this.configBase, {});
@@ -520,8 +520,7 @@ export class KeycloakHandler {
             SimbaConfig.log.debug(`:: EXIT : true`);
             return true;
         }
-        // return true below, to pad for time required for operations
-        if (authToken.expires_at <= new Date()) {
+        if (new Date(authToken.expires_at) <= new Date()) {
             SimbaConfig.log.debug(`:: EXIT : access_token expired, returning true`);
             return true;
         }
@@ -545,8 +544,7 @@ export class KeycloakHandler {
             SimbaConfig.log.debug(`:: EXIT : true`);
             return true;
         }
-        // return true below, to pad for time required for operations
-        if (authToken.refresh_expires_at <= new Date()) {
+        if (new Date(authToken.refresh_expires_at) <= new Date()) {
             SimbaConfig.log.debug(`:: EXIT : refresh_token expired, returning true`);
             return true;
         }
