@@ -792,31 +792,6 @@ export class KeycloakHandler {
     }
 
     /**
-     * keycloak expects a different contentType (see below)
-     * @param url 
-     * @param _queryParams 
-     * @returns 
-     */
-    public async doKeycloakGetRequest(
-        url: string,
-        _queryParams?: Record<any, any>,
-    ): Promise<Record<any, any> | Error | void> {
-        const funcParams = {
-            url,
-            _queryParams,
-        };
-        SimbaConfig.log.debug(`:: ENTER : ${JSON.stringify(funcParams)}`);
-        const contentType = 'application/x-www-form-urlencoded;charset=utf-8';
-        const resData = await this.doGetRequest(url, contentType, _queryParams, false);
-        if (resData instanceof Error || axios.isAxiosError(resData)) {
-            SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(resData)}`)}`);
-            return resData;
-        }
-        SimbaConfig.log.debug(`:: EXIT : result data : ${JSON.stringify(resData)}`);
-        return resData;
-    }
-
-    /**
      * do post request. uses axios library
      * @param url 
      * @param _postData 
@@ -923,31 +898,6 @@ export class KeycloakHandler {
             SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${this.authErrors.headersError}`)}`);
             return new Error(`${this.authErrors.headersError}`);
         }
-    }
-
-    /**
-     * keycloak expects different contentType
-     * @param url 
-     * @param _postData 
-     * @returns 
-     */
-    public async doKeycloakPostRequest(
-        url: string,
-        _postData?: Record<any, any>
-    ): Promise<Record<any, any> | Error | void> {
-        const funcParams = {
-            url,
-            _postData,
-        };
-        SimbaConfig.log.debug(`:: ENTER : ${JSON.stringify(funcParams)}`);
-        const contentType = 'application/x-www-form-urlencoded;charset=utf-8';
-        const resData = await this.doPostRequest(url, _postData, contentType, false);
-        if (resData instanceof Error) {
-            SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(resData)}`)}`);
-            return resData;
-        }
-        SimbaConfig.log.debug(`:: EXIT : result data : ${JSON.stringify(resData)}`);
-        return resData;
     }
 }
 

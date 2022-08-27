@@ -34,7 +34,7 @@
     "hardhatcleanunittest": "npm run cleantest && npm run hardhatunittest",
     "hardhatintegrationtest": "cd src/tests/hardhat/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register './azure_handler/integration/**/*.ts'",
     "hardhatcleanintegrationtest": "npm run cleantest && npm run hardhatintegrationtest",
-    "test": "cd src/tests/truffle/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register './**/*.ts'",
+    "test": "npm run cleantest && npm run truffletest && npm run hardhattest && npm run cleantest",
     "cleantest": "cd src/tests/tests_setup/clean/ && ts-node clean.ts",
     "allcleantests": "npm run cleantest && npm run truffletest && npm run hardhattest && npm run cleantest"
   },

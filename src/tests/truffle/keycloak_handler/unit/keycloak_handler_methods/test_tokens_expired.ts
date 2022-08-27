@@ -35,7 +35,6 @@ const newAuthToken = {
     "refresh_expires_at": "2030-08-27T21:47:24.726Z"
 }
 
-
 describe('tests tokenExpired', () => {
     it('should return true, false', async () => {
         // original settings
