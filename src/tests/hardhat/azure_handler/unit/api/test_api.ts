@@ -137,6 +137,7 @@ describe('tests writeAndReturnASTAndOtherInfo', () => {
         // resetting
         let pathToBackUpBuildArtifact = path.join(cwd(), "../tests_setup");
         pathToBackUpBuildArtifact = path.join(pathToBackUpBuildArtifact, "backup_files");
+        pathToBackUpBuildArtifact = path.join(pathToBackUpBuildArtifact, "backup_hardhat_artifacts");
         pathToBackUpBuildArtifact = path.join(pathToBackUpBuildArtifact, "artifacts");
         pathToBackUpBuildArtifact = path.join(pathToBackUpBuildArtifact, "contracts");
         pathToBackUpBuildArtifact = path.join(pathToBackUpBuildArtifact, contractSolName);
@@ -164,7 +165,7 @@ describe('tests primaryContractConstructor', () => {
 
 describe('tests primaryConstructorInputs', () => {
     it('type, name for first two entries should be uint256, _ourNum and string, _ourString', async () => {
-        const constructorInputs = await primaryConstructorInputs();
+        const constructorInputs = await primaryConstructorInputs() as any;
         expect(constructorInputs[0].name).to.equal("_ourNum");
         expect(constructorInputs[1].name).to.equal("_ourString");
         expect(constructorInputs[0].type).to.equal("uint256");

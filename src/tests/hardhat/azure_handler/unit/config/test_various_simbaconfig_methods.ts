@@ -7,7 +7,7 @@ import 'mocha';
 describe('tests web3Suite', () => {
     it('should be "hardhat"', async () => {
         const web3Suite = SimbaConfig.web3Suite;
-        expect(web3Suite.toLowerCase()).to.equal("truffle");
+        expect(web3Suite.toLowerCase()).to.equal("hardhat");
     });
 });
 

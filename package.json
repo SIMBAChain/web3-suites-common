@@ -22,21 +22,21 @@
   ],
   "scripts": {
     "buildtest": "cd src/tests/tests_setup/build/ && ts-node build.ts",
-    "trufflecleantest": "npm run buildtest && npm run truffletest && npm run cleantest",
     "truffletest": "cd src/tests/truffle/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register './**/*.ts'",
-    "truffleunittest": "cd src/tests/truffle/keycloak_handler/unit && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register './**/*.ts'",
+    "trufflecleantest": "npm run cleantest && npm run truffletest && npm run cleantest",
+    "truffleunittest": "cd src/tests/truffle/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register './keycloak_handler/unit/**/*.ts'",
     "trufflecleanunittest": "npm run cleantest && npm run truffleunittest",
-    "truffleintegrationtest": "cd src/tests/truffle/keycloak_handler/integration && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register './**/*.ts'",
+    "truffleintegrationtest": "cd src/tests/truffle/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register './keycloak_handler/integration/**/*.ts'",
     "trufflecleanintegrationtest": "npm run cleantest && npm run truffleintegrationtest",
-    "hardhatcleantest": "npm run buildtest && npm run hardhattest && npm run cleantest",
     "hardhattest": "cd src/tests/hardhat/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register './**/*.ts'",
-    "hardhatunittest": "cd src/tests/hardhat/azure_handler/unit && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register './**/*.ts'",
+    "hardhatcleantest": "npm run cleantest && npm run hardhattest && npm run cleantest",
+    "hardhatunittest": "cd src/tests/hardhat/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register './azure_handler/unit/**/*.ts'",
     "hardhatcleanunittest": "npm run cleantest && npm run hardhatunittest",
-    "hardhatintegrationtest": "cd src/tests/hardhat/azure_handler/integration && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register './**/*.ts'",
+    "hardhatintegrationtest": "cd src/tests/hardhat/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register './azure_handler/integration/**/*.ts'",
     "hardhatcleanintegrationtest": "npm run cleantest && npm run hardhatintegrationtest",
     "test": "cd src/tests/truffle/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register './**/*.ts'",
     "cleantest": "cd src/tests/tests_setup/clean/ && ts-node clean.ts",
-    "allcleantests": "npm run buildtest && npm run truffletest && npm run hardhattest && npm run cleantest"
+    "allcleantests": "npm run cleantest && npm run truffletest && npm run hardhattest && npm run cleantest"
   },
   "repository": {
     "type": "git",
