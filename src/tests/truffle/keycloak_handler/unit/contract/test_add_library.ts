@@ -21,5 +21,5 @@ describe('add library test', () => {
         // now reset simba.json to its original state
         SimbaConfig.ProjectConfigStore.clear();
         SimbaConfig.ProjectConfigStore.set(simbaJson);
-    });
+    }).timeout(10000);
 });
