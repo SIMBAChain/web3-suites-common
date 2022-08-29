@@ -10,7 +10,7 @@ describe('tests web3Suite', () => {
     it('should be "hardhat"', async () => {
         const web3Suite = SimbaConfig.web3Suite;
         expect(web3Suite.toLowerCase()).to.equal("truffle");
-    });
+    }).timeout(10000);
 });
 
 describe('tests organisation', () => {
@@ -23,7 +23,7 @@ describe('tests organisation', () => {
         // setter
         SimbaConfig.organisation = oldOrg;
         expect(SimbaConfig.ProjectConfigStore.get("organisation").name).to.equal("brendan_birch_simbachain_com");
-    });
+    }).timeout(10000);;
 });
 
 describe('tests application', () => {
@@ -36,5 +36,5 @@ describe('tests application', () => {
         // setter
         SimbaConfig.application = oldApp;
         expect(SimbaConfig.ProjectConfigStore.get("application").name).to.equal("BrendanTestApp");
-    });
+    }).timeout(10000);;
 });
