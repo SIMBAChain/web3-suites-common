@@ -39,3 +39,6 @@ export {
     AzureHandler,
     KeycloakHandler,
 } from "./authentication";
+export {
+    SimbaInfo,
+} from "./simbainfo"
