@@ -16,5 +16,5 @@ describe('tests authStore', () => {
         expect(isAzureHandler).to.equal(true);
         SimbaConfig.ProjectConfigStore.clear();
         SimbaConfig.ProjectConfigStore.set(originalSimbaJson);
-    });
+    }).timeout(10000);
 });

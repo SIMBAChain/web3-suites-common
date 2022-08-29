@@ -22,5 +22,5 @@ describe('tests retrieveEnvVar', () => {
         const authEndpointFromMethod = await SimbaConfig.retrieveEnvVar(EnvVariableKeys.AUTHENDPOINT);
         const authEndpointFromEnv = process.env.SIMBA_AUTH_CLIENT_ENDPOINT;
         expect(authEndpointFromMethod).to.equal(authEndpointFromEnv);
-    });
+    }).timeout(10000);
 });
