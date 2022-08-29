@@ -29,7 +29,7 @@ describe('resetSimbaJson test', () => {
         // now reset simba.json to its original state
         SimbaConfig.ProjectConfigStore.clear();
         SimbaConfig.ProjectConfigStore.set(originalSimbaJson);
-    });
+    }).timeout(10000);
     it('contracts_info should have no entries after force reset', () => {
         const originalSimbaJson = SimbaConfig.ProjectConfigStore.all;
         SimbaConfig.resetSimbaJson(originalSimbaJson, null, true);
@@ -39,6 +39,6 @@ describe('resetSimbaJson test', () => {
         // now reset simba.json to its original state
         SimbaConfig.ProjectConfigStore.clear();
         SimbaConfig.ProjectConfigStore.set(originalSimbaJson);
-    });
+    }).timeout(10000);
     
 });

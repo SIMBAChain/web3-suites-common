@@ -18,5 +18,5 @@ describe('tests getAndSetAuthProviderInfo', () => {
         // now reset simba.json to its original state
         SimbaConfig.ProjectConfigStore.clear();
         SimbaConfig.ProjectConfigStore.set(originalSimbaJson);
-    });
+    }).timeout(10000);
 });

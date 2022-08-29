@@ -68,7 +68,7 @@ describe('tests tokenExpired', () => {
         SimbaConfig.ProjectConfigStore.set(originalSimbaJson);
         SimbaConfig.ConfigStore.clear();
         SimbaConfig.ConfigStore.set(originalAuthConfig);
-    });
+    }).timeout(10000);
 });
 
 describe('tests refreshTokenExpired', () => {
@@ -103,5 +103,5 @@ describe('tests refreshTokenExpired', () => {
         SimbaConfig.ProjectConfigStore.set(originalSimbaJson);
         SimbaConfig.ConfigStore.clear();
         SimbaConfig.ConfigStore.set(originalAuthConfig);
-    });
+    }).timeout(10000);
 });

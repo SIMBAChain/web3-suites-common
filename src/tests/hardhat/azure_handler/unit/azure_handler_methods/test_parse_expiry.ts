@@ -25,5 +25,5 @@ describe('tests parseExpiry', () => {
         expect(parsed.expires_at).to.exist;
         expect(parsed.refresh_expires_at).to.exist;
         expect(parsed.retrieved_at).to.exist;
-    });
+    }).timeout(10000);
 });

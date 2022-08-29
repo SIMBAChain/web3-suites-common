@@ -32,7 +32,7 @@ describe('basic test of getting file name, agnostic towards OS', () => {
         const windowsName = WindowsOrMacFileName(windowsPath);
         expect(macName).to.equal(contractName);
         expect(windowsName).to.equal(contractName);
-    });
+    }).timeout(10000);
 
     it('should be "fc60cca1c3038646bb57f93b2a8c9aa9.json"', async () => {
         const fileName = "fc60cca1c3038646bb57f93b2a8c9aa9.json";
@@ -42,7 +42,7 @@ describe('basic test of getting file name, agnostic towards OS', () => {
         const windowsName = parseBuildInfoJsonName(windowsPath);
         expect(macName).to.equal(fileName);
         expect(windowsName).to.equal(windowsName);
-    });
+    }).timeout(10000);
 });
 
 describe('tests related to parsing buildInfo (for hardhat)', () => {
@@ -54,7 +54,7 @@ describe('tests related to parsing buildInfo (for hardhat)', () => {
         const windowsName = parseBuildInfoJsonName(windowsPath);
         expect(macName).to.equal(fileName);
         expect(windowsName).to.equal(windowsName);
-    });
+    }).timeout(10000);
 
     it('should be "fc60cca1c3038646bb57f93b2a8c9aa9.json"', async () => {
         const fileName = "fc60cca1c3038646bb57f93b2a8c9aa9.json";
@@ -62,7 +62,7 @@ describe('tests related to parsing buildInfo (for hardhat)', () => {
         const contractName = "TestContractVT20"
         const _buildInfoJsonName = await buildInfoJsonName(contractName, contractSourceName);
         expect(_buildInfoJsonName).to.equal(fileName);
-    });
+    }).timeout(10000);
 });
 
 describe('tests related to ast', () => {
@@ -70,19 +70,19 @@ describe('tests related to ast', () => {
     it('nodeType should exist in first element', () => {
         const nodes = getASTNodes(ast);
         expect(nodes[0].nodeType).to.exist;
-    });
+    }).timeout(10000);
 
     it('should be "contract"', async () => {
         const contractName = "TestContractVT20";
         const contractKind = getContractKind(contractName, ast);
         expect(contractKind).to.equal("contract");
-    });
+    }).timeout(10000);
 
     it('should be false', () => {
         const contractName = "TestContractVT20";
         const isLib = isLibrary(contractName, testContractVT20AST);
         expect(isLib).to.equal(false);
-    })
+    }).timeout(10000);
 });
 
 describe('tests astAndOtherInfo info from contractName and contractSourceName and buildInfoSourceName', () => {
@@ -97,7 +97,7 @@ describe('tests astAndOtherInfo info from contractName and contractSourceName an
         );
         expect(_astAndOtherInfo.ast).to.exist;
         expect(_astAndOtherInfo.source).to.exist;
-    });
+    }).timeout(10000);
 });
 
 describe('tests getASTAndOtherInfo info from contractName and contractSourceName', () => {
@@ -110,7 +110,7 @@ describe('tests getASTAndOtherInfo info from contractName and contractSourceName
         ) as ASTAndOtherInfo;
         expect(_astAndOtherInfo.ast).to.exist;
         expect(_astAndOtherInfo.source).to.exist;
-    });
+    }).timeout(10000);
 });
 
 describe('tests writeAndReturnASTAndOtherInfo', () => {
@@ -145,14 +145,14 @@ describe('tests writeAndReturnASTAndOtherInfo', () => {
         await FileHandler.transferFile(pathToBackUpBuildArtifact, pathToContractBuildFile);
 
 
-    });
+    }).timeout(10000);
 });
 
 describe('tests getABIForPrimaryContract', () => {
     it('abi.length should be > 0', async () => {
         const abi = await getABIForPrimaryContract();
         expect(abi.length).to.be.greaterThan(0);
-    });
+    }).timeout(10000);
 });
 
 describe('tests primaryContractConstructor', () => {
@@ -160,7 +160,7 @@ describe('tests primaryContractConstructor', () => {
         const primaryConstructor = await primaryContractConstructor();
         expect(primaryConstructor.inputs[0].name).to.equal("_ourNum");
         expect(primaryConstructor.inputs[1].name).to.equal("_ourString");
-    });
+    }).timeout(10000);
 });
 
 describe('tests primaryConstructorInputs', () => {
@@ -170,13 +170,13 @@ describe('tests primaryConstructorInputs', () => {
         expect(constructorInputs[1].name).to.equal("_ourString");
         expect(constructorInputs[0].type).to.equal("uint256");
         expect(constructorInputs[1].type).to.equal("string");
-    });
+    }).timeout(10000);
 });
 
 describe('tests primaryConstructorRequiresArgs', () => {
     it('should be true', async () => {
         const requiresArgs = await primaryConstructorRequiresArgs();
         expect(requiresArgs).to.equal(true);
-    });
+    }).timeout(10000);
 });
 

@@ -22,7 +22,7 @@ describe('testing walkDirForContracts', () => {
         const contractsDir = path.join(cwd(), "contracts");
         const contracts = await walkDirForContracts(contractsDir, ".sol");
         expect(contracts.length).to.equal(2);
-    });
+    }).timeout(10000);
 });
 
 describe('testing promisifedReadFile', () => {
@@ -31,7 +31,7 @@ describe('testing promisifedReadFile', () => {
         const contractPath = path.join(contractsDir, "TestContractVT20.sol");
         const file = await promisifiedReadFile(contractPath, {flag: 'r'});
         expect(file).to.exist;
-    });
+    }).timeout(10000);
 });
 
 describe('testing absolutePaths', () => {

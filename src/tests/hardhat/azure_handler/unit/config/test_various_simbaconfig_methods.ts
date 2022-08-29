@@ -8,7 +8,7 @@ describe('tests web3Suite', () => {
     it('should be "hardhat"', async () => {
         const web3Suite = SimbaConfig.web3Suite;
         expect(web3Suite.toLowerCase()).to.equal("hardhat");
-    });
+    }).timeout(10000);
 });
 
 describe('tests logLevel', () => {
@@ -19,5 +19,5 @@ describe('tests logLevel', () => {
         const newLogLevel = SimbaConfig.ProjectConfigStore.get("logLevel");
         expect(newLogLevel).to.equal("debug");
         SimbaConfig.ProjectConfigStore.set("logLevel", oldLogLevel);
-    });
+    }).timeout(10000);
 });
