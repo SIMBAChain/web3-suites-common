@@ -41,7 +41,7 @@ describe('basic test of getting file name, agnostic towards OS', () => {
         const macName = parseBuildInfoJsonName(macPath);
         const windowsName = parseBuildInfoJsonName(windowsPath);
         expect(macName).to.equal(fileName);
-        expect(windowsName).to.equal(windowsName);
+        expect(windowsName).to.equal(fileName);
     }).timeout(10000);
 });
 
@@ -53,7 +53,7 @@ describe('tests related to parsing buildInfo (for hardhat)', () => {
         const macName = parseBuildInfoJsonName(macPath);
         const windowsName = parseBuildInfoJsonName(windowsPath);
         expect(macName).to.equal(fileName);
-        expect(windowsName).to.equal(windowsName);
+        expect(windowsName).to.equal(fileName);
     }).timeout(10000);
 
     it('should be "fc60cca1c3038646bb57f93b2a8c9aa9.json"', async () => {
@@ -120,10 +120,7 @@ describe('tests writeAndReturnASTAndOtherInfo', () => {
         const contractSourceName = "contracts/TestContractVT20.sol";
         const contractSolName = "TestContractVT20.sol";
         const contractJsonName = "TestContractVT20.json";
-        let pathToContractBuildFile = path.join(cwd(), "artifacts");
-        pathToContractBuildFile = path.join(pathToContractBuildFile, "contracts");
-        pathToContractBuildFile = path.join(pathToContractBuildFile, contractSolName);
-        pathToContractBuildFile = path.join(pathToContractBuildFile, contractJsonName);
+        let pathToContractBuildFile = path.join(cwd(), "artifacts", "contracts", contractSolName, contractJsonName);
         let parsedFile = await FileHandler.parsedFile(pathToContractBuildFile);
         
         // prior conditions
@@ -135,13 +132,7 @@ describe('tests writeAndReturnASTAndOtherInfo', () => {
         expect(parsedFile.ast).to.exist;
 
         // resetting
-        let pathToBackUpBuildArtifact = path.join(cwd(), "../tests_setup");
-        pathToBackUpBuildArtifact = path.join(pathToBackUpBuildArtifact, "backup_files");
-        pathToBackUpBuildArtifact = path.join(pathToBackUpBuildArtifact, "backup_hardhat_artifacts");
-        pathToBackUpBuildArtifact = path.join(pathToBackUpBuildArtifact, "artifacts");
-        pathToBackUpBuildArtifact = path.join(pathToBackUpBuildArtifact, "contracts");
-        pathToBackUpBuildArtifact = path.join(pathToBackUpBuildArtifact, contractSolName);
-        pathToBackUpBuildArtifact = path.join(pathToBackUpBuildArtifact, contractJsonName);
+        let pathToBackUpBuildArtifact = path.join(cwd(), "../tests_setup", "backup_files", "backup_hardhat_artifacts", "artifacts", "contracts", contractSolName, contractJsonName);
         await FileHandler.transferFile(pathToBackUpBuildArtifact, pathToContractBuildFile);
 
 

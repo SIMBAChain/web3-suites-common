@@ -50,7 +50,7 @@ describe('tests refreshToken with new authToken', () => {
         SimbaConfig.ProjectConfigStore.set(originalSimbaJson);
         SimbaConfig.ConfigStore.clear();
         SimbaConfig.ConfigStore.set(originalAuthConfig);
-    }).timeout(100000);
+    }).timeout(15000);
 });
 
 describe('tests refreshToken with synthetically old authToken', () => {
@@ -107,7 +107,7 @@ describe('tests refreshToken with synthetically old authToken', () => {
         SimbaConfig.ProjectConfigStore.set(originalSimbaJson);
         SimbaConfig.ConfigStore.clear();
         SimbaConfig.ConfigStore.set(originalAuthConfig);
-    }).timeout(100000);
+    }).timeout(15000);
 });
 
 describe('tests refreshToken with forced reset', () => {
@@ -153,5 +153,5 @@ describe('tests refreshToken with forced reset', () => {
         SimbaConfig.ProjectConfigStore.set(originalSimbaJson);
         SimbaConfig.ConfigStore.clear();
         SimbaConfig.ConfigStore.set(originalAuthConfig);
-    }).timeout(100000);
+    }).timeout(15000);
 });

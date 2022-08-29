@@ -53,15 +53,12 @@ describe('testing absolutePaths', () => {
 
 describe('testing contractSimbaPath', () => {
     it('SimbaImports should exist after call', async () => {
-        let simbaPath = path.join(cwd(), "contracts");
-        simbaPath = path.join(simbaPath, "SimbaImports");
+        let simbaPath = path.join(cwd(), "contracts", "SimbaImports");
         FileHandler.removeDirectory(simbaPath);
         expect(fs.existsSync(simbaPath)).to.equal(false);
         const absPaths: any = await absolutePaths();
         const contractPath = contractSimbaPath(absPaths, "TestContractVT20");
-        let expectedPath = path.join(cwd(), "contracts");
-        expectedPath = path.join(expectedPath, "SimbaImports");
-        expectedPath = path.join(expectedPath, "TestContractVT20.sol");
+        let expectedPath = path.join(cwd(), "contracts", "SimbaImports", "TestContractVT20.sol");
         expect(contractPath).to.equal(expectedPath);
         FileHandler.removeDirectory(simbaPath);
     });

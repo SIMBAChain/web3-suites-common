@@ -34,8 +34,7 @@ const contractDesignsPath = "../tests_setup/contract_designs/hardhat_az/contract
 
 describe('testing pulling .sol file from designID', () => {
     it('should exist in /contracts/simbaimports/ after', async () => {
-        let simbaDir = path.join(cwd(), "contracts");
-        simbaDir = path.join(simbaDir, "SimbaImports");
+        let simbaDir = path.join(cwd(), "contracts", "SimbaImports");
         const contractName = "TestContractVT3";
         const oldContractID = "cb3ad592-1ca2-43b3-a9d0-cd0d0f127b32";
         const filePath = path.join(simbaDir, `${contractName}.sol`);
@@ -49,13 +48,12 @@ describe('testing pulling .sol file from designID', () => {
         exists = fs.existsSync(filePath);
         expect(exists).to.equal(true);
         FileHandler.removeDirectory(simbaDir);
-    }).timeout(100000);
+    }).timeout(15000);
 });
 
 describe('testing pulling .sol files using contractDesigns and other params', () => {
     it('contracts should exist in /contracts/simbaimports/ after', async () => {
-        let simbaDir = path.join(cwd(), "contracts");
-        simbaDir = path.join(simbaDir, "SimbaImports");
+        let simbaDir = path.join(cwd(), "contracts", "SimbaImports");
         const simbaConfig = new SimbaConfig();
         const authStore = await simbaConfig.authStore();
         await authStore!.performLogin(false);
@@ -101,11 +99,9 @@ describe('testing pulling .sol files using contractDesigns and other params', ()
         }
 
         FileHandler.removeDirectory(simbaDir);
-    }).timeout(100000);
+    }).timeout(120000);
 });
 
-
-// pick up with this one tomorrow
 describe('testing pulling source code to simba.json', () => {
     it('source code should be in simba.json after function calls', async () => {
         const contractName = "TestContractVT3";
@@ -144,7 +140,7 @@ describe('testing pulling source code to simba.json', () => {
         SimbaConfig.ProjectConfigStore.set(originalSimbaJson);
 
         SimbaConfig.ProjectConfigStore.set(originalSimbaJson);
-    }).timeout(100000);
+    }).timeout(120000);
 });
 
 describe('testing pulling .sol files to contracts/SimbaImports dir and source code to simba.json', () => {
@@ -223,6 +219,6 @@ describe('testing pulling .sol files to contracts/SimbaImports dir and source co
         SimbaConfig.ProjectConfigStore.clear();
         SimbaConfig.ProjectConfigStore.set(originalSimbaJson);
         FileHandler.removeDirectory(simbaDir);
-    }).timeout(300000);
+    }).timeout(120000);
 });
 

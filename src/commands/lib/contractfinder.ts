@@ -129,8 +129,7 @@ export function contractSimbaPath(
     } else {
         base = contractPath.split("\\")[0];
     }
-    let newPathWithSimba = path.join(base, SimbaPath);
-    newPathWithSimba = path.join(newPathWithSimba, contractPath.slice(base.length));
+    let newPathWithSimba = path.join(base, SimbaPath, contractPath.slice(base.length));
     const newAbsoluteSimbaPath = path.join(cwd(), newPathWithSimba);
     const newAbsoluteDir = path.dirname(newAbsoluteSimbaPath);
     if (!fs.existsSync(newAbsoluteDir)) {

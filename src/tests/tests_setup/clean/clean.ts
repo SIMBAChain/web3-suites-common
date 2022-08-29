@@ -22,18 +22,9 @@ async function resetHardhatArtifacts() {
     SimbaConfig.log.info(`resetting hardhat artifacts`);
     const contractSolName = "TestContractVT20.sol";
     const contractJsonName = "TestContractVT20.json";
-    let pathToContractBuildFile = path.join("../../hardhat/", "artifacts");
-    pathToContractBuildFile = path.join(pathToContractBuildFile, "contracts");
-    pathToContractBuildFile = path.join(pathToContractBuildFile, contractSolName);
-    pathToContractBuildFile = path.join(pathToContractBuildFile, contractJsonName);
+    let pathToContractBuildFile = path.join("../../hardhat/", "artifacts", "contracts", contractSolName, contractJsonName);
 
-    let pathToBackUpBuildArtifact = path.join(cwd(), "../");
-    pathToBackUpBuildArtifact = path.join(pathToBackUpBuildArtifact, "backup_files");
-    pathToBackUpBuildArtifact = path.join(pathToBackUpBuildArtifact, "backup_hardhat_artifacts");
-    pathToBackUpBuildArtifact = path.join(pathToBackUpBuildArtifact, "artifacts");
-    pathToBackUpBuildArtifact = path.join(pathToBackUpBuildArtifact, "contracts");
-    pathToBackUpBuildArtifact = path.join(pathToBackUpBuildArtifact, contractSolName);
-    pathToBackUpBuildArtifact = path.join(pathToBackUpBuildArtifact, contractJsonName);
+    let pathToBackUpBuildArtifact = path.join(cwd(), "../", "backup_files", "backup_hardhat_artifacts", "artifacts", "contracts", contractSolName, contractJsonName);
     await FileHandler.transferFile(pathToBackUpBuildArtifact, pathToContractBuildFile);
 }
 

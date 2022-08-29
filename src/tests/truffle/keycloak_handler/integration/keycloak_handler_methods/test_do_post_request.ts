@@ -32,5 +32,5 @@ describe('tests doPostRequest after login', () => {
         SimbaConfig.ProjectConfigStore.set(originalSimbaJson);
         SimbaConfig.ConfigStore.clear();
         SimbaConfig.ConfigStore.set(originalAuthConfig);
-    }).timeout(100000);
+    }).timeout(15000);
 });

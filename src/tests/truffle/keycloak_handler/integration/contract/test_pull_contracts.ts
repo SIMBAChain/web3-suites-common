@@ -31,8 +31,7 @@ const contractDesignsPath = "../tests_setup/contract_designs/truffle_kc/contract
 
 describe('testing pulling .sol file from designID', () => {
     it('should exist in /contracts/simbaimports/ after', async () => {
-        let simbaDir = path.join(cwd(), "contracts");
-        simbaDir = path.join(simbaDir, "SimbaImports");
+        let simbaDir = path.join(cwd(), "contracts", "SimbaImports");
         const contractName = "TestContractVT20";
         const oldContractID = "a01b28b7-0ac5-466a-95d2-f04295a6f38d";
         const filePath = path.join(simbaDir, `${contractName}.sol`);
@@ -46,13 +45,12 @@ describe('testing pulling .sol file from designID', () => {
         exists = fs.existsSync(filePath);
         expect(exists).to.equal(true);
         FileHandler.removeDirectory(simbaDir);
-    }).timeout(100000);
+    }).timeout(120000);
 });
 
 describe('testing pulling .sol files using contractDesigns and other params', () => {
     it('contracts should exist in /contracts/simbaimports/ after', async () => {
-        let simbaDir = path.join(cwd(), "contracts");
-        simbaDir = path.join(simbaDir, "SimbaImports");
+        let simbaDir = path.join(cwd(), "contracts", "SimbaImports");
         const simbaConfig = new SimbaConfig();
         const authStore = await simbaConfig.authStore();
         await authStore!.performLogin(false);
@@ -98,11 +96,9 @@ describe('testing pulling .sol files using contractDesigns and other params', ()
         }
 
         FileHandler.removeDirectory(simbaDir);
-    }).timeout(100000);
+    }).timeout(120000);
 });
 
-
-// pick up with this one tomorrow
 describe('testing pulling source code to simba.json', () => {
     it('source code should be in simba.json after function calls', async () => {
         const contractName = "TestContractVT20";
@@ -141,7 +137,7 @@ describe('testing pulling source code to simba.json', () => {
         SimbaConfig.ProjectConfigStore.set(originalSimbaJson);
 
         SimbaConfig.ProjectConfigStore.set(originalSimbaJson);
-    }).timeout(100000);
+    }).timeout(120000);
 });
 
 describe('testing pulling .sol files to contracts/SimbaImports dir and source code to simba.json', () => {
@@ -150,8 +146,7 @@ describe('testing pulling .sol files to contracts/SimbaImports dir and source co
         const simbaConfig = new SimbaConfig();
         const authStore = await simbaConfig.authStore();
         const contractDesigns = await FileHandler.parsedFile(contractDesignsPath);
-        let simbaDir = path.join(cwd(), "contracts");
-        simbaDir = path.join(simbaDir, "SimbaImports");
+        let simbaDir = path.join(cwd(), "contracts", "SimbaImports");
         const originalSimbaJson = SimbaConfig.ProjectConfigStore.all;
         let contractNames: any = [];
         for (let i = 0; i < contractDesigns.length; i++) {
@@ -220,6 +215,6 @@ describe('testing pulling .sol files to contracts/SimbaImports dir and source co
         SimbaConfig.ProjectConfigStore.clear();
         SimbaConfig.ProjectConfigStore.set(originalSimbaJson);
         FileHandler.removeDirectory(simbaDir);
-    }).timeout(300000);
+    }).timeout(120000);
 });
 

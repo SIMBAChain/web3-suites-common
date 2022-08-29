@@ -39,7 +39,7 @@ describe('basic test of getting file name, agnostic towards OS', () => {
         const macName = parseBuildInfoJsonName(macPath);
         const windowsName = parseBuildInfoJsonName(windowsPath);
         expect(macName).to.equal(fileName);
-        expect(windowsName).to.equal(windowsName);
+        expect(windowsName).to.equal(fileName);
     }).timeout(10000);
 });
 
