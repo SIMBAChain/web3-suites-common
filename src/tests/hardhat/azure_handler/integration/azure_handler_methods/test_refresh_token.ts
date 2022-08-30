@@ -7,10 +7,6 @@ import {
 import { expect } from 'chai';
 import 'mocha';
 
-// These tests test non-interactive login
-// perfomLogin(false) contains pretty much all of the functionality
-// that the others do, but we're testing them separately as well here
-
 describe('tests refreshToken with new authToken', () => {
     it('authtoken should stay the same, since it is new', async () => {
         // original settings
@@ -54,7 +50,7 @@ describe('tests refreshToken with new authToken', () => {
         SimbaConfig.ProjectConfigStore.set(originalSimbaJson);
         SimbaConfig.ConfigStore.clear();
         SimbaConfig.ConfigStore.set(originalAuthConfig);
-    }).timeout(100000);
+    }).timeout(15000);
 });
 
 describe('tests refreshToken with synthetically old authToken', () => {
@@ -111,7 +107,7 @@ describe('tests refreshToken with synthetically old authToken', () => {
         SimbaConfig.ProjectConfigStore.set(originalSimbaJson);
         SimbaConfig.ConfigStore.clear();
         SimbaConfig.ConfigStore.set(originalAuthConfig);
-    }).timeout(100000);
+    }).timeout(15000);
 });
 
 describe('tests refreshToken with forced reset', () => {
@@ -157,5 +153,5 @@ describe('tests refreshToken with forced reset', () => {
         SimbaConfig.ProjectConfigStore.set(originalSimbaJson);
         SimbaConfig.ConfigStore.clear();
         SimbaConfig.ConfigStore.set(originalAuthConfig);
-    }).timeout(100000);
+    }).timeout(15000);
 });

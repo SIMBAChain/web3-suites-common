@@ -91,6 +91,10 @@ export async function absolutePaths(): Promise<Record<any, any> | void> {
         let absPath = astAndOtherInfo.ast.absolutePath ?
             astAndOtherInfo.ast.absolutePath :
             path.join("contracts", `${contractName}.sol`);
+        // the following line is for truffle, since it prepends paths with "project:/"
+        if (absPath.startsWith("project:/")) {
+            absPath = absPath.split("project:/")[1];
+        }
         absolutePathMap[contractName] = absPath;
     }
     SimbaConfig.log.debug(`:: EXIT : absolutePathMap : ${JSON.stringify(absolutePathMap)}`);
@@ -125,8 +129,7 @@ export function contractSimbaPath(
     } else {
         base = contractPath.split("\\")[0];
     }
-    let newPathWithSimba = path.join(base, SimbaPath);
-    newPathWithSimba = path.join(newPathWithSimba, contractPath.slice(base.length));
+    let newPathWithSimba = path.join(base, SimbaPath, contractPath.slice(base.length));
     const newAbsoluteSimbaPath = path.join(cwd(), newPathWithSimba);
     const newAbsoluteDir = path.dirname(newAbsoluteSimbaPath);
     if (!fs.existsSync(newAbsoluteDir)) {
