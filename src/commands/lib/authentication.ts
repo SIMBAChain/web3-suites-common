@@ -226,7 +226,7 @@ export class KeycloakHandler {
      * @param key 
      * @returns 
      */
-    protected getConfig(key: string): any {
+    public getConfig(key: string): any {
         SimbaConfig.log.debug(`:: ENTER :`);
         if (!this.config.has(this.configBase)) {
             SimbaConfig.log.debug(`:: EXIT :`);
@@ -269,7 +269,7 @@ export class KeycloakHandler {
      * @param value 
      * @returns 
      */
-    protected setConfig(key: string, value: any): any {
+    public setConfig(key: string, value: any): any {
         SimbaConfig.log.debug(`:: ENTER : KEY: ${key}, VALUE: ${JSON.stringify(value)}`);
         if (!this.config.has(this.configBase)) {
             this.config.set(this.configBase, {});
@@ -520,8 +520,7 @@ export class KeycloakHandler {
             SimbaConfig.log.debug(`:: EXIT : true`);
             return true;
         }
-        // return true below, to pad for time required for operations
-        if (authToken.expires_at <= new Date()) {
+        if (new Date(authToken.expires_at) <= new Date()) {
             SimbaConfig.log.debug(`:: EXIT : access_token expired, returning true`);
             return true;
         }
@@ -545,8 +544,7 @@ export class KeycloakHandler {
             SimbaConfig.log.debug(`:: EXIT : true`);
             return true;
         }
-        // return true below, to pad for time required for operations
-        if (authToken.refresh_expires_at <= new Date()) {
+        if (new Date(authToken.refresh_expires_at) <= new Date()) {
             SimbaConfig.log.debug(`:: EXIT : refresh_token expired, returning true`);
             return true;
         }
@@ -794,31 +792,6 @@ export class KeycloakHandler {
     }
 
     /**
-     * keycloak expects a different contentType (see below)
-     * @param url 
-     * @param _queryParams 
-     * @returns 
-     */
-    public async doKeycloakGetRequest(
-        url: string,
-        _queryParams?: Record<any, any>,
-    ): Promise<Record<any, any> | Error | void> {
-        const funcParams = {
-            url,
-            _queryParams,
-        };
-        SimbaConfig.log.debug(`:: ENTER : ${JSON.stringify(funcParams)}`);
-        const contentType = 'application/x-www-form-urlencoded;charset=utf-8';
-        const resData = await this.doGetRequest(url, contentType, _queryParams, false);
-        if (resData instanceof Error || axios.isAxiosError(resData)) {
-            SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(resData)}`)}`);
-            return resData;
-        }
-        SimbaConfig.log.debug(`:: EXIT : result data : ${JSON.stringify(resData)}`);
-        return resData;
-    }
-
-    /**
      * do post request. uses axios library
      * @param url 
      * @param _postData 
@@ -925,31 +898,6 @@ export class KeycloakHandler {
             SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${this.authErrors.headersError}`)}`);
             return new Error(`${this.authErrors.headersError}`);
         }
-    }
-
-    /**
-     * keycloak expects different contentType
-     * @param url 
-     * @param _postData 
-     * @returns 
-     */
-    public async doKeycloakPostRequest(
-        url: string,
-        _postData?: Record<any, any>
-    ): Promise<Record<any, any> | Error | void> {
-        const funcParams = {
-            url,
-            _postData,
-        };
-        SimbaConfig.log.debug(`:: ENTER : ${JSON.stringify(funcParams)}`);
-        const contentType = 'application/x-www-form-urlencoded;charset=utf-8';
-        const resData = await this.doPostRequest(url, _postData, contentType, false);
-        if (resData instanceof Error) {
-            SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(resData)}`)}`);
-            return resData;
-        }
-        SimbaConfig.log.debug(`:: EXIT : result data : ${JSON.stringify(resData)}`);
-        return resData;
     }
 }
 

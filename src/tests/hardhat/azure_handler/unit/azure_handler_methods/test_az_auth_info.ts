@@ -17,5 +17,5 @@ describe('tests getAndSetAZAuthInfo', () => {
         expect(SimbaConfig.ProjectConfigStore.get("authProviderInfo").type).to.equal("azureb2c");
         SimbaConfig.ProjectConfigStore.clear();
         SimbaConfig.ProjectConfigStore.set(originalSimbaJson);
-    });
+    }).timeout(10000);
 });
