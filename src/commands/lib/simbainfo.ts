@@ -178,4 +178,11 @@ export class SimbaInfo {
         this.printChalkedObject(web3Suite, "web3Suite");
         return;
     }
+
+    public static printBaseURL(): void {
+        SimbaConfig.log.debug(`:: ENTER :`);
+        const baseURL = this.getProjectConfig("baseURL");
+        this.printChalkedObject(baseURL, "baseURL");
+        return;
+    }
 }
