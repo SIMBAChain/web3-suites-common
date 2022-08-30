@@ -848,7 +848,7 @@ export class KeycloakHandler {
         };
         SimbaConfig.log.debug(`:: ENTER : ${JSON.stringify(funcParams)}`);
 
-        if (!(method in ['POST', 'PUT'])) {
+        if (!(['POST', 'PUT'].includes(method))) {
             SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : Invalid method, must be 'POST' or 'PUT'`)}`);
         }
 
