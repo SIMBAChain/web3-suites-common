@@ -10,11 +10,12 @@ export class SimbaInfo {
     ): string {
         SimbaConfig.log.debug(`:: ENTER : obj: ${JSON.stringify(obj)}`);
         let chalkString = objName ? `\n${chalk.yellowBright(`${objName}`)}:` : `\n`;
+    
         if (Object.prototype.toString.call(obj) === '[object Object]') {
             const _obj = obj as any;
             chalkString += `${chalk.cyanBright(`\n{`)}`;
             for (let key in _obj) {
-                chalkString += `\n\t${chalk.greenBright(key)}: ${chalk.cyanBright(_obj[key])},`;
+                chalkString += `\n\t${chalk.greenBright(key)}: ${chalk.cyanBright(JSON.stringify(_obj[key]))},`;
             }
             chalkString = chalkString.slice(0, -1);
             chalkString += `${chalk.cyanBright(`\n}`)}`;
@@ -64,6 +65,13 @@ export class SimbaInfo {
             return null;
         }
         const authInfo = authConfig[configBase];
+        if (authInfo.SIMBAAUTH.access_token) {
+            console.log("entering here")
+            authInfo.SIMBAAUTH.access_token = "*****";
+        }
+        if (authInfo.SIMBAAUTH.refresh_token) {
+            authInfo.SIMBAAUTH.refresh_token = "*****"
+        }
         if (!authInfo) {
             SimbaConfig.log.debug(`:: no auth info set for ${configBase} in authconfig.json`);
             SimbaConfig.log.debug(`:: EXIT :`);
@@ -129,13 +137,7 @@ export class SimbaInfo {
     public static printAllSimbaJson(): void {
         SimbaConfig.log.debug(`:: ENTER :`);
         const allSimba = SimbaConfig.ProjectConfigStore.all;
-        for (let key in allSimba) {
-            const val = allSimba[key];
-            if (Object.prototype.toString.call(val) === '[object Object]') {
-                allSimba[key] = this.chalkObject(val)
-            }
-        }
-        this.printChalkedObject(allSimba, "simba.json");
+        SimbaInfo.printChalkedObject(allSimba, "simba.json")
         SimbaConfig.log.debug(`:: EXIT :`);
         return;
     }
