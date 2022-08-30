@@ -13,8 +13,10 @@ describe('tests getAndSetAuthProviderInfo', () => {
         const authInfo = SimbaConfig.ProjectConfigStore.get("authProviderInfo");
         expect(authInfo).to.exist;
         expect(authInfo.client_id).to.equal(returnedAuthInfo.client_id);
+        const authType = authInfo.type;
+        expect(authType).to.equal("azureb2c");
         // now reset simba.json to its original state
         SimbaConfig.ProjectConfigStore.clear();
         SimbaConfig.ProjectConfigStore.set(originalSimbaJson);
-    });
+    }).timeout(10000);
 });
