@@ -166,10 +166,13 @@ export class SimbaConfig {
             "KeycloakOAuth2": "KEYCLOAK",
         }
 
-        const val = process.env[`SIMBA_${authMap[authType]}_${envVarKey}`] || 
+        let val = process.env[`SIMBA_${authMap[authType]}_${envVarKey}`] || 
             process.env[`SIMBA_AUTH_CLIENT_${envVarKey}`] ||
             process.env[`SIMBA_PLUGIN_${envVarKey}`];
         
+        if (!val && envVarKey === EnvVariableKeys.AUTHENDPOINT) {
+            val = "/o/";
+        }
         SimbaConfig.log.debug(`:: EXIT :`);
         return val;
     }
