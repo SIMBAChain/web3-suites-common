@@ -66,7 +66,6 @@ export class SimbaInfo {
         }
         const authInfo = authConfig[configBase];
         if (authInfo.SIMBAAUTH.access_token) {
-            console.log("entering here")
             authInfo.SIMBAAUTH.access_token = "*****";
         }
         if (authInfo.SIMBAAUTH.refresh_token) {
