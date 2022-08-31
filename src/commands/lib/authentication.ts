@@ -887,9 +887,9 @@ export class KeycloakHandler {
                     url = this.buildURL(url);
                 }
                 let res: AxiosResponse;
-                if (method == "POST") {
+                if (method === "POST") {
                     res = await axios.post(url, postData, config);
-                } else if (method == "PUT") {
+                } else if (method === "PUT") {
                     res = await axios.put(url, postData, config);
                 }
                 const resData: Record<any, any> = res!.data;
