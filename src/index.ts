@@ -17,6 +17,7 @@ export {
     getContractKind,
     AuthProviders,
     authErrors,
+    SimbaInfo,
 } from './commands/lib';
 export {
     pullContractsInteractive,
