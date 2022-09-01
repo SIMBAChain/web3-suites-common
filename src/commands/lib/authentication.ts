@@ -1472,10 +1472,13 @@ export class AzureHandler {
         await this.setAndGetAZAuthInfo();
         let opts = await this.getClientOptions(url, contentType, data);
         const uri = opts.uri;
-        const headers = opts.headers;
+        const headers = Object.assign({}, opts.headers);
         const config = {
             headers,
         };
+        if (opts.headers.Authorization) {
+            opts.headers.Authorization = "******";
+        }
         SimbaConfig.log.debug(`opts: ${JSON.stringify(opts)}`);
         try {
             if (requestType === "POST") {
