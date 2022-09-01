@@ -2,6 +2,7 @@ export {LogLevel} from './logger';
 export {
     SimbaConfig,
     handleV2,
+    AllDirs,
 } from './config';
 export {
     promisifiedReadFile,

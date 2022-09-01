@@ -18,6 +18,7 @@ export {
     AuthProviders,
     authErrors,
     SimbaInfo,
+    AllDirs,
 } from './commands/lib';
 export {
     pullContractsInteractive,
