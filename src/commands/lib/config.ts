@@ -14,6 +14,9 @@ import {
     AuthProviders,
     authErrors,
 } from './authentication';
+import {
+    SimbaInfo,
+} from "./simbainfo";
 import {default as chalk} from 'chalk';
 import axios from "axios";
 // const fsPromises = require("fs").promises;
@@ -26,6 +29,12 @@ enum WebThreeSuites {
 enum CompiledDirs {
     ARTIFACTS = "artifacts",
     BUILD = "build",
+}
+
+export enum AllDirs {
+    BUILDDIRECTORY = "buildDirectory",
+    ARTIFACTDIRECTORY = "artifactDirectory",
+    CONTRACTDIRECTORY = "contractDirectory",
 }
 
 export enum EnvVariableKeys {
@@ -354,6 +363,35 @@ export class SimbaConfig {
         return await SimbaConfig.authStore();
     }
 
+    public static allDirs(): Record<any, any> {
+        SimbaConfig.log.debug(`:: ENTER :`);
+        const dirs = {
+            buildDirectory: SimbaConfig.buildDirectory,
+            contractDirectory: SimbaConfig.contractDirectory,
+            artifactDirectory: SimbaConfig.artifactDirectory,
+        }
+        SimbaConfig.log.debug(`:: EXIT : dirs : ${JSON.stringify(dirs)}`);
+        return dirs;
+    }
+
+    public allDirs(): Record<any, any> {
+        SimbaConfig.log.debug(`:: ENTER :`);
+        SimbaConfig.log.debug(`:: EXIT :`);
+        return SimbaConfig.allDirs();
+    }
+
+    public static printChalkedDirs(): void {
+        SimbaConfig.log.debug(`:: ENTER :`);
+        SimbaInfo.printChalkedObject(SimbaConfig.allDirs(), "simba directories");
+        SimbaConfig.log.debug(`:: EXIT :`);
+    }
+
+    public printChalkedDirs(): void {
+        SimbaConfig.log.debug(`:: ENTER :`);
+        SimbaConfig.printChalkedDirs();
+        SimbaConfig.log.debug(`:: EXIT :`);
+    }
+
     /**
      * to determine where compiled contracts are stored
      */
@@ -387,6 +425,63 @@ export class SimbaConfig {
         return SimbaConfig.artifactDirectory;
     }
 
+    public static setDirectory(dirName: AllDirs, dirPath: string): void {
+        const entryParams = {
+            dirName,
+            dirPath,
+        };
+        SimbaConfig.log.debug(`:: ENTER : entryParmas : ${JSON.stringify(entryParams)}`);
+        switch (dirName) {
+            case (AllDirs.ARTIFACTDIRECTORY): {
+                SimbaConfig.artifactDirectory = dirPath;
+                break;
+            }
+            case (AllDirs.BUILDDIRECTORY): {
+                SimbaConfig.buildDirectory = dirPath;
+                break;
+            }
+            case (AllDirs.CONTRACTDIRECTORY): {
+                SimbaConfig.contractDirectory = dirPath;
+                break;
+            }
+            default: {
+                SimbaConfig.log.error(`${chalk.redBright(`\nsimba: unrecognized directory name: ${dirName}`)}`);
+                return;
+            }
+        }
+    }
+
+    public setDirectory(dirName: AllDirs, dirPath: string): void {
+        const entryParams = {
+            dirName,
+            dirPath,
+        };
+        SimbaConfig.log.debug(`:: ENTER : entryParmas : ${JSON.stringify(entryParams)}`);
+        SimbaConfig.setDirectory(dirName, dirPath);
+        SimbaConfig.log.debug(`:: EXIT :`);
+        return;
+    }
+
+    public static set artifactDirectory(dirPath: string) {
+        SimbaConfig.log.debug(`:: ENTER : dirPath : ${dirPath}`);
+        if (dirPath === "reset") {
+            SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: resetting artifactDirectory to default settings`)}`);
+            SimbaConfig.ProjectConfigStore.delete("artifactDirectory");
+            SimbaConfig.log.debug(`:: EXIT :`);
+            return;
+        }
+        SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: setting artifactDirectory to ${dirPath}`)}`);
+        SimbaConfig.ProjectConfigStore.set("artifactDirectory", dirPath);
+        SimbaConfig.log.debug(`:: EXIT :`);
+        return;
+    }
+
+    public set artifactDirectory(dirPath: string) {
+        SimbaConfig.log.debug(`:: ENTER : dirPath : ${dirPath}`);
+        SimbaConfig.artifactDirectory = dirPath;
+        SimbaConfig.log.debug(`:: EXIT :`);
+    }
+
     /**
      * used for Hardhat, since some build info is stored in separate file from main artifact info
      */
@@ -398,9 +493,6 @@ export class SimbaConfig {
         return SimbaConfig.buildInfoDirectory;
     }
 
-    /**
-     * finds contracts directory and returns path
-     */
     public static get buildDirectory(): string {
         let buildDir = this.ProjectConfigStore.get("buildDirectory");
         if (buildDir) {
@@ -412,6 +504,26 @@ export class SimbaConfig {
 
     public get buildDirectory(): string {
         return SimbaConfig.buildDirectory;
+    }
+
+    public static set buildDirectory(dirPath: string) {
+        SimbaConfig.log.debug(`:: ENTER : dirPath : ${dirPath}`);
+        if (dirPath.toLowerCase() === "reset") {
+            SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: resetting buildDirectory to default settings`)}`);
+            SimbaConfig.ProjectConfigStore.delete("buildDirectory");
+            SimbaConfig.log.debug(`:: EXIT :`);
+            return;
+        }
+        SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: setting buildDirectory to ${dirPath}`)}`);
+        SimbaConfig.ProjectConfigStore.set("buildDirectory", dirPath);
+        SimbaConfig.log.debug(`:: EXIT :`);
+        return;
+    }
+
+    public set buildDirectory(dirPath: string) {
+        SimbaConfig.log.debug(`:: ENTER : dirPath : ${dirPath}`);
+        SimbaConfig.buildDirectory = dirPath;
+        SimbaConfig.log.debug(`:: EXIT :`);
     }
 
     /**
@@ -432,6 +544,26 @@ export class SimbaConfig {
 
     public get contractDirectory(): string {
         return SimbaConfig.contractDirectory;
+    }
+
+    public static set contractDirectory(dirPath: string) {
+        SimbaConfig.log.debug(`:: ENTER : dirPath : ${dirPath}`);
+        if (dirPath.toLowerCase() === "reset") {
+            SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: resetting contractDirectory to default settings`)}`);
+            SimbaConfig.ProjectConfigStore.delete("contractDirectory");
+            SimbaConfig.log.debug(`:: EXIT :`);
+            return;
+        }
+        SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: setting contractDirectory to ${dirPath}`)}`);
+        SimbaConfig.ProjectConfigStore.set("contractDirectory", dirPath);
+        SimbaConfig.log.debug(`:: EXIT :`);
+        return;
+    }
+
+    public set contractDirectory(dirPath: string) {
+        SimbaConfig.log.debug(`:: ENTER : dirPath : ${dirPath}`);
+        SimbaConfig.contractDirectory = dirPath;
+        SimbaConfig.log.debug(`:: EXIT :`);
     }
 
     /**
