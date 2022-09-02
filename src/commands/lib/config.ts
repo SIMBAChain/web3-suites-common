@@ -235,7 +235,7 @@ export class SimbaConfig {
             SimbaConfig.log.debug(`:: EXIT : no new org name specified; no action required`);
             return;
         }
-        const previousOrgName = previousSimbaJson.organisation.name;
+        const previousOrgName = previousSimbaJson.organisation ? previousSimbaJson.organisation : null;
         const newOrgName = (typeof newOrg === "string") ?
             newOrg :
             (newOrg as any).name;
