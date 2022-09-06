@@ -182,6 +182,7 @@ export async function chooseOrganisationFromName(
             const res = await authStore.doGetRequest(url);
             SimbaConfig.log.info(`${chalk.cyanBright(`simba: logging in using organisation ${res.name}`)}`);
             SimbaConfig.log.debug(`:: EXIT : res : ${JSON.stringify(res)}`);
+            SimbaConfig.organisation = res;
             return res;
         } catch (error) {
             if (axios.isAxiosError(error) && error.response) {
@@ -522,6 +523,7 @@ export async function chooseApplicationFromName(
             const res = await authStore.doGetRequest(url, 'application/json');
             SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(res)}`);
             SimbaConfig.log.info(`${chalk.cyanBright(`simba: logging in using app ${res.name}`)}`);
+            SimbaConfig.application = res;
             return res;
         } catch (error) {
             if (axios.isAxiosError(error) && error.response) {
