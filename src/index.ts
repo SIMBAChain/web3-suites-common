@@ -33,4 +33,6 @@ export {
     SourceCodeComparer,
     pullContractFromDesignId,
     pullSourceCodeForSimbaJson,
+    deleteContractFromDesignID,
+    deleteContractsFromPrompts,
 } from "./commands/contract";
