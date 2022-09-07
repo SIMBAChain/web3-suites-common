@@ -70,7 +70,7 @@ export async function deleteContractsFromPrompts(contractDesignArray?: ContractD
         const chosen = await prompt({
             type: 'multiselect',
             name: 'contracts',
-            message: `${chalk.cyanBright(`Please select all contracts you want to sync. Use the Space Bar to select or un-select a contract (You can also use -> to select a contract, and <- to un-select a contract). Hit Return/Enter when you are ready to sync your contracts. This will overwrite any local versions of selected contracts.`)}`,
+            message: `${chalk.cyanBright(`Please select all contracts you want to delete from your organisation. Use the Space Bar to select or un-select a contract (You can also use -> to select a contract, and <- to un-select a contract). Hit Return/Enter when you are ready to sync your contracts. THIS WILL PERMANENTLY DELETE THESE CONTRACT DESIGNS FROM YOUR SIMBA ORGANISATION.`)}`,
             choices,
         });
         for (let i = 0; i < chosen.contracts.length; i++) {
