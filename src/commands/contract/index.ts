@@ -28,6 +28,11 @@ export {
 } from "./pull";
 
 export {
+    deleteContractFromDesignID,
+    deleteContractsFromPrompts,
+} from "./delete";
+
+export {
     addLib,
 } from "./addlibrary";
 

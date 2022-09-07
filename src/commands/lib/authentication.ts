@@ -945,6 +945,107 @@ export class KeycloakHandler {
             return new Error(`${this.authErrors.headersError}`);
         }
     }
+
+    async doDeleteRequest(
+        url: string,
+        contentType?: string,
+        _buildURL: boolean = true,
+    ): Promise<Record<any, any> | void> {
+        const entryParams = {
+            url,
+            contentType,
+            _buildURL,
+        };
+        SimbaConfig.log.debug(`:: ENTER : ${JSON.stringify(entryParams)}`);
+
+        if (this.tokenExpired()) {
+            SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: auth token expired`)}`);
+            if (this.refreshTokenExpired()) {
+                SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: refresh token expired, acquiring new auth token`)}`);
+                const authToken = await this.loginAndGetAuthToken();
+                if (!authToken) {
+                    SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${this.authErrors.authTokenError}`)}`);
+                    return new Error(`${this.authErrors.authTokenError}`);
+                }
+            } else {
+                SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: refreshing token`)}`);
+                const newAuthToken = await this.refreshToken();
+                if (!newAuthToken) {
+                    SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${this.authErrors.authTokenError}`)}`)
+                    SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: there was an error with your request, please log out and then login again, then try your request again`)}`);
+                    return
+                }
+            }
+        }
+        const headers = await this.accessTokenHeader();
+        if (headers) {
+            if (!contentType) {
+                headers["content-type"] = "application/json";
+            } else {
+                headers["content-type"] = contentType;
+            }
+            const config = {
+                headers: headers,
+            }
+            try {
+                if (_buildURL) {
+                    url = this.buildURL(url);
+                }
+                let res: AxiosResponse;
+                res = await axios.delete(url, config);
+                const resData: Record<any, any> = res!.data;
+                SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(resData)}`);
+                return resData;
+            } catch (error) {
+                if (axios.isAxiosError(error) && error.response) {
+                    SimbaConfig.log.error(`${chalk.redBright(`\nsimba: ${JSON.stringify(error.response.data)}`)}`)
+                } else {
+                    SimbaConfig.log.error(`${chalk.redBright(`\nsimba: ${JSON.stringify(error)}`)}`);
+                }
+                SimbaConfig.log.debug(`err: ${JSON.stringify(error)}`);
+                if (axios.isAxiosError(error) && error.response && error.response.status === 401)  {
+                    SimbaConfig.log.debug(`:: received 401 response, attempting to refresh token`);
+                    // if 401 from Simba, then try refreshing token.
+                    try {
+                        const newAuthToken = await this.refreshToken();
+                        if (newAuthToken) {
+                            SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: new token acquired. Please try your request again`)}`)
+                            return;
+                        } else {
+                            SimbaConfig.log.error(`${chalk.redBright(`\nsimba: there was a problem acquiring your access token. Please log out and then login and then try your request again`)}`);
+                            return;
+                        }
+                    } catch (e) {
+                        if (axios.isAxiosError(e) && e.response) {
+                            SimbaConfig.log.error(`${chalk.redBright(`\nsimba: ${JSON.stringify(e.response.data)}`)}`)
+                        } else {
+                            SimbaConfig.log.error(`${chalk.redBright(`\nsimba: ${JSON.stringify(e)}`)}`);
+                        }
+                        try {
+                            SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: you need to login again; redirecting you to login. Then please try your request again.`)}`);
+                            await this.loginAndGetAuthToken(false);
+                            return;
+                        } catch (e) {
+                            if (axios.isAxiosError(e) && e.response) {
+                                SimbaConfig.log.error(`${chalk.redBright(`\nsimba: ${JSON.stringify(e.response.data)}`)}`)
+                            } else {
+                                SimbaConfig.log.error(`${chalk.redBright(`\nsimba: ${JSON.stringify(e)}`)}`);
+                            }
+                            const err = e as any;
+                            SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : there was a problem with your request. Please log out and then login and then try your request again`)}`);
+                            return err;
+                        }
+                    }
+                } else {
+                    SimbaConfig.log.error(`${chalk.redBright(`simba: there was a problem with your request. To view debug logs, please set your loglevel to debug and try your request again.`)}`);
+                    return error as Error;
+                }
+            }
+        } else {
+            SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${this.authErrors.headersError}`)}`);
+            return new Error(`${this.authErrors.headersError}`);
+        }
+    }
 }
 
 export class AzureHandler {
@@ -1380,6 +1481,14 @@ export class AzureHandler {
         return await this.retryAfterTokenRefresh(url, "PUT", contentType, data);
     }
 
+    public async doDeleteRequest(url: string, contentType?: string, _buildURL: boolean = true): Promise<any> {
+        SimbaConfig.log.debug(`:: ENTER :`);
+        // the _buildURL param here does not get used. It's strictly been
+        // added because the interface call in the truffle and hardhat suites
+        // for authStore.doPutRequest expects it.
+        return await this.retryAfterTokenRefresh(url, "DELETE", contentType);
+    }
+
     public logout(): void {
         SimbaConfig.log.debug(`:: ENTER :`);
         this.deleteAuthInfo();
@@ -1496,6 +1605,11 @@ export class AzureHandler {
                 const resData: Record<any, any> = res.data;
                 return resData;
             }
+            if (requestType === "DELETE") {
+                const res = await axios.delete(uri, config);
+                const resData: Record<any, any> = res.data;
+                return resData;
+            }
         } catch (error) {
                 if (axios.isAxiosError(error) && error.response) {
                     SimbaConfig.log.debug(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error.response.data)}`)}`);
@@ -1514,6 +1628,9 @@ export class AzureHandler {
                         }
                         if (requestType === "GET") {
                             return await axios.get(uri, config);
+                        }
+                        if (requestType === "DELETE") {
+                            return await axios.delete(uri, config);
                         }
                     }
                 } else {
