@@ -1383,13 +1383,13 @@ export class AzureHandler {
         SimbaConfig.log.debug(`:: ENTER :`)
         if (state !== this.state) {
             SimbaConfig.log.error(chalk.redBright('Error logging in to SIMBAChain: state does not match'));
-            return new Error('Error logging in to SIMBAChain: state does not match');
+            throw(error);
         } else if (error) {
             SimbaConfig.log.error(chalk.redBright('Unknown Error logging in to SIMBAChain: ' + error));
-            return new Error('Unknown Error logging in to SIMBAChain: ' + error);
+            throw(error);
         } else if (!code) {
             SimbaConfig.log.error(chalk.redBright('Error logging in to SIMBAChain: missing auth code'));
-            return new Error('Error logging in to SIMBAChain: missing auth code');
+            throw(error);
         } else {
             let uri = '';
             if (this.redirectURI) {
@@ -1427,6 +1427,7 @@ export class AzureHandler {
                 } else {
                     SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error)}`)}`);
                 }
+                console.log("are we getting here?")
                 throw(error);
             }
         }
