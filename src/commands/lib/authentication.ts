@@ -1427,7 +1427,7 @@ export class AzureHandler {
                 } else {
                     SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error)}`)}`);
                 }
-                return error as Error;
+                throw(error);
             }
         }
     }
