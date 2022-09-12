@@ -1382,13 +1382,13 @@ export class AzureHandler {
     public async receiveCode(code: string, state: string, error: string): Promise<any> {
         SimbaConfig.log.debug(`:: ENTER :`)
         if (state !== this.state) {
-            SimbaConfig.log.error(chalk.redBright('Error logging in to SIMBAChain: state does not match'));
+            SimbaConfig.log.error(chalk.redBright('Error logging in to SIMBA Chain: state does not match'));
             throw(error);
         } else if (error) {
-            SimbaConfig.log.error(chalk.redBright('Unknown Error logging in to SIMBAChain: ' + error));
+            SimbaConfig.log.error(chalk.redBright('Unknown Error logging in to SIMBA Chain: ' + error));
             throw(error);
         } else if (!code) {
-            SimbaConfig.log.error(chalk.redBright('Error logging in to SIMBAChain: missing auth code'));
+            SimbaConfig.log.error(chalk.redBright('Error logging in to SIMBA Chain: missing auth code'));
             throw(error);
         } else {
             let uri = '';
