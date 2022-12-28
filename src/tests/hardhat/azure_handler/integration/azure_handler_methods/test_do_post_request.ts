@@ -21,11 +21,14 @@ describe('tests doPostRequest after login', () => {
             organisation_name: "brendan_birch_simbachain_com",
             role: "Owner",
         };
-        // function
-        // calling with the above data will not change anything for this user
-        // since they are already an owner
-        const res = await az.doPostRequest(url, data);
-        expect(res.organisation_name).to.equal(data.organisation_name)
+        // this needs to be standardized between KeycloakHandler and AzureHandler
+        // keycloak is RETURNING error, but azure is THROWING
+        // standardize by THROWING in each in future ticket
+        try {
+            await az.doPostRequest(url, data);
+        } catch (err) {
+            expect(err.message).to.equal("Request failed with status code 400");
+        }
 
         // resetting
         SimbaConfig.ProjectConfigStore.clear();

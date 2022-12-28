@@ -8,7 +8,7 @@ import { expect } from 'chai';
 import 'mocha';
 
 describe('tests doPostRequest after login', () => {
-    it('endpoint returns the posted data', async () => {
+    it('returns an error', async () => {
         // original settings
         const originalSimbaJson = SimbaConfig.ProjectConfigStore.all;
         const originalAuthConfig = SimbaConfig.ConfigStore.all;
@@ -21,11 +21,11 @@ describe('tests doPostRequest after login', () => {
             organisation_name: "brendan_birch_simbachain_com",
             role: "Owner",
         };
-        // function
-        // calling with the above data will not change anything for this user
-        // since they are already an owner
-        const res = await kch.doPostRequest(url, data) as Record<any, any>;
-        expect(res.organisation_name).to.equal(data.organisation_name)
+        // this needs to be standardized between KeycloakHandler and AzureHandler
+        // keycloak is RETURNING error, but azure is THROWING
+        // standardize by THROWING in each in future ticket
+        const returnedError = await kch.doPostRequest(url, data) as Record<any, any>;
+        expect(returnedError.message).to.equal("Request failed with status code 400");
 
         // resetting
         SimbaConfig.ProjectConfigStore.clear();
