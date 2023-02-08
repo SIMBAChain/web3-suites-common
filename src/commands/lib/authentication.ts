@@ -668,8 +668,12 @@ export class KeycloakHandler {
             return urlExtension;
         }
         let baseURL = this.baseURL.endsWith("/") ? this.baseURL : this.baseURL + "/";
-        baseURL = baseURL.endsWith("v2/") ? baseURL : baseURL.slice(0, -1) + "v2/";
-        const fullURL = baseURL + urlExtension;
+        // baseURL = baseURL.endsWith("v2/") ? baseURL : baseURL.slice(0, -1) + "v2/";
+        let modifiedExtension = urlExtension.startsWith("/") ? urlExtension.slice(1) : urlExtension;
+        if (baseURL.endsWith("v2/") && modifiedExtension.startsWith("v2/")) {
+            modifiedExtension = modifiedExtension.slice(3);
+        }
+        const fullURL = baseURL + modifiedExtension;
         SimbaConfig.log.debug(`:: EXIT : ${fullURL}`);
         return fullURL;
     }
@@ -1427,7 +1431,6 @@ export class AzureHandler {
                 } else {
                     SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error)}`)}`);
                 }
-                console.log("are we getting here?")
                 throw(error);
             }
         }
@@ -1438,7 +1441,27 @@ export class AzureHandler {
         await this.refreshToken();
         const auth = this.getConfig(AUTHKEY);
         if (!url.startsWith('http')) {
-            url = this.baseURL + url;
+            let shortenedBaseURL;
+            if (url.startsWith("v2") || url.startsWith("/v2")) {
+                if (this.baseURL.endsWith("v2/") || this.baseURL.endsWith("v2")) {
+                    shortenedBaseURL = this.baseURL.endsWith("v2/") ?
+                        this.baseURL.slice(0, -"v2/".length) :
+                        this.baseURL.slice(0, -"v2".length);
+                } else {
+                    if (this.baseURL.endsWith("/") && url.startsWith("/")) {
+                        url = url.slice(1);
+                        shortenedBaseURL = this.baseURL;
+                    }
+                }
+                url = shortenedBaseURL ?
+                    shortenedBaseURL + url :
+                    this.baseURL + url;
+            } else {
+                if (this.baseURL.endsWith("/") && url.startsWith("/")) {
+                    url = url.slice(1);
+                }
+                url = this.baseURL + url;
+            }
         }
 
         const opts: request.Options = {

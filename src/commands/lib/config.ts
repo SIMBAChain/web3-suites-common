@@ -48,10 +48,15 @@ export function handleV2(baseURL: string): string {
     if (baseURL.endsWith("/v2/") || baseURL.endsWith("/v2")) {
         const extension = baseURL.endsWith("/v2") ? "/v2" : "/v2/";
         const shortenedBaseURL = baseURL.slice(0,-(extension.length));
-        SimbaConfig.log.debug(`:: EXIT :`);
+        SimbaConfig.log.debug(`:: EXIT : ${shortenedBaseURL}`);
         return shortenedBaseURL;
     }
-    SimbaConfig.log.debug(`:: EXIT :`);
+    if (baseURL.endsWith("/")) {
+        const shortenedBaseURL = baseURL.slice(0, -1)
+        SimbaConfig.log.debug(`:: EXIT : ${shortenedBaseURL}`);
+        return shortenedBaseURL;
+    }
+    SimbaConfig.log.debug(`:: EXIT : ${baseURL}`);
     return baseURL;
 }
 
@@ -297,6 +302,7 @@ export class SimbaConfig {
                 throw new Error(message);
             }
             const authInfoURL = `${handleV2(baseURL)}/authinfo`;
+            SimbaConfig.log.debug(`:: authInfoURL: ${authInfoURL}`);
             try {
                 const res = await axios.get(authInfoURL);
                 let _authProviderInfo = res.data;

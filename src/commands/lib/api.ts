@@ -58,7 +58,7 @@ export const getList = async (config: SimbaConfig, url?: string): Promise<Record
     const authStore = await config.authStore();
     if (authStore) {
         try {
-            const res = authStore.doGetRequest(url);
+            const res = await authStore.doGetRequest(url);
             SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(res)}`);
             return res;
         } catch (error) {
@@ -87,7 +87,7 @@ export const getList = async (config: SimbaConfig, url?: string): Promise<Record
 export const chooseOrganisationFromList = async (config: SimbaConfig, url?: string): Promise<any> => {
     SimbaConfig.log.debug(`:: ENTER : ${JSON.stringify(config)}`);
     if (!url) {
-        url = 'organisations/';
+        url = 'v2/organisations/';
     }
     const orgResponse = await getList(config, url);
 
@@ -175,7 +175,7 @@ export async function chooseOrganisationFromName(
     orgName: string,
 ): Promise<any> {
     SimbaConfig.log.debug(`:: ENTER : ${orgName}`);
-    const url = `organisations/${orgName}/`;
+    const url = `v2/organisations/${orgName}/`;
     const authStore = await config.authStore();
     if (authStore) {
         try {
@@ -458,7 +458,7 @@ export async function getASTAndOtherInfo(
         contractSourceName,
         _buildInfoJsonName,
     );
-    if (_astAndOtherInfo.ast === {}) {
+    if (Object.keys(_astAndOtherInfo.ast).length === 0) {
         const message = `no ast found for ${contractName}`;
         SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${message}`)}`);
         return new Error(`${message}`);
@@ -516,7 +516,7 @@ export async function chooseApplicationFromName(
     appName: string,
 ): Promise<any> {
     SimbaConfig.log.debug(`:: ENTER : ${appName}`);
-    const url = `organisations/${config.organisation.id}/applications/${appName}/`;
+    const url = `v2/organisations/${config.organisation.id}/applications/${appName}/`;
     const authStore = await config.authStore();
     if (authStore) {
         try {
@@ -561,7 +561,7 @@ export async function selectNewApplicationName(
     }
     
     const authStore = await config.authStore();
-    const url = `organisations/${config.organisation.id}/applications/validate/${appName.app_name}/`;
+    const url = `v2/organisations/${config.organisation.id}/applications/validate/${appName.app_name}/`;
     if (authStore) {
         try {
             const appNameResponse = await authStore.doGetRequest(url, 'application/json');
@@ -601,7 +601,7 @@ async function createApplicationForOrg(
     const entryParams = {config};
 
     const authStore = await config.authStore();
-    const url = `organisations/${config.organisation.id}/applications/`;
+    const url = `v2/organisations/${config.organisation.id}/applications/`;
     const appName = await selectNewApplicationName(config);
     const postData = {
         name: appName,
@@ -645,7 +645,7 @@ export async function chooseApplicationFromList(
     };
     SimbaConfig.log.debug(`:: ENTER : ${JSON.stringify(entryParams)}`);
     if (!url) {
-        url = `organisations/${config.organisation.id}/applications/`;
+        url = `v2/organisations/${config.organisation.id}/applications/`;
     }
 
     const appResponse = await getList(config, url);
@@ -736,7 +736,7 @@ export async function getBlockchains(
     };
     SimbaConfig.log.debug(`:: ENTER : ${JSON.stringify(entryParams)}`);
     if (!url) {
-        url = `organisations/${config.organisation.id}/blockchains/`;
+        url = `v2/organisations/${config.organisation.id}/blockchains/`;
     }
 
     const chains: any = await getList(config, url);
@@ -769,7 +769,7 @@ export async function getStorages(
     };
     SimbaConfig.log.debug(`:: ENTER : ${JSON.stringify(entryParams)}`);
     if (!url) {
-        url = `organisations/${config.organisation.id}/storage/`;
+        url = `v2/organisations/${config.organisation.id}/storage/`;
     }
 
     const storages: any = await getList(config, url);

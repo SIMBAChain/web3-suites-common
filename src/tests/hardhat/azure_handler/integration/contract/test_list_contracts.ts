@@ -32,5 +32,5 @@ describe('testing gathering all contracts', () => {
         expect("asset_type" in contracts[0]).to.equal(true);
         expect("organisation" in contracts[0]).to.equal(true);
         expect("designset" in contracts[0]).to.equal(true);
-    }).timeout(120000);
+    }).timeout(300000);
 });

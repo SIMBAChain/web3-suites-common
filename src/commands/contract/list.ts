@@ -12,7 +12,7 @@ import {
 export async function allContracts(): Promise<ContractDesignWithCode[] | void> {
     SimbaConfig.log.debug(`:: ENTER :`);
     let contractDesigns: ContractDesignWithCode[] = [];
-    const url = `organisations/${SimbaConfig.organisation.id}/contract_designs/`;
+    const url = `v2/organisations/${SimbaConfig.organisation.id}/contract_designs/`;
     const authStore = await SimbaConfig.authStore();
     if (authStore) {
         SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: retrieving all contracts for organisation ${chalk.greenBright(`${SimbaConfig.organisation.name}`)}`)}`);
