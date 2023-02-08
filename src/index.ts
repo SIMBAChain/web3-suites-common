@@ -19,6 +19,8 @@ export {
     authErrors,
     SimbaInfo,
     AllDirs,
+    discoverAndSetWeb3Suite,
+    web3SuiteErrorMessage,
 } from './commands/lib';
 export {
     pullContractsInteractive,

@@ -6,13 +6,6 @@ import 'mocha';
 import * as path from 'path';
 import {cwd} from 'process';
 
-describe('tests web3Suite', () => {
-    it('should be "hardhat"', async () => {
-        const web3Suite = SimbaConfig.web3Suite;
-        expect(web3Suite.toLowerCase()).to.equal("hardhat");
-    }).timeout(10000);
-});
-
 describe('tests organisation', () => {
     it('should be "brendan_birch_simbachain_com', async () => {
         // getter

@@ -43,3 +43,7 @@ export {
 export {
     SimbaInfo,
 } from "./simbainfo"
+export {
+    discoverAndSetWeb3Suite,
+    web3SuiteErrorMessage,
+} from "./discover_web3suite";

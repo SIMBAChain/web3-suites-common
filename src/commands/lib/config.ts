@@ -15,6 +15,10 @@ import {
     authErrors,
 } from './authentication';
 import {
+    discoverAndSetWeb3Suite,
+    web3SuiteErrorMessage,
+} from "../lib";
+import {
     SimbaInfo,
 } from "./simbainfo";
 import {default as chalk} from 'chalk';
@@ -116,7 +120,6 @@ export class SimbaConfig {
     public constructor() {
         const confstore = this.ConfigStore;
         const projconfstore = this.ProjectConfigStore;
-        const w3Suite = this.web3Suite;
         const app = this.application;
         const org = this.organisation;
         const authStr = this.authStore;
@@ -129,7 +132,6 @@ export class SimbaConfig {
             app,
             org,
             authStr,
-            w3Suite,
             buildDir,
             logLevel,
         }
@@ -402,14 +404,13 @@ export class SimbaConfig {
      * to determine where compiled contracts are stored
      */
     public static get artifactDirectory(): string {
+        SimbaConfig.log.debug(":: ENTER :");
         let artifactPath = this.ProjectConfigStore.get("artifactDirectory");
         if (artifactPath) {
             this.log.debug(`${chalk.cyanBright(`simba: artifactDirectory path obtained from simba.json. If you wish to have Simba obtain your artifacts from the default location for your web3 project, then please remove the 'artifactDirectory' field from simba.json.`)}`)
             return artifactPath;
         }
-        const web3Suite = this.ProjectConfigStore.get("web3Suite") ?
-            this.ProjectConfigStore.get("web3Suite").toLowerCase() :
-            this.ProjectConfigStore.get("web3suite").toLowerCase();
+        const web3Suite = discoverAndSetWeb3Suite();
         switch(web3Suite) {
             case WebThreeSuites.HARDHAT: {
                 artifactPath =  path.join(cwd(), CompiledDirs.ARTIFACTS)
@@ -420,7 +421,7 @@ export class SimbaConfig {
                 break;
             }
             default: { 
-               SimbaConfig.log.error(`${chalk.redBright(`simba: ERROR : "web3Suite" not defined in simba.json. Please specify as "hardhat", "truffle", etc.`)}`)
+               SimbaConfig.log.error(web3SuiteErrorMessage);
                break; 
             } 
          }
@@ -492,6 +493,7 @@ export class SimbaConfig {
      * used for Hardhat, since some build info is stored in separate file from main artifact info
      */
     public static get buildInfoDirectory(): string {
+        SimbaConfig.log.debug(":: ENTER :");
         return path.join(SimbaConfig.artifactDirectory, "build-info");
     }
 
@@ -500,6 +502,7 @@ export class SimbaConfig {
     }
 
     public static get buildDirectory(): string {
+        SimbaConfig.log.debug(":: ENTER :");
         let buildDir = this.ProjectConfigStore.get("buildDirectory");
         if (buildDir) {
             this.log.debug(`${chalk.cyanBright(`simba: buildDirectory path obtained from simba.json. If you wish to have Simba obtain your build artifacts from the default location for your web3 project, then please remove the 'buildDirectory' field from simba.json.`)}`);
@@ -570,26 +573,6 @@ export class SimbaConfig {
         SimbaConfig.log.debug(`:: ENTER : dirPath : ${dirPath}`);
         SimbaConfig.contractDirectory = dirPath;
         SimbaConfig.log.debug(`:: EXIT :`);
-    }
-
-    /**
-     * used to determine whether we're using Hardhat, Truffle, etc.
-     * this field should be stored in simba.json at beginning of each project
-     */
-    public static get web3Suite(): string {
-        return this.ProjectConfigStore.get('web3Suite');
-    }
-
-    public get web3Suite(): string {
-        return SimbaConfig.web3Suite;
-    }
-
-    public static set web3Suite(_w3Suite: string) {
-        this.ProjectConfigStore.set('web3Suite', _w3Suite);
-    }
-    
-    public set web3Suite(_w3Suite: string) {
-        SimbaConfig.web3Suite = _w3Suite;
     }
 
     /**

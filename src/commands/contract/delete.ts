@@ -1,5 +1,3 @@
-import fs from 'fs';
-import path from 'path';
 import {default as chalk} from 'chalk';
 import {default as prompt} from 'prompts';
 import {
@@ -11,9 +9,6 @@ import axios from "axios";
 import {
     allContracts,
 } from "./list";
-import {
-    authErrors,
-} from "../lib/authentication";
 
 export async function deleteContractFromDesignID(
     designID: string,

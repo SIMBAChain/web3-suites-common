@@ -1,6 +1,8 @@
 import {default as prompt} from 'prompts';
 import {
     SimbaConfig,
+    discoverAndSetWeb3Suite,
+    web3SuiteErrorMessage,
 } from "../lib";
 import {
     promisifiedReadFile,
@@ -349,7 +351,11 @@ export async function astAndOtherInfo(
         contractSourceName,
     };
 
-    const web3Suite = SimbaConfig.ProjectConfigStore.get("web3Suite").toLowerCase();
+    const web3Suite = discoverAndSetWeb3Suite();
+
+    if (!web3Suite) {
+        throw new Error(web3SuiteErrorMessage);
+    }
 
     if (web3Suite === "hardhat") {
         try {
@@ -449,7 +455,10 @@ export async function getASTAndOtherInfo(
     }
     SimbaConfig.log.debug(`:: ENTER : ${JSON.stringify(entryParams)}`);
     let _buildInfoJsonName;
-    const web3Suite = SimbaConfig.ProjectConfigStore.get("web3Suite").toLowerCase();
+    const web3Suite = discoverAndSetWeb3Suite();
+    if (!web3Suite) {
+        throw new Error(web3SuiteErrorMessage);
+    }
     if (web3Suite === "hardhat") {
         _buildInfoJsonName = await buildInfoJsonName(contractName, contractSourceName as string);
     }
