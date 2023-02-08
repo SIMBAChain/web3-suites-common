@@ -9,6 +9,10 @@ lerna-debug.log*
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
+
+# authconfig from testing:
+**/authconfig.json
+
 # Runtime data
 pids
 *.pid
@@ -69,6 +73,7 @@ typings/
 .yarn-integrity
 
 # dotenv environment variables file
+**.env
 .env
 .env.test
 
@@ -102,3 +107,8 @@ dist
 
 # TernJS port file
 .tern-port
+
+# Vim
+*.*.swp
+*.*.swo
+*.*~
