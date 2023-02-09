@@ -4,13 +4,6 @@ import {
 import { expect } from 'chai';
 import 'mocha';
 
-describe('tests web3Suite', () => {
-    it('should be "hardhat"', async () => {
-        const web3Suite = SimbaConfig.web3Suite;
-        expect(web3Suite.toLowerCase()).to.equal("hardhat");
-    }).timeout(10000);
-});
-
 describe('tests logLevel', () => {
     it('should be "info" then "debug"', async () => {
         const oldLogLevel = SimbaConfig.ProjectConfigStore.get("logLevel");

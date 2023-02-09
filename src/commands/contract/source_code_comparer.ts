@@ -4,6 +4,8 @@ import {
     walkDirForContracts,
     promisifiedReadFile,
     getASTAndOtherInfo,
+    discoverAndSetWeb3Suite,
+    web3SuiteErrorMessage,
 } from '../lib';
 
 export class SourceCodeComparer {
@@ -32,10 +34,10 @@ export class SourceCodeComparer {
             return sourceCodeMap;
         }
 
-        const web3Suite = SimbaConfig.ProjectConfigStore.get("web3Suite").toLowerCase();
+        const web3Suite = discoverAndSetWeb3Suite();
 
         if (!web3Suite) {
-            SimbaConfig.log.error(`${chalk.redBright(`simba: web3Suite not set in simba.json`)}`);
+            SimbaConfig.log.error(web3SuiteErrorMessage);
             return sourceCodeMap;
         }
 

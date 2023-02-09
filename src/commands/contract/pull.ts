@@ -29,9 +29,8 @@ export async function pullContractFromDesignId(
     let contractDesign: ContractDesignWithCode;
     const authStore = await SimbaConfig.authStore();
     if (authStore) {
-        const resp = await authStore.doGetRequest(
-            `organisations/${SimbaConfig.organisation.id}/contract_designs/${designID}`,
-        );
+        const url = `v2/organisations/${SimbaConfig.organisation.id}/contract_designs/${designID}`;
+        const resp = await authStore.doGetRequest(url);
         SimbaConfig.log.debug(`resp: ${JSON.stringify(resp)}`);
         if (resp && !(resp instanceof Error)) {
             contractDesign = resp as ContractDesignWithCode;

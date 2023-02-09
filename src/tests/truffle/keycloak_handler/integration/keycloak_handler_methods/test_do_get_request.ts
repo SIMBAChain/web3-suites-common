@@ -14,7 +14,7 @@ describe('tests doGetRequest after login', () => {
         const originalAuthConfig = SimbaConfig.ConfigStore.all;
         const kch = new KeycloakHandler();
         await kch.performLogin(false);
-        const url = 'organisations/';
+        const url = 'v2/organisations/';
         
         // function
         const res = await kch.doGetRequest(url) as Record<any, any>;

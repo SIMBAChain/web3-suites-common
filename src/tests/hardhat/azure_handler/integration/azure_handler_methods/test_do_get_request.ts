@@ -14,7 +14,7 @@ describe('tests doGetRequest after login', () => {
         const originalAuthConfig = SimbaConfig.ConfigStore.all;
         const az = new AzureHandler();
         await az.performLogin(false);
-        const url = 'organisations/';
+        const url = 'https://simba-dev-api.platform.simbachain.com/v2/organisations/';
         
         // function
         const res = await az.doGetRequest(url);
