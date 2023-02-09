@@ -6,7 +6,9 @@ import {
     Logger,
 } from "tslog";
 import {cwd} from 'process';
+import * as dotenv from "dotenv";
 import * as path from 'path';
+import * as os from "os";
 import Configstore from 'configstore';
 import {
     KeycloakHandler,
@@ -45,8 +47,24 @@ export enum AllDirs {
 export enum EnvVariableKeys {
     ID = "ID",
     SECRET = "SECRET",
-    AUTHENDPOINT = "ENDPOINT"
+    AUTHENDPOINT = "ENDPOINT",
+    BASE_URL = "BASE_URL",
 }
+
+enum SimbaEnvFiles {
+    DOT_SIMBACHAIN_DOT_ENV = ".simbachain.env",
+    SIMBACHAIN_DOT_ENV = "simbachain.env",
+    DOT_ENV = ".env",
+}
+
+// for ordered iteration purposes
+export const simbaEnvFilesArray = [
+    SimbaEnvFiles.DOT_SIMBACHAIN_DOT_ENV,
+    SimbaEnvFiles.SIMBACHAIN_DOT_ENV,
+    SimbaEnvFiles.DOT_ENV,
+]
+
+const SIMBA_HOME = process.env.SIMBA_HOME || os.homedir();
 
 function handleAlternativeAuthJSON(authInfo: Record<any, any>): Record<any, any> {
     SimbaConfig.log.debug(`:: ENTER : ${JSON.stringify(authInfo)}`);
@@ -153,6 +171,41 @@ export class SimbaConfig {
 
     public get ProjectConfigStore(): Configstore {
         return SimbaConfig.ProjectConfigStore;
+    }
+
+    public static retrieveBaseAPIURL(): string {
+        const fullKey = "SIMBA_API_BASE_URL";
+
+        // first we check simba.json
+        let val = SimbaConfig.ProjectConfigStore.get("baseURL") ||
+            SimbaConfig.ProjectConfigStore.get("baseUrl") ||
+            SimbaConfig.ProjectConfigStore.get(fullKey);
+        if (val) {
+            return val;
+        }
+        
+        // now we check local directory for 
+        for (let i = 0; i < simbaEnvFilesArray.length; i++) {
+            const fileName = simbaEnvFilesArray[i];
+            dotenv.config({ path: path.resolve(cwd(), fileName) });
+            const val = process.env[fullKey];
+            if (val) {
+                return val;
+            }
+        }
+
+        // now we check SIMBA_HOME directory
+        for (let i = 0; i < simbaEnvFilesArray.length; i++) {
+            const fileName = simbaEnvFilesArray[i];
+            dotenv.config({ path: path.resolve(SIMBA_HOME, fileName) });
+            const val = process.env[fullKey];
+            if (val) {
+                return val;
+            }
+        }
+        const message = `Unable to locate a value for either SIMBA_API_BASE_URL or baseURL. We check in the following places:\n1. simba.json for either SIMBA_API_BASE_URL or baseURL\n2. local project root for SIMBA_API_BASE_URL in: .simbachain.env, simbachain.env, or .env\n3. SIMBA_HOME for SIMBA_API_BASE_URL in .simbachain.env, simbachain.env, or .env. If you want to use SIMBA_HOME, then set a desired directory as SIMBA_HOME in your system's environment variables. Then within that specified directory, create one of .simbachain.env, simbachain.env, or .env, and then set SIMBA_API_BASE_URL=<YOUR BASE URL>\n`
+        SimbaConfig.log.error(`:: EXIT : ${chalk.redBright(`${message}`)}`);
+        throw new Error(message);
     }
 
     public static async retrieveEnvVar(envVarKey: EnvVariableKeys): Promise<string | void> {
@@ -279,13 +332,10 @@ export class SimbaConfig {
     public static async setAndGetAuthProviderInfo(): Promise<any> {
         SimbaConfig.log.debug(`:: ENTER :`);
         if (!SimbaConfig.ProjectConfigStore.get("authProviderInfo")) {
-            const baseURL = SimbaConfig.ProjectConfigStore.get("baseURL") ?
-                SimbaConfig.ProjectConfigStore.get("baseURL") :
-                SimbaConfig.ProjectConfigStore.get("baseUrl");
+            const baseURL = SimbaConfig.retrieveBaseAPIURL();
             if (!baseURL) {
-                const message = `\nsimba: no baseURL defined in your simba.json!`;
-                SimbaConfig.log.error(`${chalk.redBright(`${message}`)}`);
-                throw new Error(message);
+                SimbaConfig.log.error(`${chalk.redBright(`${authErrors.noBaseURLError}`)}`);
+                throw new Error(authErrors.noBaseURLError);
             }
             const authInfoURL = buildURL(baseURL, "/authinfo");
             SimbaConfig.log.debug(`:: authInfoURL: ${authInfoURL}`);
@@ -345,7 +395,7 @@ export class SimbaConfig {
                     break;
                 }
                 default: { 
-                   SimbaConfig.log.error(`${chalk.redBright(`\nsimba: a valid auth provider was not found. Deleting authProviderInfo from simba.json. Please make sure your 'baseURL' field is properly set in your simba.json and try again.`)}`);
+                   SimbaConfig.log.error(`${chalk.redBright(`\nsimba: a valid auth provider was not found. Deleting authProviderInfo from simba.json. Please make sure your SIMBA_API_BASE_URL is properly configured.`)}`);
                    SimbaConfig.deleteAuthProviderInfo();
                    break; 
                 } 

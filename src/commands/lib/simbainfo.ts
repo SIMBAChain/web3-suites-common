@@ -55,7 +55,7 @@ export class SimbaInfo {
     }
 
     private static getAuthToken(key?: string) {
-        const baseURL = SimbaConfig.ProjectConfigStore.get("baseURL");
+        const baseURL = SimbaConfig.retrieveBaseAPIURL();
         const configBase = baseURL.split(".").join("_");
         SimbaConfig.log.debug(`:: ENTER : key : ${key}`);
         const authConfig = SimbaConfig.ConfigStore.all;

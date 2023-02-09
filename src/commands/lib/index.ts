@@ -2,6 +2,7 @@ export {LogLevel} from './logger';
 export {
     SimbaConfig,
     AllDirs,
+    EnvVariableKeys,
 } from './config';
 export {
     promisifiedReadFile,
