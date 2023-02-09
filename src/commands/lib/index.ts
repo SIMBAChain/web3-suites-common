@@ -1,7 +1,6 @@
 export {LogLevel} from './logger';
 export {
     SimbaConfig,
-    handleV2,
     AllDirs,
 } from './config';
 export {
@@ -47,3 +46,6 @@ export {
     discoverAndSetWeb3Suite,
     web3SuiteErrorMessage,
 } from "./discover_web3suite";
+export {
+    buildURL,
+} from "./utils";

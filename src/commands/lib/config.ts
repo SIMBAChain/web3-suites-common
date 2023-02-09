@@ -17,6 +17,7 @@ import {
 import {
     discoverAndSetWeb3Suite,
     web3SuiteErrorMessage,
+    buildURL,
 } from "../lib";
 import {
     SimbaInfo,
@@ -45,23 +46,6 @@ export enum EnvVariableKeys {
     ID = "ID",
     SECRET = "SECRET",
     AUTHENDPOINT = "ENDPOINT"
-}
-
-export function handleV2(baseURL: string): string {
-    SimbaConfig.log.debug(`:: ENTER : baseURL : ${baseURL}`)
-    if (baseURL.endsWith("/v2/") || baseURL.endsWith("/v2")) {
-        const extension = baseURL.endsWith("/v2") ? "/v2" : "/v2/";
-        const shortenedBaseURL = baseURL.slice(0,-(extension.length));
-        SimbaConfig.log.debug(`:: EXIT : ${shortenedBaseURL}`);
-        return shortenedBaseURL;
-    }
-    if (baseURL.endsWith("/")) {
-        const shortenedBaseURL = baseURL.slice(0, -1)
-        SimbaConfig.log.debug(`:: EXIT : ${shortenedBaseURL}`);
-        return shortenedBaseURL;
-    }
-    SimbaConfig.log.debug(`:: EXIT : ${baseURL}`);
-    return baseURL;
 }
 
 function handleAlternativeAuthJSON(authInfo: Record<any, any>): Record<any, any> {
@@ -261,7 +245,7 @@ export class SimbaConfig {
             SimbaConfig.log.debug(`:: EXIT :`);
             return;
         } else {
-            SimbaConfig.log.info(`\nsimba: ${previousOrgName} === ${newOrgName}; not switching orgs, no action needed`);
+            SimbaConfig.log.debug(`\nsimba: ${previousOrgName} === ${newOrgName}; not switching orgs, no action needed`);
             SimbaConfig.log.debug(`:: EXIT :`);
             return;
         }
@@ -303,7 +287,7 @@ export class SimbaConfig {
                 SimbaConfig.log.error(`${chalk.redBright(`${message}`)}`);
                 throw new Error(message);
             }
-            const authInfoURL = `${handleV2(baseURL)}/authinfo`;
+            const authInfoURL = buildURL(baseURL, "/authinfo");
             SimbaConfig.log.debug(`:: authInfoURL: ${authInfoURL}`);
             try {
                 const res = await axios.get(authInfoURL);
@@ -314,7 +298,11 @@ export class SimbaConfig {
                 return _authProviderInfo;
             } catch (error) {
                 if (axios.isAxiosError(error) && error.response) {
-                    SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error.response.data)}`)}`)
+                    if (error.response.status == 404) {
+                        SimbaConfig.log.error(`${chalk.redBright(`\n:: EXIT : received 404 response for url ${authInfoURL}.`)}` );
+                    } else {
+                        SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : messsage: ${JSON.stringify(error.response.data)}`)}`)
+                    }
                 } else {
                     SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${JSON.stringify(error)}`)}`);
                 }

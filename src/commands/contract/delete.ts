@@ -1,9 +1,9 @@
 import {default as chalk} from 'chalk';
 import {default as prompt} from 'prompts';
 import {
-    handleV2,
     SimbaConfig,
 } from '../lib';
+import {buildURL} from "../lib"; 
 import {ContractDesignWithCode} from '.';
 import axios from "axios";
 import {
@@ -22,8 +22,7 @@ export async function deleteContractFromDesignID(
     };
     const deleteEndpoint = `/v2/organisations/${SimbaConfig.organisation.id}/contract_designs/${designID}/`;
     let baseURL = SimbaConfig.ProjectConfigStore.get("baseURL");
-    baseURL = handleV2(baseURL);
-    const url = `${baseURL}${deleteEndpoint}`;
+    const url = buildURL(baseURL, deleteEndpoint);
     SimbaConfig.log.debug(`url : ${url}`);
     try {
         await authStore.doDeleteRequest(url);

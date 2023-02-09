@@ -1,7 +1,7 @@
 import Configstore from "configstore";
 import {
     SimbaConfig,
-    handleV2,
+    buildURL,
 } from "../lib";
 import {default as cryptoRandomString} from 'crypto-random-string';
 import * as CryptoJS from 'crypto-js';
@@ -103,7 +103,7 @@ function addSlashToURL(baseURL: string): string {
 export class KeycloakHandler {
     private config: Configstore;
     private projectConfig: Configstore;
-    private baseURL: string;
+    public baseURL: string;
     private verificationInfo: KeycloakDeviceVerificationInfo;
     private configBase: string;
     private authErrors: AuthErrors;
@@ -338,8 +338,9 @@ export class KeycloakHandler {
             headers,
         };
         try {
-            const baseURL = handleV2(`${SimbaConfig.ProjectConfigStore.get("baseURL")}`);
-            const url = `${baseURL}${authEndpoint}token/`;
+            const baseURL = SimbaConfig.ProjectConfigStore.get("baseURL");
+            // const url = `${baseURL}${authEndpoint}token/`;
+            const url = buildURL(baseURL, `${authEndpoint}token/`);
             SimbaConfig.log.debug(`:: url : ${url}`);
             const res = await axios.post(url, params, config);
             let authToken = res.data;
@@ -668,11 +669,7 @@ export class KeycloakHandler {
             return urlExtension;
         }
         let baseURL = this.baseURL.endsWith("/") ? this.baseURL : this.baseURL + "/";
-        // baseURL = baseURL.endsWith("v2/") ? baseURL : baseURL.slice(0, -1) + "v2/";
         let modifiedExtension = urlExtension.startsWith("/") ? urlExtension.slice(1) : urlExtension;
-        if (baseURL.endsWith("v2/") && modifiedExtension.startsWith("v2/")) {
-            modifiedExtension = modifiedExtension.slice(3);
-        }
         const fullURL = baseURL + modifiedExtension;
         SimbaConfig.log.debug(`:: EXIT : ${fullURL}`);
         return fullURL;
@@ -737,7 +734,7 @@ export class KeycloakHandler {
             }
             try {
                 if (_buildURL) {
-                    url = this.buildURL(url);
+                    url = buildURL(this.baseURL, url);
                 }
                 const res = await axios.get(url, config);
                 const resData: Record<any, any> = res.data;
@@ -888,7 +885,7 @@ export class KeycloakHandler {
             }
             try {
                 if (_buildURL) {
-                    url = this.buildURL(url);
+                    url = buildURL(this.baseURL, url);
                 }
                 let res: AxiosResponse;
                 if (method === "POST") {
@@ -993,7 +990,7 @@ export class KeycloakHandler {
             }
             try {
                 if (_buildURL) {
-                    url = this.buildURL(url);
+                    url = buildURL(this.baseURL, url);
                 }
                 let res: AxiosResponse;
                 res = await axios.delete(url, config);
@@ -1062,7 +1059,7 @@ export class AzureHandler {
     private pkceChallenge: string | undefined;
     private config: Configstore;
     private projectConfig: Configstore;
-    private baseURL: string;
+    public baseURL: string;
     private configBase: string;
     private authErrors: AuthErrors;
     private authInfo: Record<any, any>;
@@ -1156,6 +1153,15 @@ export class AzureHandler {
         }, this.closeTimeout);
     }
 
+    private buildURL(url: string): string {
+        if (this.baseURL.endsWith("/") && url.startsWith("/")) {
+            url = url.slice(1);
+            url = this.baseURL + url;
+        }
+        SimbaConfig.log.debug(`:: EXIT : finalURL : ${url}`);
+        return url;
+    }
+
     public async getAndSetAuthTokenFromClientCreds(): Promise<any> {
         SimbaConfig.log.debug(`:: ENTER :`);
         const clientID = await SimbaConfig.retrieveEnvVar(EnvVariableKeys.ID);
@@ -1175,8 +1181,8 @@ export class AzureHandler {
             headers,
         };
         try {
-            const baseURL = handleV2(`${SimbaConfig.ProjectConfigStore.get("baseURL")}`);
-            const url = `${baseURL}${authEndpoint}token/`;
+            const baseURL = SimbaConfig.ProjectConfigStore.get("baseURL");
+            const url = buildURL(baseURL, `${authEndpoint}token/`);
             SimbaConfig.log.debug(`:: url : ${url}`);
             const res = await axios.post(url, params, config);
             const access_token = res.data;
@@ -1440,29 +1446,7 @@ export class AzureHandler {
         SimbaConfig.log.debug(`:: ENTER :`)
         await this.refreshToken();
         const auth = this.getConfig(AUTHKEY);
-        if (!url.startsWith('http')) {
-            let shortenedBaseURL;
-            if (url.startsWith("v2") || url.startsWith("/v2")) {
-                if (this.baseURL.endsWith("v2/") || this.baseURL.endsWith("v2")) {
-                    shortenedBaseURL = this.baseURL.endsWith("v2/") ?
-                        this.baseURL.slice(0, -"v2/".length) :
-                        this.baseURL.slice(0, -"v2".length);
-                } else {
-                    if (this.baseURL.endsWith("/") && url.startsWith("/")) {
-                        url = url.slice(1);
-                        shortenedBaseURL = this.baseURL;
-                    }
-                }
-                url = shortenedBaseURL ?
-                    shortenedBaseURL + url :
-                    this.baseURL + url;
-            } else {
-                if (this.baseURL.endsWith("/") && url.startsWith("/")) {
-                    url = url.slice(1);
-                }
-                url = this.baseURL + url;
-            }
-        }
+        url = buildURL(this.baseURL, url);
 
         const opts: request.Options = {
             uri: url,
