@@ -173,23 +173,30 @@ export class SimbaConfig {
         return SimbaConfig.ProjectConfigStore;
     }
 
-    public static retrieveBaseAPIURL(): string {
+    private static retrieveBaseAPIURLFromConfigStore(): string | void {
+        SimbaConfig.log.debug(":: ENTER :");
         const fullKey = "SIMBA_API_BASE_URL";
-
-        // first we check simba.json
         let val = SimbaConfig.ProjectConfigStore.get("baseURL") ||
             SimbaConfig.ProjectConfigStore.get("baseUrl") ||
+            SimbaConfig.ProjectConfigStore.get("baseurl") ||
             SimbaConfig.ProjectConfigStore.get(fullKey);
         if (val) {
+            SimbaConfig.log.debug(`:: EXIT : ${val}`);
             return val;
         }
-        
-        // now we check local directory for 
+        SimbaConfig.log.debug(":: EXIT :");
+    }
+
+    private static retrieveBaseAPIURLFromEnvVars(): string | void {
+        // first check local project
+        SimbaConfig.log.debug(":: ENTER :");
+        const fullKey = "SIMBA_API_BASE_URL";
         for (let i = 0; i < simbaEnvFilesArray.length; i++) {
             const fileName = simbaEnvFilesArray[i];
             dotenv.config({ path: path.resolve(cwd(), fileName) });
             const val = process.env[fullKey];
             if (val) {
+                SimbaConfig.log.debug(`:: EXIT : ${val}`);
                 return val;
             }
         }
@@ -200,9 +207,27 @@ export class SimbaConfig {
             dotenv.config({ path: path.resolve(SIMBA_HOME, fileName) });
             const val = process.env[fullKey];
             if (val) {
+                SimbaConfig.log.debug(`:: EXIT : ${val}`);
                 return val;
             }
         }
+        SimbaConfig.log.debug(":: EXIT :");
+    }
+
+    public static retrieveBaseAPIURL(): string {
+        SimbaConfig.log.debug(":: ENTER :");
+        let baseURL = this.retrieveBaseAPIURLFromConfigStore();
+        if (baseURL) {
+            SimbaConfig.log.debug(`:: EXIT : ${baseURL}`);
+            return baseURL;
+        }
+
+        baseURL = this.retrieveBaseAPIURLFromEnvVars();
+        if (baseURL) {
+            SimbaConfig.log.debug(`:: EXIT : ${baseURL}`);
+            return baseURL;
+        }
+
         const message = `Unable to locate a value for either SIMBA_API_BASE_URL or baseURL. We check in the following places:\n1. simba.json for either SIMBA_API_BASE_URL or baseURL\n2. local project root for SIMBA_API_BASE_URL in: .simbachain.env, simbachain.env, or .env\n3. SIMBA_HOME for SIMBA_API_BASE_URL in .simbachain.env, simbachain.env, or .env. If you want to use SIMBA_HOME, then set a desired directory as SIMBA_HOME in your system's environment variables. Then within that specified directory, create one of .simbachain.env, simbachain.env, or .env, and then set SIMBA_API_BASE_URL=<YOUR BASE URL>\n`
         SimbaConfig.log.error(`:: EXIT : ${chalk.redBright(`${message}`)}`);
         throw new Error(message);
