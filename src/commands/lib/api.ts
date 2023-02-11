@@ -471,7 +471,7 @@ export async function getASTAndOtherInfo(
     if (Object.keys(_astAndOtherInfo.ast).length === 0) {
         const message = `no ast found for ${contractName}`;
         SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${message}`)}`);
-        return new Error(`${message}`);
+        throw new Error(`${message}`);
     }
     SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(_astAndOtherInfo)}`);
     return _astAndOtherInfo;
