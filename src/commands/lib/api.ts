@@ -61,8 +61,7 @@ export const getList = async (config: SimbaConfig, url?: string): Promise<Record
     if (authStore) {
         try {
             const res = await authStore.doGetRequest(url);
-            // SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(res)}`);
-            SimbaConfig.log.debug("resss: ", res)
+            SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(res)}`);
             return res;
         } catch (error) {
             if (axios.isAxiosError(error) && error.response) {
