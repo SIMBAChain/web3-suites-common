@@ -63,10 +63,10 @@ export const authErrors: AuthErrors = {
     verificationInfoError: `${chalk.red('simba: Error acquiring verification info. Please make sure OAuth provider certs are not expired.')}`,
     authTokenError: `${chalk.red('simba: Error acquiring auth token. Please make sure OAuth provider certs are not expired')}`,
     noClientIDError: `${chalk.red('simba: Error acquiring clientID. Please make sure "clientID" is configured correctly for your OAuth provider')}`,
-    noBaseURLError: `${chalk.red('simba: Error acquiring baseURL. Please make sure "baseURL" is configured in simba.json')}`,
+    noBaseURLError: `${chalk.red('simba: Error acquiring SIMBA_API_BASE_URL/baseURL. Please make sure SIMBA_API_BASE_URL is configured')}`,
     noAuthURLError: `${chalk.red('simba: Error acquiring authURL. Please make sure "authURLID" is configured in simba.json')}`,
     noRealmError: `${chalk.red('simba: Error acquiring realm. Please make sure "realm" is configured in simba.json')}`,
-    badAuthProviderInfo: `${chalk.red('simba: Error acquiring auth provider info. This may be due to a bad "baseURL" value. Please check that your "baseURL" field is properly set in your simba.json')}`,
+    badAuthProviderInfo: `${chalk.red('simba: Error acquiring auth provider info. This may be due to a bad SIMBA_API_BASE_URL/baseURL value. Please make sure SIMBA_API_BASE_URL is configured')}`,
 }
 
 interface KeycloakAccessToken {
@@ -91,10 +91,6 @@ interface ClientCredsToken {
     expires_at: number;
 }
 
-function addSlashToURL(baseURL: string): string {
-    return baseURL.endsWith("/") ? baseURL : `${baseURL}/`
-}
-
 /**
  * This class handles our login for keycloak device login
  * In the future, when we decide to introduce other auth flows,
@@ -116,7 +112,7 @@ export class KeycloakHandler {
         this.authErrors = authErrors;
         this.config = SimbaConfig.ConfigStore;
         this.projectConfig = SimbaConfig.ProjectConfigStore;
-        this.baseURL = this.projectConfig.get('baseURL') ? this.projectConfig.get('baseURL') : this.projectConfig.get('baseUrl');
+        this.baseURL = SimbaConfig.retrieveBaseAPIURL();
         if (!this.baseURL) {
             SimbaConfig.log.error(`:: ${this.authErrors.noBaseURLError}`);
         }
@@ -338,8 +334,7 @@ export class KeycloakHandler {
             headers,
         };
         try {
-            const baseURL = SimbaConfig.ProjectConfigStore.get("baseURL");
-            // const url = `${baseURL}${authEndpoint}token/`;
+            const baseURL = SimbaConfig.retrieveBaseAPIURL();
             const url = buildURL(baseURL, `${authEndpoint}token/`);
             SimbaConfig.log.debug(`:: url : ${url}`);
             const res = await axios.post(url, params, config);
@@ -1078,8 +1073,7 @@ export class AzureHandler {
         this.authErrors = authErrors;
         this.config = SimbaConfig.ConfigStore;
         this.projectConfig = SimbaConfig.ProjectConfigStore;
-        this.baseURL = this.projectConfig.get('baseURL') ? this.projectConfig.get('baseURL') : this.projectConfig.get('baseUrl');
-        this.baseURL = addSlashToURL(this.baseURL);
+        this.baseURL = SimbaConfig.retrieveBaseAPIURL();
         SimbaConfig.ProjectConfigStore.set("baseURL", this.baseURL)
         if (!this.baseURL) {
             SimbaConfig.log.error(`:: ${this.authErrors.noBaseURLError}`);
@@ -1153,15 +1147,6 @@ export class AzureHandler {
         }, this.closeTimeout);
     }
 
-    private buildURL(url: string): string {
-        if (this.baseURL.endsWith("/") && url.startsWith("/")) {
-            url = url.slice(1);
-            url = this.baseURL + url;
-        }
-        SimbaConfig.log.debug(`:: EXIT : finalURL : ${url}`);
-        return url;
-    }
-
     public async getAndSetAuthTokenFromClientCreds(): Promise<any> {
         SimbaConfig.log.debug(`:: ENTER :`);
         const clientID = await SimbaConfig.retrieveEnvVar(EnvVariableKeys.ID);
@@ -1181,7 +1166,7 @@ export class AzureHandler {
             headers,
         };
         try {
-            const baseURL = SimbaConfig.ProjectConfigStore.get("baseURL");
+            const baseURL = SimbaConfig.retrieveBaseAPIURL();
             const url = buildURL(baseURL, `${authEndpoint}token/`);
             SimbaConfig.log.debug(`:: url : ${url}`);
             const res = await axios.post(url, params, config);

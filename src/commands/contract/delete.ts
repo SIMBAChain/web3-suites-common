@@ -2,6 +2,7 @@ import {default as chalk} from 'chalk';
 import {default as prompt} from 'prompts';
 import {
     SimbaConfig,
+    EnvVariableKeys,
 } from '../lib';
 import {buildURL} from "../lib"; 
 import {ContractDesignWithCode} from '.';
@@ -21,8 +22,15 @@ export async function deleteContractFromDesignID(
         return;
     };
     const deleteEndpoint = `/v2/organisations/${SimbaConfig.organisation.id}/contract_designs/${designID}/`;
-    let baseURL = SimbaConfig.ProjectConfigStore.get("baseURL");
-    const url = buildURL(baseURL, deleteEndpoint);
+    let baseURL = SimbaConfig.retrieveBaseAPIURL();
+    let url;
+    if (baseURL) {
+        url = buildURL(baseURL, deleteEndpoint);
+    } else {
+        const message = "unable to obtain value for baseURL/SIMBA_API_BASE_URL";
+        SimbaConfig.log.error(`:: EXIT : ${message}`)
+        throw new Error(message);
+    }
     SimbaConfig.log.debug(`url : ${url}`);
     try {
         await authStore.doDeleteRequest(url);
