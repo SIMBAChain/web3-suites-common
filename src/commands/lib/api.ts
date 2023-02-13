@@ -61,8 +61,7 @@ export const getList = async (config: SimbaConfig, url?: string): Promise<Record
     if (authStore) {
         try {
             const res = await authStore.doGetRequest(url);
-            // SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(res)}`);
-            SimbaConfig.log.debug("resss: ", res)
+            SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(res)}`);
             return res;
         } catch (error) {
             if (axios.isAxiosError(error) && error.response) {
@@ -471,7 +470,7 @@ export async function getASTAndOtherInfo(
     if (Object.keys(_astAndOtherInfo.ast).length === 0) {
         const message = `no ast found for ${contractName}`;
         SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${message}`)}`);
-        return new Error(`${message}`);
+        throw new Error(`${message}`);
     }
     SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(_astAndOtherInfo)}`);
     return _astAndOtherInfo;

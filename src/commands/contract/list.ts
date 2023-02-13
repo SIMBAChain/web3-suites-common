@@ -18,7 +18,7 @@ export async function allContracts(): Promise<ContractDesignWithCode[] | void> {
         SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: retrieving all contracts for organisation ${chalk.greenBright(`${SimbaConfig.organisation.name}`)}`)}`);
         let resp = await authStore.doGetRequest(url);
         SimbaConfig.log.debug(`resp: ${JSON.stringify(resp)}`);
-        if (resp && !(resp instanceof Error)) {
+        if (resp) {
             let res = resp as any;
             contractDesigns = contractDesigns.concat(res.results as ContractDesignWithCode[]);
             while (res.next !== null) {
@@ -47,7 +47,7 @@ export async function allContracts(): Promise<ContractDesignWithCode[] | void> {
 export async function printAllContracts(): Promise<void> {
     let contractDesigns: ContractDesignWithCode[];
     const _allContracts = await allContracts();
-    if (_allContracts && !(_allContracts instanceof Error)) {
+    if (_allContracts) {
         contractDesigns = _allContracts;
         for (let i = 0; i < contractDesigns.length; i++) {
             SimbaConfig.log.info(

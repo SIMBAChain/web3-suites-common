@@ -699,7 +699,7 @@ export class KeycloakHandler {
                 const authToken = await this.loginAndGetAuthToken();
                 if (!authToken) {
                     SimbaConfig.log.error(`${chalk.red(`\nsimba: EXIT : ${this.authErrors.authTokenError}`)}`);
-                    return new Error(`${this.authErrors.authTokenError}`);
+                    throw new Error(`${this.authErrors.authTokenError}`);
                 }
             } else {
                 SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: refreshing token`)}`);
@@ -783,7 +783,7 @@ export class KeycloakHandler {
             }
         } else {
             SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${this.authErrors.authTokenError}`)}`);
-            return new Error(`${this.authErrors.authTokenError}`);
+            throw new Error(`${this.authErrors.authTokenError}`);
         }
     }
 
@@ -855,7 +855,7 @@ export class KeycloakHandler {
                 const authToken = await this.loginAndGetAuthToken();
                 if (!authToken) {
                     SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${this.authErrors.authTokenError}`)}`);
-                    return new Error(`${this.authErrors.authTokenError}`);
+                    throw new Error(`${this.authErrors.authTokenError}`);
                 }
             } else {
                 SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: refreshing token`)}`);
@@ -938,7 +938,7 @@ export class KeycloakHandler {
             }
         } else {
             SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${this.authErrors.headersError}`)}`);
-            return new Error(`${this.authErrors.headersError}`);
+            throw new Error(`${this.authErrors.headersError}`);
         }
     }
 
@@ -961,7 +961,7 @@ export class KeycloakHandler {
                 const authToken = await this.loginAndGetAuthToken();
                 if (!authToken) {
                     SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${this.authErrors.authTokenError}`)}`);
-                    return new Error(`${this.authErrors.authTokenError}`);
+                    throw new Error(`${this.authErrors.authTokenError}`);
                 }
             } else {
                 SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: refreshing token`)}`);
@@ -1039,7 +1039,7 @@ export class KeycloakHandler {
             }
         } else {
             SimbaConfig.log.error(`${chalk.redBright(`\nsimba: EXIT : ${this.authErrors.headersError}`)}`);
-            return new Error(`${this.authErrors.headersError}`);
+            throw new Error(`${this.authErrors.headersError}`);
         }
     }
 }
@@ -1278,7 +1278,7 @@ export class AzureHandler {
                         if (!clientID || !clientSecret || !authEndpoint) {
                             const message = "refresh_token not present in auth token. To use client credentials, please set SIMBA_AUTH_CLIENT_ID, SIMBA_AUTH_CLIENT_SECRET, and SIMBA_AUTH_CLIENT_ENDPOINT in your environment variables.";
                             SimbaConfig.log.error(`${chalk.redBright(`\nsimba: ${message}`)}`);
-                            return new Error(message);
+                            throw new Error(message);
                         }
                         await this.getAndSetAuthTokenFromClientCreds();
                         SimbaConfig.log.debug(`:: EXIT :`);
@@ -1312,7 +1312,7 @@ export class AzureHandler {
                         if (!clientID || !clientSecret || !authEndpoint) {
                             const message = "refresh_token not present in auth token. To use client credentials, please set SIMBA_AUTH_CLIENT_ID, SIMBA_AUTH_CLIENT_SECRET, and SIMBA_AUTH_CLIENT_ENDPOINT in your environment variables.";
                             SimbaConfig.log.error(`${chalk.redBright(`\nsimba: ${message}`)}`);
-                            return new Error(message);
+                            throw new Error(message);
                         }
                         await this.getAndSetAuthTokenFromClientCreds();
                         SimbaConfig.log.debug(`:: EXIT :`);
@@ -1354,7 +1354,7 @@ export class AzureHandler {
             }
         } else {
             SimbaConfig.log.error(`${chalk.redBright("No auth provider info detected. exiting.")}`);
-            return new Error("No auth provider info detected. exiting.");
+            throw new Error("No auth provider info detected. exiting.");
         }
     }
 
