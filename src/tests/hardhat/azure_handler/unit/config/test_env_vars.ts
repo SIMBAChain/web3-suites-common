@@ -12,11 +12,12 @@ describe('tests retrieveEnvVar', () => {
             // SIMBA_AZURE_SECRET
             // SIMBA_AUTH_CLIENT_ENDPOINT
         const IDFromMethod = await SimbaConfig.retrieveEnvVar(EnvVariableKeys.ID);
-        const IDFromEnv = process.env.SIMBA_AZURE_ID;
+        // dev is now using keycloak
+        const IDFromEnv = process.env.SIMBA_KEYCLOAK_ID;
         expect(IDFromMethod).to.equal(IDFromEnv);
 
         const secretFromMethod = await SimbaConfig.retrieveEnvVar(EnvVariableKeys.SECRET);
-        const secretFromEnv = process.env.SIMBA_AZURE_SECRET;
+        const secretFromEnv = process.env.SIMBA_KEYCLOAK_SECRET;
         expect(secretFromMethod).to.equal(secretFromEnv);
 
         const authEndpointFromMethod = await SimbaConfig.retrieveEnvVar(EnvVariableKeys.AUTHENDPOINT);

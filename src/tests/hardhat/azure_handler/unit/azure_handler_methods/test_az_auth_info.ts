@@ -14,7 +14,8 @@ describe('tests getAndSetAZAuthInfo', () => {
         SimbaConfig.ProjectConfigStore.delete("authProviderInfo");
         expect(SimbaConfig.ProjectConfigStore.get("authProviderInfo")).to.not.exist;
         await az.setAndGetAZAuthInfo();
-        expect(SimbaConfig.ProjectConfigStore.get("authProviderInfo").type).to.equal("azureb2c");
+        // we changed the dev environment to keycloak
+        expect(SimbaConfig.ProjectConfigStore.get("authProviderInfo").type).to.equal("keycloak");
         SimbaConfig.ProjectConfigStore.clear();
         SimbaConfig.ProjectConfigStore.set(originalSimbaJson);
     }).timeout(10000);

@@ -193,7 +193,10 @@ export class SimbaConfig {
         const fullKey = "SIMBA_API_BASE_URL";
         for (let i = 0; i < simbaEnvFilesArray.length; i++) {
             const fileName = simbaEnvFilesArray[i];
-            dotenv.config({ path: path.resolve(cwd(), fileName) });
+            dotenv.config({
+                override: true,
+                path: path.resolve(cwd(), fileName),
+            });
             const val = process.env[fullKey];
             if (val) {
                 SimbaConfig.log.debug(`:: EXIT : ${val}`);
@@ -204,7 +207,10 @@ export class SimbaConfig {
         // now we check SIMBA_HOME directory
         for (let i = 0; i < simbaEnvFilesArray.length; i++) {
             const fileName = simbaEnvFilesArray[i];
-            dotenv.config({ path: path.resolve(SIMBA_HOME, fileName) });
+            dotenv.config({
+                override: true,
+                path: path.resolve(SIMBA_HOME, fileName),
+            });
             const val = process.env[fullKey];
             if (val) {
                 SimbaConfig.log.debug(`:: EXIT : ${val}`);
@@ -244,9 +250,45 @@ export class SimbaConfig {
             "KeycloakOAuth2": "KEYCLOAK",
         }
 
-        let val = process.env[`SIMBA_${authMap[authType]}_${envVarKey}`] || 
-            process.env[`SIMBA_AUTH_CLIENT_${envVarKey}`] ||
-            process.env[`SIMBA_PLUGIN_${envVarKey}`];
+        let val;
+        const simbaKeysArray = [
+            `SIMBA_${authMap[authType]}_${envVarKey}`,
+            `SIMBA_AUTH_CLIENT_${envVarKey}`,
+            `SIMBA_PLUGIN_${envVarKey}`,
+        ]
+
+        // first check in local project
+        for (let i = 0; i < simbaEnvFilesArray.length; i++) {
+            const fileName = simbaEnvFilesArray[i];
+            dotenv.config({
+                override: true,
+                path: path.resolve(cwd(), fileName),
+            });
+            for (let j = 0; j < simbaKeysArray.length; j++) {
+                const key = simbaKeysArray[j];
+                const val = process.env[key];
+                if (val) {
+                    SimbaConfig.log.debug(`:: EXIT : ${val}`);
+                    return val;
+                }
+            }
+        }
+    
+        // now we check SIMBA_HOME directory
+        for (let i = 0; i < simbaEnvFilesArray.length; i++) {
+            const fileName = simbaEnvFilesArray[i];
+            dotenv.config({
+                override: true, 
+                path: path.resolve(SIMBA_HOME, fileName),
+            });
+            let val = process.env[`SIMBA_${authMap[authType]}_${envVarKey}`] || 
+                process.env[`SIMBA_AUTH_CLIENT_${envVarKey}`] ||
+                process.env[`SIMBA_PLUGIN_${envVarKey}`];
+            if (val) {
+                SimbaConfig.log.debug(`:: EXIT : ${val}`);
+                return val;
+            }
+        }
         
         if (!val && envVarKey === EnvVariableKeys.AUTHENDPOINT) {
             val = "/o/";

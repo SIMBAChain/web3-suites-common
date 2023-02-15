@@ -14,9 +14,10 @@ describe('tests getAndSetAuthProviderInfo', () => {
         expect(authInfo).to.exist;
         expect(authInfo.client_id).to.equal(returnedAuthInfo.client_id);
         const authType = authInfo.type;
-        expect(authType).to.equal("azureb2c");
+        // dev now uses keycloak:
+        expect(authType).to.equal("keycloak");
         // now reset simba.json to its original state
         SimbaConfig.ProjectConfigStore.clear();
         SimbaConfig.ProjectConfigStore.set(originalSimbaJson);
-    }).timeout(10000);
+    }).timeout(20000);
 });

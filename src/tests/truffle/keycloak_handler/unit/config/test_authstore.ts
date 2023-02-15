@@ -12,8 +12,8 @@ describe('tests authStore', () => {
         const originalSimbaJson = SimbaConfig.ProjectConfigStore.all;
         SimbaConfig.ProjectConfigStore.delete("authProviderInfo");
         const authStore = await SimbaConfig.authStore();
-        const isAzureHandler = (authStore instanceof KeycloakHandler);
-        expect(isAzureHandler).to.equal(true);
+        const isKeycloakHandler = (authStore instanceof KeycloakHandler);
+        expect(isKeycloakHandler).to.equal(true);
         SimbaConfig.ProjectConfigStore.clear();
         SimbaConfig.ProjectConfigStore.set(originalSimbaJson);
     }).timeout(10000);
