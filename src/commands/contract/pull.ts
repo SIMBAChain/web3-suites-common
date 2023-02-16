@@ -296,12 +296,9 @@ export async function pullAllMostRecentSolFilesAndSourceCode(
     interactive: boolean = false,
     useSimbaPath: boolean = true,
     absPaths?: Record<any, any>,
-    contractDesignArray?: ContractDesignWithCode[],
 ): Promise<void> {
     SimbaConfig.log.debug(`:: ENTER :`);
-    const contractDesigns = contractDesignArray?
-        contractDesignArray : 
-        await allContracts();
+    const contractDesigns = await allContracts();
     if (useSimbaPath) {
         if (!absPaths) {
             absPaths = await absolutePaths() as any;

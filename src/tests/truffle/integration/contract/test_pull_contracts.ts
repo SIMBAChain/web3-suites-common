@@ -29,6 +29,8 @@ import {cwd} from 'process';
 import {
     allContractsStubFunc,
 } from "../../../tests_setup";
+const contractLib = require("../../../../commands/contract/list");
+import sinon from "sinon";
 
 const contractDesignsPath = "../tests_setup/contract_designs/truffle_kc/contract_designs.json";
 
@@ -57,7 +59,13 @@ describe('testing pulling .sol files using contractDesigns and other params', ()
         const simbaConfig = new SimbaConfig();
         const authStore = await simbaConfig.authStore();
         await authStore!.performLogin(false);
-        const contractDesigns: any = await allContractsStubFunc("demo");
+
+        // define stub
+        const fakeContractData = await allContractsStubFunc("demo")
+        const sandbox = sinon.createSandbox();
+        sandbox.stub(contractLib, "allContracts").callsFake(() => fakeContractData);
+
+        const contractDesigns: any = await allContracts();
         let contractNames: any = [];
         for (let i = 0; i < contractDesigns.length; i++) {
             const contractName = contractDesigns[i].name;
@@ -97,7 +105,8 @@ describe('testing pulling .sol files using contractDesigns and other params', ()
             let exists = fs.existsSync(filePath);
             expect(exists).to.equal(true);
         }
-
+        
+        sandbox.restore();
         FileHandler.removeDirectory(simbaDir);
     }).timeout(60000);
 });
@@ -108,6 +117,7 @@ describe('testing pulling source code to simba.json', () => {
         const contractDesigns = await FileHandler.parsedFile(contractDesignsPath);
         const simbaConfig = new SimbaConfig();
         const authStore = await simbaConfig.authStore();
+
         const originalSimbaJson = SimbaConfig.ProjectConfigStore.all;
         SimbaConfig.resetSimbaJson(originalSimbaJson, null, true);
         let contractsInfo = SimbaConfig.ProjectConfigStore.get("contracts_info");
@@ -151,6 +161,12 @@ describe('testing pulling .sol files to contracts/SimbaImports dir and source co
         const contractDesigns = await FileHandler.parsedFile(contractDesignsPath);
         let simbaDir = path.join(cwd(), "contracts", "SimbaImports");
         const originalSimbaJson = SimbaConfig.ProjectConfigStore.all;
+
+        // define stub
+        const fakeContractData = await allContractsStubFunc("demo")
+        const sandbox = sinon.createSandbox();
+        sandbox.stub(contractLib, "allContracts").callsFake(() => fakeContractData);
+
         let contractNames: any = [];
         for (let i = 0; i < contractDesigns.length; i++) {
             const contractName = contractDesigns[i].name;
@@ -200,15 +216,7 @@ describe('testing pulling .sol files to contracts/SimbaImports dir and source co
         expect(currentKeysLength).to.eq(0);
 
         // function
-        const allContractDesigns = await allContractsStubFunc("demo");
-        await pullAllMostRecentSolFilesAndSourceCode(
-            true,
-            true,
-            false,
-            true,
-            undefined,
-            allContractDesigns,
-        );
+        await pullAllMostRecentSolFilesAndSourceCode(true, true);
         
         // posterior conditions
         for (let i = 0; i < contractNames.length; i++) {
@@ -223,6 +231,7 @@ describe('testing pulling .sol files to contracts/SimbaImports dir and source co
         }
 
         // resetting
+        sandbox.restore();
         SimbaConfig.ProjectConfigStore.clear();
         SimbaConfig.ProjectConfigStore.set(originalSimbaJson);
         FileHandler.removeDirectory(simbaDir);

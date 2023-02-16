@@ -3,8 +3,11 @@ import {
 } from "../file_handler";
 import * as path from 'path';
 import {cwd} from 'process';
+import {
+    ContractDesignWithCode,
+} from "../../../commands/contract";
 
-export async function allContractsStubFunc(env: string): Promise<Array<any>> {
+export async function allContractsStubFunc(env: string): Promise<ContractDesignWithCode[] | void> {
     let allContractsArray: Array<any> = [];
     if (env === "dev") {
         allContractsArray = await FileHandler.parsedFile(
