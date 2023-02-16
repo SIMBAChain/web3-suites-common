@@ -13,6 +13,12 @@ async function resetSimbaJson() {
     const backupHardhatAZSimbaJsonPath = "../backup_files/backup_hardhat_az_simba.json"
     await FileHandler.transferFile(backupHardhatAZSimbaJsonPath, hardhatAZSimbaJsonPath);
 
+    // we're going to use the truffle simba.json for our KeycloakHandler tests
+    const keycloakHandlerJsonPath = "../../auth_store/keycloak_handler/simba.json";
+    const backupKeycloakSimbaJsonPath = "../backup_files/backup_truffle_kc_simba.json"
+    await FileHandler.transferFile(backupKeycloakSimbaJsonPath, keycloakHandlerJsonPath);
+
+
     const truffleKCSimbaJsonPath = "../../truffle/simba.json";
     const backupTruffleAZSimbaJsonPath = "../backup_files/backup_truffle_kc_simba.json"
     await FileHandler.transferFile(backupTruffleAZSimbaJsonPath, truffleKCSimbaJsonPath);
