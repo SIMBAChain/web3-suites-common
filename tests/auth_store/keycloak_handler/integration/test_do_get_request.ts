@@ -7,18 +7,18 @@ import {
 import { expect } from 'chai';
 import 'mocha';
 
-describe('tests doGetRequest after login', () => {
-    it('should get back a list of orgs', async () => {
+describe('tests doGetRequest, using free endpoint', () => {
+    it('url should exist in the response', async () => {
         // original settings
         const originalSimbaJson = SimbaConfig.ProjectConfigStore.all;
         const originalAuthConfig = SimbaConfig.ConfigStore.all;
         const kch = new KeycloakHandler();
         await kch.performLogin(false);
-        const url = 'v2/organisations/';
+        const url = 'https://httpbin.org/get';
         
         // function
         const res = await kch.doGetRequest(url) as Record<any, any>;
-        expect(res.count).to.be.greaterThan(0);
+        expect(res.url).to.equal(url);
 
         // resetting
         SimbaConfig.ProjectConfigStore.clear();

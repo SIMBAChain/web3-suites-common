@@ -7,15 +7,18 @@ import {
 import { expect } from 'chai';
 import 'mocha';
 
-describe('tests loginUser, which calls getVerificationInfo', () => {
-    it('endpoint returns the posted data', async () => {
+describe('tests doDeleteRequest, using free endpoint', () => {
+    it('url should exist in the response', async () => {
         // original settings
         const originalSimbaJson = SimbaConfig.ProjectConfigStore.all;
         const originalAuthConfig = SimbaConfig.ConfigStore.all;
         const kch = new KeycloakHandler();
-        const verificationInfoCompleteURI = await kch.loginUser();
-        expect(verificationInfoCompleteURI).to.exist;
-        expect((verificationInfoCompleteURI as string).includes("user_code")).to.equal(true);
+        await kch.performLogin(false);
+        const url = 'https://httpbin.org/delete';
+        
+        // function
+        const res = await kch.doDeleteRequest(url) as Record<any, any>;
+        expect(res.url).to.equal(url);
 
         // resetting
         SimbaConfig.ProjectConfigStore.clear();

@@ -4,6 +4,7 @@ import {
 } from "../../src"
 import * as fs from "fs";
 import * as path from 'path';
+import { buffer } from "stream/consumers";
 
 export class FileHandler {
     public static async transferFile(
@@ -11,12 +12,17 @@ export class FileHandler {
         outputPath: string,
     ): Promise<void> {
         const buf = await promisifiedReadFile(inputPath, {flag: 'r'});
-        const parsed = JSON.parse(buf.toString());
-        const data = JSON.stringify(parsed);
-        SimbaConfig.log.info(`:: writing contents of ${inputPath} to ${outputPath}`);
-        // before writing, need to recursively create path to outputPath
-        this.makeDirectory(outputPath);
-        fs.writeFileSync(outputPath, data);
+        try {
+            const parsed = JSON.parse(buf.toString());
+            const data = JSON.stringify(parsed);
+            SimbaConfig.log.info(`:: writing contents of ${inputPath} to ${outputPath}`);
+            // before writing, need to recursively create path to outputPath
+            this.makeDirectory(outputPath);
+            fs.writeFileSync(outputPath, data);
+        } catch (e) {
+            this.makeDirectory(outputPath);
+            fs.writeFileSync(outputPath, buf);
+        }
     }
 
     public static async parsedFile(filePath: string) {

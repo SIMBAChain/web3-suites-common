@@ -1,9 +1,9 @@
 import {
     SimbaConfig,
-} from "../../../../commands/lib/config";
+} from "../../../../src/commands/lib/config";
 import {
     KeycloakHandler,
-} from "../../../../commands/lib";
+} from "../../../../src/commands/lib";
 import { expect } from 'chai';
 import 'mocha';
 
