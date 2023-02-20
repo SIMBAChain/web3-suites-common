@@ -10,7 +10,6 @@ describe('tests retrieveEnvVar', () => {
         // for this test, you need to have env vars set for:
             // SIMBA_KEYCLOAK_ID
             // SIMBA_KEYCLOAK_SECRET
-            // SIMBA_AUTH_CLIENT_ENDPOINT
         const IDFromMethod = await SimbaConfig.retrieveEnvVar(EnvVariableKeys.ID);
         const IDFromEnv = process.env.SIMBA_KEYCLOAK_ID;
         expect(IDFromMethod).to.equal(IDFromEnv);
