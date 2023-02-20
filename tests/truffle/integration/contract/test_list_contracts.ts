@@ -38,5 +38,5 @@ describe('testing gathering all contracts', () => {
         expect("designset" in contracts[0]).to.equal(true);
 
         sandbox.restore();
-    }).timeout(500000);
+    }).timeout(1000);
 });

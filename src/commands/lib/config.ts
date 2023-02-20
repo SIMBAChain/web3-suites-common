@@ -114,6 +114,7 @@ export class SimbaConfig {
     public static _organisation: any;
     public static _build_directory: string;
     public static _log: Logger;
+    public static envVars: any; // do stuff with this...
 
     /**
      *  many of these instance properties are not actually uses
@@ -240,6 +241,9 @@ export class SimbaConfig {
     }
 
     public static async retrieveEnvVar(envVarKey: EnvVariableKeys): Promise<string | void> {
+        if (!SimbaConfig.envVars) {
+            // do stuff...
+        }
         SimbaConfig.log.debug(`:: ENTER : envVarKey : ${envVarKey}`);
         const authProviderInfo = await SimbaConfig.setAndGetAuthProviderInfo();
         const authType = authProviderInfo.type;
