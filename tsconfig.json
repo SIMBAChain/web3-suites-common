@@ -17,10 +17,10 @@
   "exclude": [
     "./dist",
     "./node_modules",
-    "./src/tests"
+    "tests"
   ],
   "include": [
     "./test",
     "./src"
-  ]
+, "tests"  ]
 }

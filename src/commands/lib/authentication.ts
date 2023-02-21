@@ -741,7 +741,7 @@ export class KeycloakHandler {
                 } else {
                     SimbaConfig.log.error(`${chalk.redBright(`\nsimba: ${JSON.stringify(error)}`)}`);
                 }
-                SimbaConfig.log.debug(`err: ${JSON.stringify(error)}`);
+                SimbaConfig.log.debug(`simba: ${chalk.redBright(`${JSON.stringify(error)}`)}`);
                 if (axios.isAxiosError(error) && error.response && error.response.status === 401) {
                     SimbaConfig.log.debug(`:: received 401 response, attempting to refresh token`);
                     // if 401 from Simba, then try refreshing token.

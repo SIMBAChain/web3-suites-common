@@ -44,9 +44,7 @@ export {
     SimbaInfo,
 } from "./simbainfo"
 export {
+    buildURL,
     discoverAndSetWeb3Suite,
     web3SuiteErrorMessage,
-} from "./discover_web3suite";
-export {
-    buildURL,
 } from "./utils";

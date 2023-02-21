@@ -2,6 +2,16 @@
   "name": "@simbachain/web3-suites",
   "version": "2.5.3",
   "description": "common code for web3 suite plugins. Code in this repo can be used for truffle or hardhat, but is designed to be applicable to future web3 suite plugins as well.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SIMBAChain/web3-suites-common.git"
+  },
+  "author": "SIMBA Chain",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/SIMBAChain/web3-suites-common/issues"
+  },
+  "homepage": "https://github.com/SIMBAChain/web3-suites-common#readme",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
@@ -21,37 +31,33 @@
     "blockchain"
   ],
   "scripts": {
-    "buildtest": "cd src/tests/tests_setup/build/ && ts-node build.ts",
-    "truffle_test": "cd src/tests/truffle/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register './**/*.ts'",
+    "buildtest": "cd tests/tests_setup/build/ && ts-node build.ts",
+    "truffle_test": "npm run truffle_unit_test && npm run truffle_integration_test",
     "truffle_clean_test": "npm run clean_test && npm run truffle_test && npm run clean_test",
-    "truffle_unit_test": "cd src/tests/truffle/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register './keycloak_handler/unit/**/*.ts'",
+    "truffle_unit_test": "cd tests/truffle/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register './unit/**/*.ts'",
     "truffle_clean_unit_test": "npm run clean_test && npm run truffle_unit_test && npm run clean_test",
-    "truffle_integration_test": "cd src/tests/truffle/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register './keycloak_handler/integration/**/*.ts'",
+    "truffle_integration_test": "cd tests/truffle/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register './integration/**/*.ts'",
     "truffle_clean_integration_test": "npm run clean_test && npm run truffle_integration_test && npm run clean_test",
-    "hardhat_test": "cd src/tests/hardhat/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register './**/*.ts'",
+    "keycloak_handler_test": "npm run keycloak_handler_unit_test && npm run keycloak_handler_integration_test",
+    "keycloak_handler_unit_test": "cd tests/auth_store/keycloak_handler/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register './unit/**/*.ts'",
+    "keycloak_handler_clean_unit_test": "npm run clean_test && npm run keycloak_handler_unit_test && npm run clean_test",
+    "keycloak_handler_integration_test": "cd tests/auth_store/keycloak_handler/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register './integration/**/*.ts'",
+    "keycloak_handler_clean_integration_test": "npm run clean_test && npm run keycloak_handler_integration_test && npm run clean_test",
+    "utils_unit_test": "cd tests/utils/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register './unit/**/*.ts'",
+    "hardhat_test": "npm run hardhat_unit_test && npm run hardhat_integration_test",
     "hardhat_clean_test": "npm run clean_test && npm run hardhat_test && npm run clean_test",
-    "hardhat_unit_test": "cd src/tests/hardhat/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register './azure_handler/unit/**/*.ts'",
+    "hardhat_unit_test": "cd tests/hardhat/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register './unit/**/*.ts'",
     "hardhat_clean_unit_test": "npm run clean_test && npm run hardhat_unit_test",
-    "hardhat_integration_test": "cd src/tests/hardhat/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register './azure_handler/integration/**/*.ts'",
+    "hardhat_integration_test": "cd tests/hardhat/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register './integration/**/*.ts'",
     "hardhat_clean_integration_test": "npm run clean_test && npm run hardhat_integration_test && npm run clean_test",
     "test": "npm run all_clean_tests",
-    "clean_test": "cd src/tests/tests_setup/clean/ && ts-node clean.ts",
-    "all_tests": "npm run truffle_test && npm run hardhat_test",
+    "clean_test": "cd tests/tests_setup/clean/ && ts-node clean.ts",
+    "all_tests": "npm run truffle_test && npm run hardhat_test && npm run keycloak_handler_test && npm run utils_unit_test",
     "all_clean_tests": "npm run clean_test && npm run all_tests && npm run clean_test",
-    "all_tests_with_coverage": "cd src/tests/tests_setup/clean && ts-node clean.ts && cd ../../hardhat/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' nyc mocha -r ts-node/register './**/*.ts' && cd ../truffle/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' nyc mocha -r ts-node/register './**/*.ts' && cd ../tests_setup/clean/ && ts-node clean.ts",
-    "all_unit_tests_with_coverage": "cd src/tests/tests_setup/clean && ts-node clean.ts && cd ../../hardhat/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' nyc mocha -r ts-node/register './azure_handler/unit/**/*.ts' && cd ../truffle/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' nyc mocha -r ts-node/register './keycloak_handler/unit/**/*.ts' && cd ../tests_setup/clean/ && ts-node clean.ts",
-    "all_integration_tests_with_coverage": "cd src/tests/tests_setup/clean && ts-node clean.ts && cd ../../hardhat/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' nyc mocha -r ts-node/register './azure_handler/integration/**/*.ts' && cd ../truffle/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' nyc mocha -r ts-node/register './keycloak_handler/integration/**/*.ts' && cd ../tests_setup/clean/ && ts-node clean.ts"
+    "all_tests_with_coverage": "npm run all_unit_tests_with_coverage && npm run all_integration_tests_with_coverage",
+    "all_unit_tests_with_coverage": "cd tests/tests_setup/clean && ts-node clean.ts && cd ../../hardhat/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' nyc mocha -r ts-node/register './unit/**/*.ts' && cd ../truffle/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' nyc mocha -r ts-node/register './unit/**/*.ts' && cd ../auth_store/keycloak_handler/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' nyc mocha -r ts-node/register './unit/**/*.ts' && cd ../../utils && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' nyc mocha -r ts-node/register './unit/**/*.ts'  && cd ../../tests_setup/clean/ && ts-node clean.ts",
+    "all_integration_tests_with_coverage": "cd tests/tests_setup/clean && ts-node clean.ts && cd ../../hardhat/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' nyc mocha -r ts-node/register './integration/**/*.ts' && cd ../truffle/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' nyc mocha -r ts-node/register './integration/**/*.ts' && cd ../auth_store/keycloak_handler/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' nyc mocha -r ts-node/register './integration/**/*.ts' && cd ../../utils && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' nyc mocha -r ts-node/register './integration/**/*.ts'  && cd ../../tests_setup/clean/ && ts-node clean.ts"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/SIMBAChain/web3-suites-common.git"
-  },
-  "author": "SIMBA Chain",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/SIMBAChain/web3-suites-common/issues"
-  },
-  "homepage": "https://github.com/SIMBAChain/web3-suites-common#readme",
   "dependencies": {
     "@types/configstore": "^4.0.0",
     "@types/node": "^17.0.25",
@@ -61,7 +67,7 @@
     "configstore": "^5.0.1",
     "crypto-js": "^4.1.1",
     "crypto-random-string": "3.2.0",
-    "dotenv": "^16.0.0",
+    "dotenv": "^16.0.1",
     "polka": "^0.5.2",
     "prompts": "^2.3.2",
     "request-promise": "^4.2.6",
@@ -74,10 +80,12 @@
     "@types/crypto-js": "3.1.44",
     "@types/mocha": "^9.1.1",
     "@types/request-promise": "^4.1.48",
+    "@types/sinon": "^10.0.13",
     "@types/utf8": "^3.0.1",
     "chai": "^4.3.6",
     "mocha": "^10.0.0",
     "nyc": "^15.1.0",
+    "sinon": "^15.0.1",
     "ts-node": "^10.9.1"
   }
 }
