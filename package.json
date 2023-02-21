@@ -58,34 +58,38 @@
     "all_unit_tests_with_coverage": "cd tests/tests_setup/clean && ts-node clean.ts && cd ../../hardhat/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' nyc mocha -r ts-node/register './unit/**/*.ts' && cd ../truffle/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' nyc mocha -r ts-node/register './unit/**/*.ts' && cd ../auth_store/keycloak_handler/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' nyc mocha -r ts-node/register './unit/**/*.ts' && cd ../../utils && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' nyc mocha -r ts-node/register './unit/**/*.ts'  && cd ../../tests_setup/clean/ && ts-node clean.ts",
     "all_integration_tests_with_coverage": "cd tests/tests_setup/clean && ts-node clean.ts && cd ../../hardhat/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' nyc mocha -r ts-node/register './integration/**/*.ts' && cd ../truffle/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' nyc mocha -r ts-node/register './integration/**/*.ts' && cd ../auth_store/keycloak_handler/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' nyc mocha -r ts-node/register './integration/**/*.ts' && cd ../../utils && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' nyc mocha -r ts-node/register './integration/**/*.ts'  && cd ../../tests_setup/clean/ && ts-node clean.ts"
   },
+  "overrides": {
+    "@types/express-serve-static-core": "4.17.29"
+  },
   "dependencies": {
-    "@types/configstore": "^4.0.0",
-    "@types/node": "^17.0.25",
-    "@types/polka": "^0.5.4",
-    "@types/prompts": "^2.0.5",
-    "axios": "^0.26.1",
-    "configstore": "^5.0.1",
-    "crypto-js": "^4.1.1",
+    "@types/bluebird": "3.5.36",
+    "@types/configstore": "4.0.0",
+    "@types/node": "17.0.25",
+    "@types/polka": "0.5.4",
+    "@types/prompts": "2.0.5",
+    "axios": "0.26.1",
+    "configstore": "5.0.1",
+    "crypto-js": "4.1.1",
     "crypto-random-string": "3.2.0",
-    "dotenv": "^16.0.1",
-    "polka": "^0.5.2",
-    "prompts": "^2.3.2",
-    "request-promise": "^4.2.6",
-    "tslog": "^3.3.3",
+    "dotenv": "16.0.1",
+    "polka": "0.5.2",
+    "prompts": "2.3.2",
+    "request-promise": "4.2.6",
+    "tslog": "3.3.3",
     "typescript": "3.9.7",
-    "utf8": "^3.0.0"
+    "utf8": "3.0.0"
   },
   "devDependencies": {
-    "@types/chai": "^4.3.3",
+    "@types/chai": "4.3.3",
     "@types/crypto-js": "3.1.44",
-    "@types/mocha": "^9.1.1",
-    "@types/request-promise": "^4.1.48",
-    "@types/sinon": "^10.0.13",
-    "@types/utf8": "^3.0.1",
-    "chai": "^4.3.6",
-    "mocha": "^10.0.0",
-    "nyc": "^15.1.0",
-    "sinon": "^15.0.1",
-    "ts-node": "^10.9.1"
+    "@types/mocha": "9.1.1",
+    "@types/request-promise": "4.1.48",
+    "@types/sinon": "10.0.13",
+    "@types/utf8": "3.0.1",
+    "chai": "4.3.6",
+    "mocha": "10.0.0",
+    "nyc": "15.1.0",
+    "sinon": "15.0.1",
+    "ts-node": "10.9.1"
   }
 }
