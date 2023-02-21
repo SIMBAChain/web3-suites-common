@@ -50,7 +50,7 @@ describe('testing pulling .sol file from designID', () => {
         exists = fs.existsSync(filePath);
         expect(exists).to.equal(true);
         FileHandler.removeDirectory(simbaDir);
-    }).timeout(120000);
+    }).timeout(30000);
 });
 
 describe('testing pulling .sol files using contractDesigns and other params', () => {
