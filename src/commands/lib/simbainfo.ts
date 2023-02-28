@@ -3,7 +3,16 @@ import {
 } from "../lib";
 import {default as chalk} from 'chalk';
 
+/**
+ * this class is used for printing chalked project info
+ */
 export class SimbaInfo {
+    /**
+     * helps us chalk nested objects
+     * @param obj 
+     * @param objName 
+     * @returns {string}
+     */
     private static chalkObject(
         obj: Record<any, any> | string | number | Array<any>,
         objName?: string
@@ -27,7 +36,13 @@ export class SimbaInfo {
         return chalkString;
     }
 
-    public static printChalkedObject(obj: Record<any, any>, objName?: string): void {
+    /**
+     * prints a chalked object
+     * @param obj 
+     * @param objName 
+     * @returns {void}
+     */
+    public static printChalkedObject(obj: Record<any, any> | string | number | Array<any>, objName?: string): void {
         const entryParams = {
             obj,
             objName,
@@ -39,6 +54,11 @@ export class SimbaInfo {
         return;
     }
 
+    /**
+     * gets value for a key from simba.json
+     * @param key 
+     * @returns 
+     */
     private static getProjectConfig(key?: string) {
         SimbaConfig.log.debug(`:: ENTER : key : ${key}`);
         if (key) {
@@ -54,10 +74,15 @@ export class SimbaInfo {
         }
     }
 
-    private static getAuthToken(key?: string) {
+    /**
+     * returns auth token from authconfig.json, or value for key in auth token in authconfig.json
+     * @param key - if not specified, then entire auth token is returned from authconfig.json
+     * @returns {any}
+     */
+    private static getAuthToken(key?: string): any {
+        SimbaConfig.log.debug(`:: ENTER : key : ${key}`);
         const baseURL = SimbaConfig.retrieveBaseAPIURL();
         const configBase = baseURL.split(".").join("_");
-        SimbaConfig.log.debug(`:: ENTER : key : ${key}`);
         const authConfig = SimbaConfig.ConfigStore.all;
         if (!authConfig) {
             SimbaConfig.log.debug(`:: no info present in authconfig.json`);
@@ -78,7 +103,7 @@ export class SimbaInfo {
         }
         if (key) {
             const val = authInfo[key] !== undefined ?
-                SimbaConfig.ProjectConfigStore.get(key) :
+                SimbaConfig.ConfigStore.get(key) :
                 null;
             SimbaConfig.log.debug(`:: EXIT : val : ${JSON.stringify(val)}`);
             return val;
@@ -88,6 +113,10 @@ export class SimbaInfo {
         }
     }
 
+    /**
+     * prints chalked auth otken
+     * @returns {void}
+     */
     public static printAuthToken(): void {
         SimbaConfig.log.debug(`:: ENTER :`);
         const authToken = this.getAuthToken();
@@ -96,6 +125,10 @@ export class SimbaInfo {
         return;
     }
 
+    /**
+     * gets contracts_info from simaba.json
+     * @returns {Record<any, any>}
+     */
     private static getContractsInfo(): Record<any, any> {
         SimbaConfig.log.debug(`:: ENTER :`);
         const contractsInfo = this.getProjectConfig("contracts_info") ?
@@ -105,6 +138,11 @@ export class SimbaInfo {
         return contractsInfo;
     }
 
+    /**
+     * gets info for contractName from contracts_info in simba.json
+     * @param contractName 
+     * @returns 
+     */
     private static getSingleContractInfo(contractName: string) {
         SimbaConfig.log.debug(`:: ENTER : contractName : ${contractName}`);
         const contractsInfo = this.getContractsInfo();
@@ -115,6 +153,11 @@ export class SimbaInfo {
         return singleContractInfo;
     }
 
+    /**
+     * prints chalked single contract from contracts_info in simba.json
+     * @param contractName 
+     * @returns 
+     */
     public static printSingleContract(contractName: string): void {
         SimbaConfig.log.debug(`:: ENTER : contractName : ${contractName}`);
         const contract = this.getSingleContractInfo(contractName);
@@ -123,6 +166,10 @@ export class SimbaInfo {
         return;
     }
 
+    /**
+     * prints chalked all contracts from contracts_info in simba.json
+     * @returns {void}
+     */
     public static printAllContracts(): void {
         SimbaConfig.log.debug(`:: ENTER :`);
         const allContracts = this.getContractsInfo();
@@ -133,6 +180,10 @@ export class SimbaInfo {
         return;
     }
 
+    /**
+     * prints chalked simba.json
+     * @returns {void}
+     */
     public static printAllSimbaJson(): void {
         SimbaConfig.log.debug(`:: ENTER :`);
         const allSimba = SimbaConfig.ProjectConfigStore.all;
@@ -141,6 +192,10 @@ export class SimbaInfo {
         return;
     }
 
+    /**
+     * prints chalked organisation from simba.json
+     * @returns {void}
+     */
     public static printOrg(): void {
         SimbaConfig.log.debug(`:: ENTER :`);
         const org = this.getProjectConfig("organisation");
@@ -149,6 +204,10 @@ export class SimbaInfo {
         return;
     }
 
+    /**
+     * prints chalked application from simba.json
+     * @returns {void}
+     */
     public static printApp(): void {
         SimbaConfig.log.debug(`:: ENTER :`);
         const app = this.getProjectConfig("application");
@@ -157,6 +216,10 @@ export class SimbaInfo {
         return;
     }
 
+    /**
+     * prints chalked most_recent_deployment_info from simba.json
+     * @returns {void}
+     */
     public static printMostRecentDeploymentInfo(): void {
         SimbaConfig.log.debug(`:: ENTER :`);
         const deployInfo = this.getProjectConfig("most_recent_deployment_info");
@@ -164,6 +227,10 @@ export class SimbaInfo {
         return;
     }
 
+    /**
+     * prints chalked authProviderInfo from simba.json
+     * @returns {void}
+     */
     public static printAuthProviderInfo(): void {
         SimbaConfig.log.debug(`:: ENTER :`);
         const authProviderInfo = this.getProjectConfig("authProviderInfo");
@@ -171,6 +238,10 @@ export class SimbaInfo {
         return;
     }
 
+    /**
+     * prints chalked web3Suite from simba.json
+     * @returns {void}
+     */
     public static printWeb3Suite(): void {
         SimbaConfig.log.debug(`:: ENTER :`);
         const web3Suite = this.getProjectConfig("web3Suite");
@@ -178,9 +249,13 @@ export class SimbaInfo {
         return;
     }
 
+    /**
+     * prints chalked baseURL from simba.json
+     * @returns {void}
+     */
     public static printBaseURL(): void {
         SimbaConfig.log.debug(`:: ENTER :`);
-        const baseURL = this.getProjectConfig("baseURL");
+        const baseURL = SimbaConfig.retrieveBaseAPIURL();
         this.printChalkedObject(baseURL, "baseURL");
         return;
     }

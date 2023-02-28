@@ -13,7 +13,7 @@ const SimbaPath = "SimbaImports";
  * function used in many operations in this module. helps us find compiled contracts
  * @param dir 
  * @param extension 
- * @returns 
+ * @returns {Promise<string[]>}
  */
 export const walkDirForContracts = (dir: string, extension: string): Promise<string[]> =>
 new Promise((resolve, reject) => {
@@ -60,6 +60,10 @@ export const promisifiedReadFile = (filePath: fs.PathLike, options: { encoding?:
         });
     });
 
+/**
+ * returns a promise containing an object with {contractName: pathToContractLocation}
+ * @returns [Promise<Record<any, any> | void>]
+ */
 export async function absolutePaths(): Promise<Record<any, any> | void> {
     SimbaConfig.log.debug(`:: ENTER :`);
     const buildDir = SimbaConfig.buildDirectory;
@@ -101,6 +105,12 @@ export async function absolutePaths(): Promise<Record<any, any> | void> {
     return absolutePathMap;
 }
 
+/**
+ * gives the absolute path for a single contract in project
+ * @param _absolutePaths 
+ * @param contractName 
+ * @returns {string}
+ */
 export function contractAbsolutePath(
     _absolutePaths: Record<any, any>,
     contractName: string,
@@ -117,6 +127,12 @@ export function contractAbsolutePath(
     return contractPath;
 }
 
+/**
+ * gives us the path to a contract, but within contracts/simbaimports/
+ * @param _absolutePaths 
+ * @param contractName 
+ * @returns {string}
+ */
 export function contractSimbaPath(
     _absolutePaths: Record<any, any>,
     contractName: string,

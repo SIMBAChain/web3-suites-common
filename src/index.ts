@@ -1,5 +1,6 @@
 export {LogLevel} from './commands/lib';
 export {SimbaConfig} from './commands/lib';
+export {KeycloakHandler} from './commands/lib';
 export {
     promisifiedReadFile,
     walkDirForContracts,

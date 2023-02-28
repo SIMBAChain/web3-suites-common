@@ -8,13 +8,19 @@ import {
     web3SuiteErrorMessage,
 } from '../lib';
 
+/**
+ * this class is used to compare source code in simba.json to our build artifacts,
+ * which helps us determine which contracts should/can be exported
+ */
 export class SourceCodeComparer {
     private sourceCodeFromSimbaJson: Record<any, any>;
     private sourceCodeFromArtifacts: Record<any, any>;
     private imports: Array<string>;
 
-    // first need a method that grabs source code for all compiled contracts
-    // source code exists in artifact after compiling
+    /**
+     * grabs source code for all compiled contracts from local build artifacts
+     * @returns 
+     */
     public async getAndSetSourceCodeFromArtifacts(): Promise<Record<any, any>> {
         SimbaConfig.log.debug(`:: ENTER :`);
         const buildDir = SimbaConfig.buildDirectory;
@@ -87,9 +93,11 @@ export class SourceCodeComparer {
         return sourceCodeMap;
     }
 
-    // then need a method that grabs source code from simba.json
-    // contracts_info.<contract_name> exists after a file has beeen
-    // exported
+    /**
+     * grabs source code from simba.json
+     * contracts_info.<contract_name> exists after a file has been exported
+     * @returns 
+     */
     public getAndSetSourceCodeFromSimbaJson(): Record<any, any> {
         SimbaConfig.log.debug(`:: ENTER :`);
         const contractsInfo = SimbaConfig.ProjectConfigStore.get("contracts_info");
@@ -108,7 +116,11 @@ export class SourceCodeComparer {
         return sourceCodeMap;
     }
 
-    // then a method to check if source code for contractName exists in simba.json:
+    /**
+     * checks if source code for contractName exists in simba.json
+     * @param contractName 
+     * @returns 
+     */
     public sourceCodeExistsInSimbaJson(contractName: string): boolean {
         SimbaConfig.log.debug(`:: ENTER : contractName : ${contractName}`);
         this.initSimbaJsonSourceCode();
@@ -128,7 +140,11 @@ export class SourceCodeComparer {
         }
     }
 
-    // then a method to check if source code for contractName exists in artifacts / build dir:
+    /**
+     * checks if source code for contractName exists in artifacts / build dir
+     * @param contractName 
+     * @returns 
+     */
     public async sourceCodeExistsInArtifacts(contractName: string): Promise<boolean> {
         SimbaConfig.log.debug(`:: ENTER : contractName : ${contractName}`);
         await this.initArtifactSourceCode();
@@ -145,7 +161,11 @@ export class SourceCodeComparer {
         }
     }
 
-    // then need a method that runs through and checks for differences
+    /**
+     * compares build artifacts and simba.json to see if contract is new or updated
+     * @param contractName 
+     * @returns 
+     */
     public async sourceCodeHasChangedOrIsNew(contractName: string): Promise<boolean> {
         SimbaConfig.log.debug(`:: ENTER : contractName : ${contractName}`);
         await this.initSourceCode();
@@ -171,6 +191,11 @@ export class SourceCodeComparer {
         }   
     }
 
+    /**
+     * used to communicate to user the status of an attempted export
+     * @param contractName 
+     * @returns 
+     */
     private async getStatusAndMessage(contractName: string): Promise<Record<any, any>> {
         SimbaConfig.log.debug(`:: ENTER : contractName: ${contractName}`);
         if (!this.sourceCodeFromArtifacts || !this.sourceCodeFromSimbaJson) {
@@ -210,6 +235,12 @@ export class SourceCodeComparer {
         return statusAndMessage;
     }
 
+    /**
+     * calls getStatusAndMessage for each attempted contract export, to communicate
+     * statuses to user when attempting exports
+     * @param choices 
+     * @returns 
+     */
     public async exportStatuses(choices: Array<any> | string): Promise<Record<any, any>> {
         const _exportStatuses: Record<any, any> = {};
         await this.initSourceCode();
@@ -230,26 +261,38 @@ export class SourceCodeComparer {
         return _exportStatuses;
     }
 
+    /**
+     * sets simba.json and build artifact source code as property of this class
+     */
     private async initSourceCode(): Promise<void> {
         await this.initArtifactSourceCode();
         this.initSimbaJsonSourceCode();
     }
 
+    /**
+     * sets build artifact source code as property of this class
+     */
     private async initArtifactSourceCode(): Promise<void> {
         if (!this.sourceCodeFromArtifacts) {
             await this.getAndSetSourceCodeFromArtifacts();
         }
     }
 
+    /**
+     * sets simba.json source code as property of this class
+     */
     private initSimbaJsonSourceCode(): void {
         if (!this.sourceCodeFromSimbaJson) {
             this.getAndSetSourceCodeFromSimbaJson();
         }
     }
 
-    // this method is living in this class because it helps us determine
-    // what to export or not. If an artifact has empty bytecode,
-    // then it is an import, and we don't export it
+    /**
+     * this method is living in this class because it helps us determine
+     * what to export or not. If an artifact has empty bytecode,
+     * then it is an import (dependency), and we don't export it
+     * @returns 
+     */
     private async getAndSetimports(): Promise<Array<string>> {
         SimbaConfig.log.debug(`:: ENTER :`);
         let files;

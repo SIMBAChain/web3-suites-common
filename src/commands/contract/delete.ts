@@ -2,7 +2,6 @@ import {default as chalk} from 'chalk';
 import {default as prompt} from 'prompts';
 import {
     SimbaConfig,
-    EnvVariableKeys,
 } from '../lib';
 import {buildURL} from "../lib"; 
 import {ContractDesignWithCode} from '.';
@@ -11,6 +10,11 @@ import {
     allContracts,
 } from "./list";
 
+/**
+ * deletes contract from your organisation's design patterns, based on designID
+ * @param designID 
+ * @returns 
+ */
 export async function deleteContractFromDesignID(
     designID: string,
 ): Promise<void> {
@@ -51,6 +55,11 @@ export async function deleteContractFromDesignID(
     }
 }
 
+/**
+ * Allows user to delete contracts from org from prompts
+ * @param contractDesignArray 
+ * @returns 
+ */
 export async function deleteContractsFromPrompts(contractDesignArray?: ContractDesignWithCode[]): Promise<any> {
     SimbaConfig.log.debug(`:: ENTER : contractDesignArary: ${JSON.stringify(contractDesignArray)}`);
     try {

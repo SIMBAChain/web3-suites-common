@@ -10,7 +10,6 @@ describe('tests retrieveEnvVar', () => {
         // for this test, you need to have env vars set for:
             // SIMBA_AZURE_ID
             // SIMBA_AZURE_SECRET
-            // SIMBA_AUTH_CLIENT_ENDPOINT
         const IDFromMethod = await SimbaConfig.retrieveEnvVar(EnvVariableKeys.ID);
         // dev is now using keycloak
         const IDFromEnv = process.env.SIMBA_KEYCLOAK_ID;

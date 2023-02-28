@@ -66,6 +66,11 @@ export const simbaEnvFilesArray = [
 
 const SIMBA_HOME = process.env.SIMBA_HOME || os.homedir();
 
+/**
+ * tacks /auth onto end of baseurl for authinfo for AuthProviders.KEYCLOAKOAUTH2
+ * @param authInfo 
+ * @returns 
+ */
 function handleAlternativeAuthJSON(authInfo: Record<any, any>): Record<any, any> {
     SimbaConfig.log.debug(`:: ENTER : ${JSON.stringify(authInfo)}`);
     const type = authInfo.type;
@@ -96,7 +101,9 @@ function handleAlternativeAuthJSON(authInfo: Record<any, any>): Record<any, any>
  * this class handles our configstore operations (eg reading simba.json)
  * http operations are handled by our authStore property.
  * 
- * If you notice throughout this class, the same methods are defined in static
+ * the two main files SimbaConfig manipulates and reads from are simba.json and authconfig.json
+ * 
+ * If you notice throughout this class, many methods are defined in static
  * and instance methods. This was so that some older code that was integrated,
  * that uses instance methods, would still be supported.
  */
@@ -143,7 +150,7 @@ export class SimbaConfig {
     }
 
     /**
-     * handles our auth / access token info
+     * handles our auth / access token info - currently authconfig.json
      */
     public static get ConfigStore(): Configstore {
         if (!this._configStore) {
@@ -174,6 +181,10 @@ export class SimbaConfig {
         return SimbaConfig.ProjectConfigStore;
     }
 
+    /**
+     * looks for baseURL in simba.json
+     * @returns {string | void}
+     */
     private static retrieveBaseAPIURLFromConfigStore(): string | void {
         SimbaConfig.log.debug(":: ENTER :");
         const fullKey = "SIMBA_API_BASE_URL";
@@ -188,6 +199,12 @@ export class SimbaConfig {
         SimbaConfig.log.debug(":: EXIT :");
     }
 
+    /**
+     * looks for SIMBA_API_BASE_URL in env vars
+     * first looks in local project (.simbachain.env, simbachain.env, .env)
+     * then looks in SIMBA_HOME location, iterating through those same file names
+     * @returns {string | void}
+     */
     private static retrieveBaseAPIURLFromEnvVars(): string | void {
         // first check local project
         SimbaConfig.log.debug(":: ENTER :");
@@ -221,6 +238,10 @@ export class SimbaConfig {
         SimbaConfig.log.debug(":: EXIT :");
     }
 
+    /**
+     * checks simba.json first, then looks for env vars
+     * @returns {string}
+     */
     public static retrieveBaseAPIURL(): string {
         SimbaConfig.log.debug(":: ENTER :");
         let baseURL = this.retrieveBaseAPIURLFromConfigStore();
@@ -240,6 +261,21 @@ export class SimbaConfig {
         throw new Error(message);
     }
 
+    /**
+     * this method only gets called once, when a process first tries to retrieve an env var
+     * if SimbaConfig.envVars's values is zero length, then we call this method
+     * 
+     * The code is a bit convoluted, so here's the process:
+     * 1. iterate through file names of (.simbachain.env, simbachain.env, .env) in our project root
+     * 2. we then loop through each of our simba keys:"ID", "SECRET", "ENDPOINT", and "BASE_URL"
+     * 3. for each one of those keys, we iterate through possible keys that users can set, eg:
+     * `SIMBA_KEYCLOAK_ID`
+     * `SIMBA_AUTH_CLIENT_ID`,
+     * `SIMBA_PLUGIN_ID`,
+     * 4. once we have found a value for "ID", "SECRET", "ENDPOINT", and "BASE_URL", based on the above keys that users can actually set (in 3), we return them and set them as SimbaConfig.envVars
+     * 5. we then run through 1-4 again, but we use SIMBA_HOME instead of project root
+     * @returns {Promise<Record<any, any>>}
+     */
     public static async setEnvVars(): Promise<Record<any, any>> {
         SimbaConfig.log.debug(`:: ENTER :`);
         const authProviderInfo = await SimbaConfig.setAndGetAuthProviderInfo();
@@ -334,6 +370,17 @@ export class SimbaConfig {
         return SimbaConfig.envVars;
     }
 
+    /**
+     * retrieves value for env var key. checks different key iterations that users are allowed to set,
+     * so for "ID", we would check for:
+     * `SIMBA_KEYCLOAK_ID`
+     * `SIMBA_AUTH_CLIENT_ID`,
+     * `SIMBA_PLUGIN_ID`,
+     * 
+     * if SimbaConfig.envVars values has zero length, we first call SimbaConfig.setEnvVars
+     * @param envVarKey
+     * @returns 
+     */
     public static async retrieveEnvVar(envVarKey: EnvVariableKeys): Promise<string | void> {
         let envVars;
         if (!Object.values(SimbaConfig.envVars).length) {
@@ -375,6 +422,14 @@ export class SimbaConfig {
         return val;
     }
 
+    /**
+     * this method is used in the plugins to reset simba.json, but with more control over what exactly gets reset
+     * @param previousSimbaJson 
+     * @param newOrg 
+     * @param forceReset - basically wipes all of simba.json if true, dependent on value of keepOrgAndApp
+     * @param keepOrgAndApp 
+     * @returns 
+     */
     public static resetSimbaJson(
         previousSimbaJson: Record<any, any>,
         newOrg?: string | Record<any, any> | unknown,
@@ -442,6 +497,10 @@ export class SimbaConfig {
         }
     }
 
+    /**
+     * used to delete field in simba.json
+     * @param key 
+     */
     public static deleteSimbaJsonField(key: string) {
         SimbaConfig.log.debug(`:: ENTER : key : ${key}`)
         if (this.ProjectConfigStore.get(key)) {
@@ -457,6 +516,9 @@ export class SimbaConfig {
         SimbaConfig.deleteSimbaJsonField(key);
     }
 
+    /**
+     * deletes authProviderInfo in simba.json
+     */
     public static deleteAuthProviderInfo() {
         SimbaConfig.log.debug(`:: ENTER :`);
         const key = "authProviderInfo";
@@ -467,6 +529,10 @@ export class SimbaConfig {
         SimbaConfig.deleteAuthProviderInfo();
     }
 
+    /**
+     * retrieves and sets authProviderInfo in simba.json, based on our baseAPI (or SIMBA)AUTH_CLIENT_ID or other iteration of key)
+     * @returns {Promise<any>}
+     */
     public static async setAndGetAuthProviderInfo(): Promise<any> {
         SimbaConfig.log.debug(`:: ENTER :`);
         if (!SimbaConfig.ProjectConfigStore.get("authProviderInfo")) {
@@ -502,8 +568,8 @@ export class SimbaConfig {
     }
 
     /**
-     * currently an instance of KeycloakHandler, but code can be amended
-     * to be different kind of authStore once supported
+     * currently only returns KeycloakHandler, since we no longer use AzureHandler for auth
+     * @returns {Promise<KeycloakHandler | AzureHandler | null>}
      */
     public static async authStore(): Promise<KeycloakHandler | AzureHandler | null> {
         SimbaConfig.log.debug(`:: ENTER :`)
@@ -547,6 +613,11 @@ export class SimbaConfig {
         return await SimbaConfig.authStore();
     }
 
+    /**
+     * if user has modified build, contract, artifact directory for their project,
+     * then it grabs these and returns them from simba.json
+     * @returns {Record<any, any>}
+     */
     public static allDirs(): Record<any, any> {
         SimbaConfig.log.debug(`:: ENTER :`);
         const dirs = {
@@ -564,6 +635,9 @@ export class SimbaConfig {
         return SimbaConfig.allDirs();
     }
 
+    /**
+     * prints chalked directories
+     */
     public static printChalkedDirs(): void {
         SimbaConfig.log.debug(`:: ENTER :`);
         SimbaInfo.printChalkedObject(SimbaConfig.allDirs(), "simba directories");
@@ -577,7 +651,8 @@ export class SimbaConfig {
     }
 
     /**
-     * to determine where compiled contracts are stored
+     * to determine where compiled contracts are stored, based on web3Suite (hardhat, truffle, etc.)
+     * @returns {string}
      */
     public static get artifactDirectory(): string {
         SimbaConfig.log.debug(":: ENTER :");
@@ -608,6 +683,12 @@ export class SimbaConfig {
         return SimbaConfig.artifactDirectory;
     }
 
+    /**
+     * allows user to override default directories for build, contract, artifact, etc.
+     * @param dirName 
+     * @param dirPath 
+     * @returns {void}
+     */
     public static setDirectory(dirName: AllDirs, dirPath: string): void {
         const entryParams = {
             dirName,
@@ -645,6 +726,9 @@ export class SimbaConfig {
         return;
     }
 
+    /**
+     * setter for artifactDirectory in simba.json
+     */
     public static set artifactDirectory(dirPath: string) {
         SimbaConfig.log.debug(`:: ENTER : dirPath : ${dirPath}`);
         if (dirPath === "reset") {
@@ -677,6 +761,10 @@ export class SimbaConfig {
         return SimbaConfig.buildInfoDirectory;
     }
 
+    /**
+     * getter for buildDirectory
+     * @returns {string}
+     */
     public static get buildDirectory(): string {
         SimbaConfig.log.debug(":: ENTER :");
         let buildDir = this.ProjectConfigStore.get("buildDirectory");
@@ -691,6 +779,9 @@ export class SimbaConfig {
         return SimbaConfig.buildDirectory;
     }
 
+    /**
+     * setter for buildDirectory in simba.json
+     */
     public static set buildDirectory(dirPath: string) {
         SimbaConfig.log.debug(`:: ENTER : dirPath : ${dirPath}`);
         if (dirPath.toLowerCase() === "reset") {
@@ -712,7 +803,8 @@ export class SimbaConfig {
     }
 
     /**
-     * not used in standard flow
+     * getter for contractDirectory
+     * Not used in standard flow, since users shouldn't typically modify this value
      */
     public static get contractDirectory(): string {
         let contractDir = this.ProjectConfigStore.get("contractDirectory");
@@ -731,6 +823,9 @@ export class SimbaConfig {
         return SimbaConfig.contractDirectory;
     }
 
+    /**
+     * setter for contractDirectory in simba.json
+     */
     public static set contractDirectory(dirPath: string) {
         SimbaConfig.log.debug(`:: ENTER : dirPath : ${dirPath}`);
         if (dirPath.toLowerCase() === "reset") {
@@ -753,6 +848,7 @@ export class SimbaConfig {
 
     /**
      * this is what we use for logging throughout our plugins
+     * @returns {Logger}
      */
     public static get log(): Logger {
         const logLevel = SimbaConfig.logLevel;
@@ -766,6 +862,7 @@ export class SimbaConfig {
 
     /**
      * how we get loglevel throughout our plugins
+     * @returns {LogLevel}
      */
     public static get logLevel(): LogLevel {
         let logLevel = this.ProjectConfigStore.get('logLevel') ? 
@@ -798,7 +895,7 @@ export class SimbaConfig {
     }
 
     /**
-     * view organisation from our simba.json
+     * getter for organisation from our simba.json
      */
     public static get organisation(): any {
         const org = this.ProjectConfigStore.get('organisation') ? this.ProjectConfigStore.get('organisation') : this.ProjectConfigStore.get('organization');
@@ -809,6 +906,9 @@ export class SimbaConfig {
         return SimbaConfig.organisation;
     }
 
+    /**
+     * setter for organisation in simba.json
+     */
     public static set organisation(org: any) {
         this.ProjectConfigStore.set('organisation', org);
     }
@@ -818,7 +918,8 @@ export class SimbaConfig {
     }
 
     /**
-     * view application from our simba.json
+     * getter for simba.json in simba.json
+     * @returns {any}
      */
     public static get application(): any {
         return this.ProjectConfigStore.get('application');
@@ -828,6 +929,9 @@ export class SimbaConfig {
         return SimbaConfig.application;
     }
 
+    /**
+     * setter for application in simba.json
+     */
     public static set application(app: any) {
         this.ProjectConfigStore.set('application', app);
     }
