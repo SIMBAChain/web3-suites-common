@@ -4,6 +4,7 @@
 3. [Running Tests](#running-tests)
 4. [Hardhat Tests](#hardhat-tests)
 5. [Truffle Tests](#truffle-tests)
+6. [Tests With Coverage](#tests-with-coverage)
 
 ## Summary
 The tests are currently broken down into 4 sections: auth_store, utils, hardhat, and truffle. The auth_store tests are meant to test the KeycloakHandler and AzureHandler, but AzureHandler is being phased out as of this writing. The utils tests test util functions. The bulk of the tests live in truffle and hardhat, and they are meant to test the functionality of web3-suites inside of a hardhat or truffle project.
@@ -45,7 +46,7 @@ npm run all_clean_tests
 ```
 
 ## Hardhat Tests
-All clean Hardhat tests, run:
+All clean Hardhat tests:
 
 ```
 npm run hardhat_clean_test
@@ -64,7 +65,7 @@ npm run hardhat_clean_unit_test
 ```
 
 ### Truffle Tests
-All clean Truffle tests, run:
+All clean Truffle tests:
 
 ```
 npm run truffle_clean_test
@@ -82,3 +83,21 @@ All clean Truffle unit tests:
 npm run truffle_clean_unit_test
 ```
 
+### Tests With Coverage
+All tests with coverage:
+
+```
+npm run all_tests_with_coverage
+```
+
+All unit tests with coverage:
+
+```
+npm run all_unit_tests_with_coverage
+```
+
+All integration tests with coverage:
+
+```
+npm run all_integration_tests_with_coverage
+```
