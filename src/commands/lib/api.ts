@@ -40,7 +40,7 @@ export interface ASTAndOtherInfo {
 }
 
 /**
- * determines filename whether on mac or windows machine (this was an issue before)
+ * determines filename, whether on mac or windows machine
  * @param filePath 
  * @returns 
  */
