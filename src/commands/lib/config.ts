@@ -67,7 +67,7 @@ export const simbaEnvFilesArray = [
 const SIMBA_HOME = process.env.SIMBA_HOME || os.homedir();
 
 /**
- * tacks /auth onto end of baseurl for authinfo for AuthProviders.KEYCLOAKOAUTH2
+ * appends /auth onto end of baseurl for authinfo for AuthProviders.KEYCLOAKOAUTH2
  * @param authInfo 
  * @returns 
  */
@@ -918,7 +918,7 @@ export class SimbaConfig {
     }
 
     /**
-     * getter for simba.json in simba.json
+     * getter for application in simba.json
      * @returns {any}
      */
     public static get application(): any {

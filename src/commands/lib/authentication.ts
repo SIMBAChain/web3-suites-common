@@ -192,7 +192,7 @@ export class KeycloakHandler {
     }
 
     /**
-     * tells us whether a certian key exists in our configstore (authconfig.json)
+     * tells us whether a certain key exists in our configstore (authconfig.json)
      * @param key 
      * @returns 
      */
@@ -657,15 +657,15 @@ export class KeycloakHandler {
      * @returns {string}
      */
     public buildURL(
-        endopoint: string,
+        endpoint: string,
     ): string {
-        SimbaConfig.log.debug(`:: ENTER : ${endopoint}`);
-        if (endopoint.startsWith("http")) {
-            SimbaConfig.log.debug(`:: EXIT : ${endopoint}`);
-            return endopoint;
+        SimbaConfig.log.debug(`:: ENTER : ${endpoint}`);
+        if (endpoint.startsWith("http")) {
+            SimbaConfig.log.debug(`:: EXIT : ${endpoint}`);
+            return endpoint;
         }
         let baseURL = this.baseURL.endsWith("/") ? this.baseURL : this.baseURL + "/";
-        let modifiedExtension = endopoint.startsWith("/") ? endopoint.slice(1) : endopoint;
+        let modifiedExtension = endpoint.startsWith("/") ? endpoint.slice(1) : endpoint;
         const fullURL = baseURL + modifiedExtension;
         SimbaConfig.log.debug(`:: EXIT : ${fullURL}`);
         return fullURL;

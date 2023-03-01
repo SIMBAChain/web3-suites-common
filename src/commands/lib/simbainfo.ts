@@ -114,7 +114,7 @@ export class SimbaInfo {
     }
 
     /**
-     * prints chalked auth otken
+     * prints chalked auth token
      * @returns {void}
      */
     public static printAuthToken(): void {
@@ -126,7 +126,7 @@ export class SimbaInfo {
     }
 
     /**
-     * gets contracts_info from simaba.json
+     * gets contracts_info from simba.json
      * @returns {Record<any, any>}
      */
     private static getContractsInfo(): Record<any, any> {
