@@ -15,7 +15,7 @@ So a developer will not be exposed to the code contained in this module.
 
 ## Installation
 
-installation only needs to be performed by devs working on the @simbachain/truffle and @simbachain/hardhat plugins. For such installation, run:
+Installation only needs to be performed by devs working on the @simbachain/truffle and @simbachain/hardhat plugins. For such installation, run:
 
 ```
 $ npm install @simbachain/web3-suites
