@@ -59,7 +59,8 @@
     "all_integration_tests_with_coverage": "cd tests/tests_setup/clean && ts-node clean.ts && cd ../../hardhat/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' nyc mocha -r ts-node/register './integration/**/*.ts' && cd ../truffle/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' nyc mocha -r ts-node/register './integration/**/*.ts' && cd ../auth_store/keycloak_handler/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' nyc mocha -r ts-node/register './integration/**/*.ts' && cd ../../utils && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' nyc mocha -r ts-node/register './integration/**/*.ts'  && cd ../../tests_setup/clean/ && ts-node clean.ts"
   },
   "overrides": {
-    "@types/express-serve-static-core": "4.17.29"
+    "@types/express-serve-static-core": "4.17.30",
+    "@types/express": "4.17.13"
   },
   "dependencies": {
     "@types/bluebird": "3.5.36",

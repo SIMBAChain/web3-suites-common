@@ -14,7 +14,7 @@ describe('test getBlockchains', () => {
         await authStore!.performLogin(false);
         const blockChains = await getBlockchains(new SimbaConfig());
         expect(blockChains).to.exist;
-    }).timeout(30000);
+    }).timeout(60000);
 });
 
 describe('test getStorages', () => {

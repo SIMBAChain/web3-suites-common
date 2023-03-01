@@ -18,7 +18,7 @@ describe('test getBlockchains', () => {
             `/v2/organisations/${config.organisation.id}/blockchains/`,
             );
         expect(blockChains).to.exist;
-    }).timeout(30000);
+    }).timeout(60000);
 });
 
 describe('test getStorages', () => {

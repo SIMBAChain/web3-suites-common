@@ -7,7 +7,7 @@ import {
 
 /**
  * Returns data on contract name, version, and design_id
- * @return {Promise<any>}
+ * @returns {Promise<ContractDesignWithCode[] | void>}
  */
 export async function allContracts(): Promise<ContractDesignWithCode[] | void> {
     SimbaConfig.log.debug(`:: ENTER :`);

@@ -39,6 +39,11 @@ export interface ASTAndOtherInfo {
     contractSourceName?: string;
 }
 
+/**
+ * determines filename, whether on mac or windows machine
+ * @param filePath 
+ * @returns 
+ */
 export function WindowsOrMacFileName (filePath: string) {
     SimbaConfig.log.debug(`:: ENTER : ${filePath}`);
     const fileName = filePath.split('\\').pop()!.split('/').pop();
@@ -168,6 +173,7 @@ export const chooseOrganisationFromList = async (config: SimbaConfig, url?: stri
 };
 
 /**
+ * select SIMBA organisation from name
  * @param config
  * @param orgName 
  * @returns
@@ -213,21 +219,9 @@ export function parseBuildInfoJsonName(
     location: string,
 ): string {
     SimbaConfig.log.debug(`:: ENTER : ${location}`);
-    if (location.includes("/")) {
-        const idArr = location.split("/");
-        const jsonName = idArr[idArr.length-1];
-        SimbaConfig.log.debug(`:: EXIT : ${jsonName}`);
-        return jsonName;
-    }
-    if (location.includes("\\")) {
-        const idArr = location.split("\\");
-        const jsonName = idArr[idArr.length-1];
-        SimbaConfig.log.debug(`:: EXIT : ${jsonName}`);
-        return jsonName;
-    }
-    SimbaConfig.log.debug(`:: EXIT : ${location}`);
-    return location;
-
+    const fileName = WindowsOrMacFileName(location);
+    SimbaConfig.log.debug(`:: EXIT : ${fileName}`);
+    return fileName || location;
 }
 
 /**
@@ -516,6 +510,38 @@ export async function writeAndReturnASTAndOtherInfo(
 }
 
 /**
+ * Used for Hardhat, which stores AST separately from ABI
+ * @returns 
+ */
+export async function getABIForPrimaryContract() {
+    SimbaConfig.log.debug(`:: ENTER :`);
+    const contractName = SimbaConfig.ProjectConfigStore.get("primary");
+    if (!contractName) {
+        SimbaConfig.log.error(`${chalk.redBright('\nsimba: EXIT : no primary contract in simba.json')}`);
+        return "";
+    }
+    const buildDir = SimbaConfig.buildDirectory;
+    SimbaConfig.log.debug(`buildDir: ${buildDir}`);
+    const files = await walkDirForContracts(buildDir, ".json");
+    for (const file of files) {
+        SimbaConfig.log.debug(`:: file : ${JSON.stringify(file)}`);
+        const fileName = WindowsOrMacFileName(file);
+        if (fileName !== `${contractName}.json`) {
+            continue;
+        }
+        const buf = await promisifiedReadFile(file, {flag: 'r'});
+        const parsed = JSON.parse(buf.toString());
+        const abi = parsed.abi;
+        SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(abi)}`);
+        return abi;
+    }
+    SimbaConfig.log.debug(`:: no abi found for contract ${contractName}`);
+    SimbaConfig.log.debug(`:: EXIT :`);
+    return;
+}
+
+/**
+ * choose SIMBA application from application name
  * @param config 
  * @param id 
  * @returns 
@@ -607,8 +633,6 @@ export async function selectNewApplicationName(
 async function createApplicationForOrg(
     config: SimbaConfig,
 ): Promise<any> {
-    const entryParams = {config};
-
     const authStore = await config.authStore();
     const url = `v2/organisations/${config.organisation.id}/applications/`;
     const appName = await selectNewApplicationName(config);
@@ -795,39 +819,7 @@ export async function getStorages(
 };
 
 /**
- * Used for Hardhat, which stores AST separately from ABI
- * @returns 
- */
-export async function getABIForPrimaryContract(
-) {
-    SimbaConfig.log.debug(`:: ENTER :`);
-    const contractName = SimbaConfig.ProjectConfigStore.get("primary");
-    if (!contractName) {
-        SimbaConfig.log.error(`${chalk.redBright('\nsimba: EXIT : no primary contract in simba.json')}`);
-        return "";
-    }
-    const buildDir = SimbaConfig.buildDirectory;
-    SimbaConfig.log.debug(`buildDir: ${buildDir}`);
-    const files = await walkDirForContracts(buildDir, ".json");
-    for (const file of files) {
-        SimbaConfig.log.debug(`:: file : ${JSON.stringify(file)}`);
-        const fileName = WindowsOrMacFileName(file);
-        if (fileName !== `${contractName}.json`) {
-            continue;
-        }
-        const buf = await promisifiedReadFile(file, {flag: 'r'});
-        const parsed = JSON.parse(buf.toString());
-        const abi = parsed.abi;
-        SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(abi)}`);
-        return abi;
-    }
-    SimbaConfig.log.debug(`:: no abi found for contract ${contractName}`);
-    SimbaConfig.log.debug(`:: EXIT :`);
-    return;
-}
-
-/**
- * helper function for getting constructor
+ * gets field from primary contract (in simba.json) ABI
  * @param name 
  * @returns 
  */

@@ -93,8 +93,6 @@ interface ClientCredsToken {
 
 /**
  * This class handles our login for keycloak device login
- * In the future, when we decide to introduce other auth flows,
- * then we should have a similar class for other auth flows
  */
 export class KeycloakHandler {
     private config: Configstore;
@@ -120,7 +118,7 @@ export class KeycloakHandler {
     }
 
     /**
-     * To be compatible with AzureHandler
+     * handles login
      */
     public async performLogin(
         interactive: boolean = true,
@@ -146,6 +144,8 @@ export class KeycloakHandler {
 
     /**
      * self explanatory
+     * this method does not necessarily serve a big purpose right now,
+     * may want to remove in future
      * @param status 
      */
     public setLoggedInStatus(status: boolean): void {
@@ -170,7 +170,7 @@ export class KeycloakHandler {
     }
 
     /**
-     * deletes our auth info
+     * deletes our auth info / auth token in authconfig.json
      */
     public async logout(): Promise<void> {
         SimbaConfig.log.debug(`:: ENTER :`);
@@ -181,7 +181,7 @@ export class KeycloakHandler {
     }
 
     /**
-     * deletes auth info
+     * deletes auth info in authconfig.json
      */
     protected deleteAuthInfo(): void {
         SimbaConfig.log.debug(`:: ENTER :`);
@@ -192,17 +192,7 @@ export class KeycloakHandler {
     }
 
     /**
-     * not currently used
-     * @returns 
-     */
-    protected getPathToConfigFile(): string {
-        SimbaConfig.log.debug(`:: ENTER :`);
-        SimbaConfig.log.debug(`:: EXIT :`);
-        return this.config.path;
-    }
-
-    /**
-     * tells us whether a certian key exists in our configstore
+     * tells us whether a certain key exists in our configstore (authconfig.json)
      * @param key 
      * @returns 
      */
@@ -218,7 +208,7 @@ export class KeycloakHandler {
     }
 
     /**
-     * return config from configstore
+     * return value for key from configstore (authconfig.json)
      * @param key 
      * @returns 
      */
@@ -239,7 +229,7 @@ export class KeycloakHandler {
     }
 
     /**
-     * pertains to configstore
+     * pertains to configstore (authconfig.json)
      * @param key 
      * @param value 
      * @returns 
@@ -260,7 +250,7 @@ export class KeycloakHandler {
     }
 
     /**
-     * sets config in configstore
+     * sets key/value in configstore (authconfig.json)
      * @param key 
      * @param value 
      * @returns 
@@ -279,7 +269,7 @@ export class KeycloakHandler {
     }
 
     /**
-     * deletes config in configstore
+     * deletes keyu, value in configstore (authconfig.json)
      * @param key 
      * @returns 
      */
@@ -299,6 +289,12 @@ export class KeycloakHandler {
         SimbaConfig.log.debug(`:: EXIT :`);
     }
 
+    /**
+     * uses expires_in from authtoken to create more human readable version,
+     * as well as expires_at
+     * @param auth 
+     * @returns 
+     */
     public parseExpiry(auth: any): any {
         if ('expires_in' in auth) {
             const retrievedAt = new Date();
@@ -315,6 +311,10 @@ export class KeycloakHandler {
         return auth;
     }
 
+    /**
+     * retrieves auth token using client creds, sets authtoken in authconfig.json
+     * @returns 
+     */
     public async getAndSetAuthTokenFromClientCreds(): Promise<any> {
         SimbaConfig.log.debug(`:: ENTER :`);
         const clientID = await SimbaConfig.retrieveEnvVar(EnvVariableKeys.ID);
@@ -550,7 +550,7 @@ export class KeycloakHandler {
 
     /**
      * refresh auth token using refresh token
-     * @returns 
+     * @returns {Promise<KeycloakAccessToken | ClientCredsToken | void>}
      */
     public async refreshToken(): Promise<KeycloakAccessToken | ClientCredsToken | void> {
         SimbaConfig.log.debug(`:: ENTER :`);
@@ -592,8 +592,9 @@ export class KeycloakHandler {
     }
 
     /**
-     * self explanatory
-     * @param refreshing 
+     * used for both client creds and device login
+     * @param refreshing specifies whether just refreshing
+     * @param interactive device login if true, client creds if false
      * @returns 
      */
     public async loginAndGetAuthToken(
@@ -629,7 +630,7 @@ export class KeycloakHandler {
 
     /**
      * returns headers with access token
-     * @returns 
+     * @returns {Promise<Record<any, any> | void>}
      */
     public async accessTokenHeader(): Promise<Record<any, any> | void> {
         SimbaConfig.log.debug(`:: ENTER :`);
@@ -651,32 +652,32 @@ export class KeycloakHandler {
     }
 
     /**
-     * combines URL paths while checking for "v2" at end of first path, since this is a common mistake (double v2s)
+     * creates full url given our baseURL and an endpoint, while handling redundant "/"
      * @param urlExtension 
-     * @returns 
+     * @returns {string}
      */
     public buildURL(
-        urlExtension: string,
+        endpoint: string,
     ): string {
-        SimbaConfig.log.debug(`:: ENTER : ${urlExtension}`);
-        if (urlExtension.startsWith("http")) {
-            SimbaConfig.log.debug(`:: EXIT : ${urlExtension}`);
-            return urlExtension;
+        SimbaConfig.log.debug(`:: ENTER : ${endpoint}`);
+        if (endpoint.startsWith("http")) {
+            SimbaConfig.log.debug(`:: EXIT : ${endpoint}`);
+            return endpoint;
         }
         let baseURL = this.baseURL.endsWith("/") ? this.baseURL : this.baseURL + "/";
-        let modifiedExtension = urlExtension.startsWith("/") ? urlExtension.slice(1) : urlExtension;
+        let modifiedExtension = endpoint.startsWith("/") ? endpoint.slice(1) : endpoint;
         const fullURL = baseURL + modifiedExtension;
         SimbaConfig.log.debug(`:: EXIT : ${fullURL}`);
         return fullURL;
     }
 
     /**
-     * make get request. uses axios library
+     * make get request. currently uses Axios
      * @param url 
      * @param contentType 
      * @param _queryParams 
-     * @param _buildURL 
-     * @returns 
+     * @param _buildURL - builds url using baseURL and url if true
+     * @returns {Promise<Record<any, any> | Error | void>}
      */
     public async doGetRequest(
         url: string,
@@ -792,8 +793,8 @@ export class KeycloakHandler {
      * @param url 
      * @param _postData 
      * @param contentType 
-     * @param _buildURL 
-     * @returns 
+     * @param _buildURL - builds url using baseURL and url if true
+     * @returns {Promise<Record<any, any> | void>}
      */
     public async doPostRequest(
         url: string,
@@ -809,8 +810,8 @@ export class KeycloakHandler {
      * @param url
      * @param _postData
      * @param contentType
-     * @param _buildURL
-     * @returns
+     * @param _buildURL - builds url using baseURL and url if true
+     * @returns {Promise<Record<any, any> | void>}
      */
     public async doPutRequest(
         url: string,
@@ -827,8 +828,8 @@ export class KeycloakHandler {
      * @param url
      * @param _postData
      * @param contentType
-     * @param _buildURL
-     * @returns
+     * @param _buildURL - builds url using baseURL and url if true
+     * @returns {Promise<Record<any, any> | void>}
      */
     async doPutPostRequest(
         method: string,
@@ -942,6 +943,13 @@ export class KeycloakHandler {
         }
     }
 
+    /**
+     * 
+     * @param url 
+     * @param contentType 
+     * @param _buildURL - builds url using baseURL and url if true
+     * @returns {Promise<Record<any, any> | void>}
+     */
     async doDeleteRequest(
         url: string,
         contentType?: string,
@@ -1044,6 +1052,10 @@ export class KeycloakHandler {
     }
 }
 
+/**
+ * we will be ripping AzureHandler out of the codebase soon, since we no
+ * longer use Azure for auth.
+ */
 export class AzureHandler {
     private readonly closeTimeout: number = 5 * 1000;
     private port = 22315;

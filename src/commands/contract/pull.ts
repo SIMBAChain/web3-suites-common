@@ -17,8 +17,10 @@ import {
 } from "../lib/authentication";
 
 /**
- * syncs contractX saved in simbachain.com with contractX in your project directory
- * @param {Promise<void>} designID 
+ * pull contract design from blocks to local project, based on designID
+ * @param designID 
+ * @param useSimbaPath - if true, then we write to contracts/simbaimports
+ * @param absPaths - absolute paths for contracts
  */
 export async function pullContractFromDesignId(
     designID: string,
@@ -55,6 +57,12 @@ export async function pullContractFromDesignId(
     }
 }
 
+/**
+ * pull contract design (.sol file) from blocks to local project's contracts
+ * @param contractDesign 
+ * @param useSimbaPath 
+ * @param absPaths 
+ */
 export async function pullContractFromContractDesign(
     contractDesign: ContractDesignWithCode,
     useSimbaPath: boolean = true,
@@ -76,6 +84,13 @@ export async function pullContractFromContractDesign(
     SimbaConfig.log.debug(`:: EXIT :`);
 }
 
+/**
+ * pull contract designs (.sol files) interactively from prompts, from blocks to local project's contracts
+ * @param contractDesignArray 
+ * @param useSimbaPath 
+ * @param absPaths 
+ * @returns 
+ */
 export async function pullContractsInteractive(
     contractDesignArray?: ContractDesignWithCode[],
     useSimbaPath: boolean = true,
@@ -152,6 +167,12 @@ export async function pullContractsInteractive(
     }
 }
 
+/**
+ * pull most recent design pattern (.sol file) from blocks to local project's contracts, for each design pattern in org
+ * @param contractDesigns 
+ * @param useSimbaPath 
+ * @param absPaths 
+ */
 export async function pullAllMostRecentContracts(
     contractDesigns: ContractDesignWithCode[],
     useSimbaPath: boolean = true,
@@ -176,6 +197,10 @@ export async function pullAllMostRecentContracts(
     SimbaConfig.log.debug(`:: EXIT :`);
 }
 
+/**
+ * pull source code from blocks to simba.json
+ * @param contractDesign 
+ */
 export function pullSourceCodeForSimbaJson(contractDesign: ContractDesignWithCode): void {
     SimbaConfig.log.debug(`:: ENTER :`);
     const contractsInfo: Record<any, any> = SimbaConfig.ProjectConfigStore.get("contracts_info") ?
@@ -192,6 +217,12 @@ export function pullSourceCodeForSimbaJson(contractDesign: ContractDesignWithCod
     SimbaConfig.log.debug(`:: EXIT :`);
 }
 
+/**
+ * writes most recent source code to simba.json for each contract design in org
+ * this is important because the way we decide which contracts to export during
+ * contract export is by comparing source code in simba.json to our compiled/build code
+ * @param contractDesigns 
+ */
 export function pullAllMostRecentSourceCodeForSimbaJson(contractDesigns: ContractDesignWithCode[]): void {
     SimbaConfig.log.debug(`:: ENTER :`);
     SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: now pulling source code ---> simba.json`)}`);
@@ -208,6 +239,14 @@ export function pullAllMostRecentSourceCodeForSimbaJson(contractDesigns: Contrac
     SimbaConfig.log.debug(`:: EXIT :`);
 }
 
+/**
+ * pulls contract design (.sol file) from blocks to local project for single contract
+ * @param contractName 
+ * @param contractDesignArray 
+ * @param useSimbaPath 
+ * @param absPaths 
+ * @returns 
+ */
 export async function pullMostRecentRecentSolFileFromContractName(
     contractName: string,
     contractDesignArray: ContractDesignWithCode[] | null = null,
@@ -239,6 +278,12 @@ export async function pullMostRecentRecentSolFileFromContractName(
     }
 }
 
+/**
+ * updates source code in simba.json for individual contract
+ * @param contractName 
+ * @param contractDesignArray 
+ * @returns 
+ */
 export async function pullMostRecentSourceCodeFromContractName(
     contractName: string,
     contractDesignArray?: ContractDesignWithCode[] | null,
@@ -263,6 +308,14 @@ export async function pullMostRecentSourceCodeFromContractName(
     }
 }
 
+/**
+ * pulls source code to simba.json and .sol file to local contracts
+ * @param contractName 
+ * @param contractDesignArray 
+ * @param useSimbaPath 
+ * @param absPaths 
+ * @returns 
+ */
 export async function pullMostRecentFromContractName(
     contractName: string,
     contractDesignArray?: ContractDesignWithCode[],
@@ -290,6 +343,16 @@ export async function pullMostRecentFromContractName(
     }
 }
 
+/**
+ * pulls contract designs (.sol files) to local project's contracts,
+ * and also pulls most recent source code to simba.json, from blocks
+ * @param pullSourceCodeFiles 
+ * @param pullSolFiles 
+ * @param interactive 
+ * @param useSimbaPath 
+ * @param absPaths 
+ * @returns 
+ */
 export async function pullAllMostRecentSolFilesAndSourceCode(
     pullSourceCodeFiles: boolean = true,
     pullSolFiles: boolean = false,
