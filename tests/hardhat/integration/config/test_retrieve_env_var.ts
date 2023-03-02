@@ -10,16 +10,16 @@ describe('tests retrieveEnvVar', () => {
         // for this test, you need to have env vars set for:
             // SIMBA_AUTH_CLIENT_ID
             // SIMBA_AUTH_CLIENT_SECRET
-        const IDFromMethod = await SimbaConfig.retrieveEnvVar(EnvVariableKeys.ID);
+        const IDFromMethod = SimbaConfig.retrieveEnvVar(EnvVariableKeys.ID);
         // dev is now using keycloak
         const IDFromEnv = process.env.SIMBA_AUTH_CLIENT_ID;
         expect(IDFromMethod).to.equal(IDFromEnv);
 
-        const secretFromMethod = await SimbaConfig.retrieveEnvVar(EnvVariableKeys.SECRET);
+        const secretFromMethod = SimbaConfig.retrieveEnvVar(EnvVariableKeys.SECRET);
         const secretFromEnv = process.env.SIMBA_AUTH_CLIENT_SECRET;
         expect(secretFromMethod).to.equal(secretFromEnv);
 
-        const authEndpointFromMethod = await SimbaConfig.retrieveEnvVar(EnvVariableKeys.AUTHENDPOINT);
+        const authEndpointFromMethod = SimbaConfig.retrieveEnvVar(EnvVariableKeys.AUTHENDPOINT);
         const authEndpointFromEnv = process.env.SIMBA_AUTH_CLIENT_ENDPOINT;
         expect(authEndpointFromMethod).to.equal(authEndpointFromEnv);
     }).timeout(20000);
