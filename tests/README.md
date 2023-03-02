@@ -28,7 +28,7 @@ SIMBA_AUTH_CLIENT_ID=<your client ID created for org brendan_birch_simbachain_co
 SIMBA_AUTH_CLIENT_SECRET=<your client secret created for org brendan_birch_simbachain_com in demo env>
 ```
 
-for KeycloakHandler integration tests (tests/auth_store/keycloak_handler/integration/), you will also need to havea  .simbachain.env file set, since keycloakHandler gathers an auth token before doing any requests. You can use either the demo or the dev env credentials that you used above for Truffle and Hardhat. So your .simbachain.env file can look like either of:
+for KeycloakHandler integration tests (tests/auth_store/keycloak_handler/integration/), you will also need to have a .simbachain.env file set, since keycloakHandler gathers an auth token before doing any requests. You can use either the demo or the dev env credentials that you used above for Truffle and Hardhat. So your .simbachain.env file can look like either of:
 
 ```
 SIMBA_API_BASE_URL=https://simba-dev-api.platform.simbachain.com/
