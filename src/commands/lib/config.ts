@@ -280,8 +280,8 @@ export class SimbaConfig {
         // the following shouldn't need to be changed
         // has to do with whether authendpoint should be configured, but
         // for now this is fine
-        foundKeys.push(EnvVariableKeys.AUTHENDPOINT);
-        SimbaConfig.envVars[EnvVariableKeys.AUTHENDPOINT] = "/o/";
+        foundKeys.push("SIMBA_AUTH_CLIENT_ENDPOINT");
+        SimbaConfig.envVars["SIMBA_AUTH_CLIENT_ENDPOINT"] = "/o/";
 
         // first iterate through local project
             // through each file name
