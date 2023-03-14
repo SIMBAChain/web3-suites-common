@@ -922,7 +922,7 @@ export class KeycloakHandler {
                     {
                         const detail = error.response.data.errors[0].detail;
                         const version = detail.split("version")[1];
-                        const message = `\nsimba: you are attempting to export a contract that uses solc compiler version ${version}, which is not supported. Please switch your solc compiler to a supported version. This likely includes updating your compiler version in the contract source code, as well as configuring the compiler that your project is using.\n`;
+                        const message = `\nsimba: you are attempting to export a contract that uses solc compiler version ${version}, which is not supported. Please switch your solc compiler to a supported version. This likely includes updating your compiler version in the contract source code, as well as configuring the compiler that your project is using. Please navigate to the following URL for supported versions of Solidity: https://simba-chain.gitbook.io/documentation/faq/faq#supported-versions\n`;
                         SimbaConfig.log.error(`${chalk.redBright(`${message}`)}`);
                         throw new Error(message);
                     }
