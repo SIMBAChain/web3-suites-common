@@ -8,7 +8,7 @@ import * as CryptoJS from 'crypto-js';
 import {default as chalk} from 'chalk';
 import {Request, default as polka} from 'polka';
 import * as request from 'request-promise';
-import axios, {AxiosResponse} from "axios";
+import axios, {AxiosResponse, AxiosError} from "axios";
 import * as fs from 'fs';
 import * as path from 'path';
 import * as http from "http";
@@ -911,7 +911,21 @@ export class KeycloakHandler {
                 } else {
                     SimbaConfig.log.error(`${chalk.redBright(`\nsimba: ${JSON.stringify(error)}`)}`);
                 }
-                SimbaConfig.log.debug(`err: ${JSON.stringify(error)}`);
+                SimbaConfig.log.debug(`simba: ${JSON.stringify(error)}`);
+                if (
+                    axios.isAxiosError(error) &&
+                    error.response &&
+                    error.response.data &&
+                    error.response.data.errors &&
+                    error.response.data.errors[0].detail &&
+                    error.response.data.errors[0].detail.includes("unsupported version")) 
+                    {
+                        const detail = error.response.data.errors[0].detail;
+                        const version = detail.split("version")[1];
+                        const message = `\nsimba: you are attempting to export a contract that uses solc compiler version ${version}, which is not supported. Please switch your solc compiler to a supported version. This likely includes updating your compiler version in the contract source code, as well as configuring the compiler that your project is using.\n`;
+                        SimbaConfig.log.error(`${chalk.redBright(`${message}`)}`);
+                        throw new Error(message);
+                    }
                 if (axios.isAxiosError(error) && error.response && error.response.status === 401)  {
                     SimbaConfig.log.debug(`:: received 401 response, attempting to refresh token`);
                     // if 401 from Simba, then try refreshing token.
