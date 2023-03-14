@@ -90,16 +90,18 @@ export class SimbaInfo {
             return null;
         }
         const authInfo = authConfig[configBase];
-        if (authInfo.SIMBAAUTH.access_token) {
-            authInfo.SIMBAAUTH.access_token = "*****";
-        }
-        if (authInfo.SIMBAAUTH.refresh_token) {
-            authInfo.SIMBAAUTH.refresh_token = "*****"
-        }
         if (!authInfo) {
             SimbaConfig.log.debug(`:: no auth info set for ${configBase} in authconfig.json`);
             SimbaConfig.log.debug(`:: EXIT :`);
             return null;
+        }
+        if (authInfo.SIMBAAUTH){
+            if (authInfo.SIMBAAUTH.access_token) {
+                authInfo.SIMBAAUTH.access_token = "*****";
+            }
+            if (authInfo.SIMBAAUTH.refresh_token) {
+                authInfo.SIMBAAUTH.refresh_token = "*****"
+            }
         }
         if (key) {
             const val = authInfo[key] !== undefined ?
