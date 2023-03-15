@@ -12,7 +12,6 @@ import * as os from "os";
 import Configstore from 'configstore';
 import {
     KeycloakHandler,
-    AzureHandler,
     AuthProviders,
     authErrors,
 } from './authentication';
@@ -116,7 +115,7 @@ export class SimbaConfig {
     // Project config, such as app ID, etc
     public static _projectConfigStore: Configstore;
     public static help = false;
-    public static _authStore: KeycloakHandler | AzureHandler;
+    public static _authStore: KeycloakHandler;
     public static _application: any;
     public static _organisation: any;
     public static _build_directory: string;
@@ -524,10 +523,10 @@ export class SimbaConfig {
     }
 
     /**
-     * currently only returns KeycloakHandler, since we no longer use AzureHandler for auth
-     * @returns {Promise<KeycloakHandler | AzureHandler | null>}
+     * currently only returns KeycloakHandler, since we no longer use AzureHandler
+     * @returns {Promise<KeycloakHandler | null>}
      */
-    public static async authStore(): Promise<KeycloakHandler | AzureHandler | null> {
+    public static async authStore(): Promise<KeycloakHandler | null> {
         SimbaConfig.log.debug(`:: ENTER :`)
         if (!this._authStore) {
             SimbaConfig.log.debug(`${chalk.cyanBright(`\nsimba: instantiating new authStore`)}`);
@@ -550,10 +549,6 @@ export class SimbaConfig {
                     this._authStore = new KeycloakHandler(this._configStore, this._projectConfigStore);
                     break; 
                 }
-                case AuthProviders.AZUREB2C: {
-                    this._authStore = new AzureHandler(this._configStore, this._projectConfigStore);
-                    break;
-                }
                 default: { 
                    SimbaConfig.log.error(`${chalk.redBright(`\nsimba: a valid auth provider was not found. Deleting authProviderInfo from simba.json. Please make sure your SIMBA_API_BASE_URL is properly configured.`)}`);
                    SimbaConfig.deleteAuthProviderInfo();
@@ -565,7 +560,7 @@ export class SimbaConfig {
         return this._authStore;
     }
 
-    public async authStore(): Promise<KeycloakHandler | AzureHandler | null> {
+    public async authStore(): Promise<KeycloakHandler | null> {
         return await SimbaConfig.authStore();
     }
 
