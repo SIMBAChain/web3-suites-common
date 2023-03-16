@@ -32,6 +32,8 @@ jobs:
         echo SIMBA_API_BASE_URL=https://simba-dev-api.platform.simbachain.com/ >> .simbachain.env
         echo SIMBA_AUTH_CLIENT_ID=test_client_id >> .simbachain.env
         echo SIMBA_AUTH_CLIENT_SECRET=test_secret >> .simbachain.env
+    - run: pwd
+    - run: ls -a
     - run: cat .simbachain.env
     - run: npm install
     - run: npm run all_unit_tests_with_coverage
