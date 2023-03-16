@@ -97,7 +97,7 @@ describe('testing discoverAndSetWeb3Suites', () => {
         try {
             discoverAndSetWeb3Suite();
         } catch (error) {
-            expect(error.message).to.equal("It looks like you do not have a hardhat or truffle config file present in you project root. You need to make sure that you are using either a hardhat project or a truffle project. If you are using a hardhat project, you will have a hardhat.config.ts/js file in your project root. If you are using a truffle project, you will have a truffle-config.js file in your project root.");
+            expect(error.message).to.equal("It looks like you do not have a hardhat or truffle config file present in your project root. You need to make sure that you are using either a hardhat project or a truffle project. If you are using a hardhat project, you will have a hardhat.config.ts/js file in your project root. If you are using a truffle project, you will have a truffle-config.js file in your project root.");
         }
     });
 
