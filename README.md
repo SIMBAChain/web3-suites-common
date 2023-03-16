@@ -32,6 +32,3 @@ This project uses Configstore objects from the configstore library to manage aut
 
 ### Authentication and HTTP Requests
 Auth and HTTP requests are handled by SimbaConfig.authStore. SimbaConfig.authStore is actually instantiated by passing the SimbaConfig.ProjectConfigStore property and SimbaConfig.ConfigStore property. So the ProjectConfigStore and ConfigStore properties are the same for both SimbaConfig and SimbaConfig.authStore. In other words, SimbaConfig.authStore.projectConfig === SimbaConfig.ProjectConfigStore. Access / Auth tokens obtained by SimbaConfig.authStore are stored in SimbaConfig.ConfigStore (or SimbaConfig.authStore.configStore).
-
-### Note on AzureHandler
-Currently, Azure is being phased out as an auth service for SIMBA Chain. As such, the AzureHandler is not being used, so the tests for AzureHandler have been commented out. Once the AzureHandler has been fully removed from the code base for this project, the tests for AzureHandler should be removed as well.

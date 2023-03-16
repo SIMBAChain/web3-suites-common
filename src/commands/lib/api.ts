@@ -187,7 +187,7 @@ export async function chooseOrganisationFromName(
     const authStore = await config.authStore();
     if (authStore) {
         try {
-            const res = await authStore.doGetRequest(url);
+            const res = await authStore.doGetRequest(url) as Record<any, any>;
             SimbaConfig.log.info(`${chalk.cyanBright(`simba: logging in using organisation ${res.name}`)}`);
             SimbaConfig.log.debug(`:: EXIT : res : ${JSON.stringify(res)}`);
             SimbaConfig.organisation = res;
@@ -555,7 +555,7 @@ export async function chooseApplicationFromName(
     const authStore = await config.authStore();
     if (authStore) {
         try {
-            const res = await authStore.doGetRequest(url, 'application/json');
+            const res = await authStore.doGetRequest(url, 'application/json') as Record<any, any>;
             SimbaConfig.log.debug(`:: EXIT : ${JSON.stringify(res)}`);
             SimbaConfig.log.info(`${chalk.cyanBright(`simba: logging in using app ${res.name}`)}`);
             SimbaConfig.application = res;
