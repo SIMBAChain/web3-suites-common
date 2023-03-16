@@ -29,7 +29,7 @@ jobs:
         cache: 'npm'
     - run: |
         touch ./tests/hardhat/.simbachain.env
-        echo SIMBA_API_BASE_URL=${{ env.DEV_ENV_BASE_URL }} >> ./tests/hardhat/.simbachain.env
+        echo SIMBA_API_BASE_URL=https://simba-dev-api.platform.simbachain.com/ >> ./tests/hardhat/.simbachain.env
         echo SIMBA_AUTH_CLIENT_ID=${{ secrets.DEV_CLIENT_ID }} >> ./tests/hardhat/.simbachain.env
         echo SIMBA_AUTH_CLIENT_SECRET=${{ secrets.DEV_CLIENT_SECRET }} >> ./tests/hardhat/.simbachain.env
         touch ./tests/truffle/.simbachain.env
