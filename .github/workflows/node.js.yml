@@ -12,6 +12,11 @@ on:
 jobs:
   build:
 
+    defaults:
+      run:
+        working-directory: "./"
+
+
     runs-on: macos-latest
 
     strategy:
