@@ -9,7 +9,7 @@ import {
 } from "../../../../src/commands/contract";
 import {
     pullSourceCodeForSimbaJson
-} from "../../../../src/.."
+} from "../../../../src"
 import {
     allContracts,
 } from "../../../../src/commands/contract/list";
