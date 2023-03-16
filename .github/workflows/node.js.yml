@@ -36,6 +36,10 @@ jobs:
         echo SIMBA_API_BASE_URL=https://simba-demo-api.platform.simbachain.com/ >> ./tests/truffle/.simbachain.env
         echo SIMBA_AUTH_CLIENT_ID=${{ secrets.DEMO_CLIENT_SECRET }} >> ./tests/truffle/.simbachain.env
         echo SIMBA_AUTH_CLIENT_SECRET=${{ secrets.DEMO_CLIENT_SECRET }} >> ./tests/truffle/.simbachain.env
+        touch ./tests/auth_store/keycloak_handler/.simbachain.env
+        echo SIMBA_API_BASE_URL=https://simba-demo-api.platform.simbachain.com/ >> ./tests/auth_store/keycloak_handler/.simbachain.env
+        echo SIMBA_AUTH_CLIENT_ID=${{ secrets.DEMO_CLIENT_SECRET }} >> ./tests/auth_store/keycloak_handler/.simbachain.env
+        echo SIMBA_AUTH_CLIENT_SECRET=${{ secrets.DEMO_CLIENT_SECRET }} >> ./tests/auth_store/keycloak_handler/.simbachain.env
     - run: pwd
     - run: ls -a
     - run: cat tests/hardhat/.simbachain.env
