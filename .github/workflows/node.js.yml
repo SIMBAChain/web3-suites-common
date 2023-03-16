@@ -42,3 +42,4 @@ jobs:
     - run: cat tests/truffle/.simbachain.env
     - run: npm install
     - run: npm run all_unit_tests_with_coverage
+    - run: npm run all_integration_tests_with_coverage
