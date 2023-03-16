@@ -29,13 +29,13 @@ jobs:
         cache: 'npm'
     - run: |
         touch ./tests/hardhat/.simbachain.env
-        echo SIMBA_API_BASE_URL=https://simba-dev-api.platform.simbachain.com/ >> ./tests/hardhat/.simbachain.env
-        echo SIMBA_AUTH_CLIENT_ID=test_client_id >> ./tests/hardhat/.simbachain.env
-        echo SIMBA_AUTH_CLIENT_SECRET=test_secret >> ./tests/hardhat/.simbachain.env
+        echo SIMBA_API_BASE_URL=${{ env.DEV_ENV_BASE_URL }} >> ./tests/hardhat/.simbachain.env
+        echo SIMBA_AUTH_CLIENT_ID=${{ secrets.DEV_CLIENT_ID }} >> ./tests/hardhat/.simbachain.env
+        echo SIMBA_AUTH_CLIENT_SECRET=${{ secrets.DEV_CLIENT_SECRET }} >> ./tests/hardhat/.simbachain.env
         touch ./tests/truffle/.simbachain.env
-        echo SIMBA_API_BASE_URL=https://simba-demo-api.platform.simbachain.com/ >> ./tests/truffle/.simbachain.env
-        echo SIMBA_AUTH_CLIENT_ID=test_client_id >> ./tests/truffle/.simbachain.env
-        echo SIMBA_AUTH_CLIENT_SECRET=test_secret >> ./tests/truffle/.simbachain.env
+        echo SIMBA_API_BASE_URL=${{ env.DEMO_ENV_BASE_URL }} >> ./tests/truffle/.simbachain.env
+        echo SIMBA_AUTH_CLIENT_ID=${{ secrets.DEMO_CLIENT_SECRET }} >> ./tests/truffle/.simbachain.env
+        echo SIMBA_AUTH_CLIENT_SECRET=${{ secrets.DEMO_CLIENT_SECRET }} >> ./tests/truffle/.simbachain.env
     - run: pwd
     - run: ls -a
     - run: cat tests/hardhat/.simbachain.env
