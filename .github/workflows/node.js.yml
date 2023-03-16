@@ -20,19 +20,18 @@ jobs:
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
-    - name: 'Create env file'
-      run: |
-        touch .simbachain.env
-        echo SIMBA_API_BASE_URL=https://simba-dev-api.platform.simbachain.com/ >> .simbachain.env
-        echo SIMBA_AUTH_CLIENT_ID=test_client_id >> .simbachain.env
-        echo SIMBA_AUTH_CLIENT_SECRET=test_secret >> .simbachain.env
-        cat .simbachain.env
+
     - uses: actions/checkout@v3
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
+    - run: |
+        touch .simbachain.env
+        echo SIMBA_API_BASE_URL=https://simba-dev-api.platform.simbachain.com/ >> .simbachain.env
+        echo SIMBA_AUTH_CLIENT_ID=test_client_id >> .simbachain.env
+        echo SIMBA_AUTH_CLIENT_SECRET=test_secret >> .simbachain.env
     - run: cat .simbachain.env
     - run: npm install
     - run: npm run all_unit_tests_with_coverage
