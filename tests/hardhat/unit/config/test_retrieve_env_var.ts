@@ -11,8 +11,6 @@ describe('tests retrieveEnvVar', () => {
             // SIMBA_AUTH_CLIENT_ID
             // SIMBA_AUTH_CLIENT_SECRET
         const IDFromMethod = SimbaConfig.retrieveEnvVar(EnvVariableKeys.ID);
-        expect(IDFromMethod).to.equal("6lS6sae75lJx3m6KaCKKBbmxCkJM9g1aClrZtDtm");
-        // dev is now using keycloak
         const IDFromEnv = process.env.SIMBA_AUTH_CLIENT_ID;
         expect(IDFromMethod).to.equal(IDFromEnv);
 
