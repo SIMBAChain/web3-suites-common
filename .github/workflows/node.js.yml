@@ -33,5 +33,6 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
+    - run: cat .simbachain.env
     - run: npm install
     - run: npm run all_unit_tests_with_coverage
