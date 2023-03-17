@@ -47,8 +47,8 @@ export class FileHandler {
         try {
             fs.rmSync(filePath, { recursive: true });
         } catch (err) {
-            // the error message that appears just occurs when there is no file to delete
-            // so I'm deleting the printed error message
+            // the error message that appears just occurs when there is no file to delete,
+            // so no need to communicate error through printed message
         }
     }
 }
