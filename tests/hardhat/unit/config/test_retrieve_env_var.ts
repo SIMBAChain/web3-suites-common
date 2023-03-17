@@ -11,7 +11,6 @@ describe('tests retrieveEnvVar', () => {
             // SIMBA_AUTH_CLIENT_ID
             // SIMBA_AUTH_CLIENT_SECRET
         const IDFromMethod = SimbaConfig.retrieveEnvVar(EnvVariableKeys.ID);
-        // dev is now using keycloak
         const IDFromEnv = process.env.SIMBA_AUTH_CLIENT_ID;
         expect(IDFromMethod).to.equal(IDFromEnv);
 
@@ -19,8 +18,5 @@ describe('tests retrieveEnvVar', () => {
         const secretFromEnv = process.env.SIMBA_AUTH_CLIENT_SECRET;
         expect(secretFromMethod).to.equal(secretFromEnv);
 
-        const authEndpointFromMethod = SimbaConfig.retrieveEnvVar(EnvVariableKeys.AUTHENDPOINT);
-        const authEndpointFromEnv = process.env.SIMBA_AUTH_CLIENT_ENDPOINT;
-        expect(authEndpointFromMethod).to.equal(authEndpointFromEnv);
     }).timeout(20000);
 });

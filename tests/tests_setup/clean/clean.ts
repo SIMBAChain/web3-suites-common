@@ -3,7 +3,7 @@ import {
 } from "../file_handler";
 import {
     SimbaConfig,
-} from "../../.."
+} from "../../../src/"
 import * as path from 'path';
 import {cwd} from 'process';
 

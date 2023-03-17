@@ -47,7 +47,8 @@ export class FileHandler {
         try {
             fs.rmSync(filePath, { recursive: true });
         } catch (err) {
-            console.error(`Error while deleting ${filePath}.`);
+            // the error message that appears just occurs when there is no file to delete,
+            // so no need to communicate error through printed message
         }
     }
 }

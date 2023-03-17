@@ -11,7 +11,7 @@ import {
 const contractLib = require("../../../../src/commands/contract/list");
 import {
     pullSourceCodeForSimbaJson
-} from "../../../.."
+} from "../../../../src"
 import {
     FileHandler,
 } from "../../../tests_setup"
