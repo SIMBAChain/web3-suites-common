@@ -12,6 +12,8 @@ on:
 jobs:
   build:
 
+    timeout-minutes: 10
+
     defaults:
       run:
         working-directory: "./"
