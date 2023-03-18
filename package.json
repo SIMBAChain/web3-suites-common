@@ -58,10 +58,6 @@
     "all_unit_tests_with_coverage": "cd tests/tests_setup/clean && ts-node clean.ts && cd ../../hardhat/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' nyc mocha -r ts-node/register './unit/**/*.ts' && cd ../truffle/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' nyc mocha -r ts-node/register './unit/**/*.ts' && cd ../auth_store/keycloak_handler/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' nyc mocha -r ts-node/register './unit/**/*.ts' && cd ../../utils && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' nyc mocha -r ts-node/register './unit/**/*.ts'",
     "all_integration_tests_with_coverage": "cd tests/tests_setup/clean && ts-node clean.ts && cd ../../hardhat/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' nyc mocha -r ts-node/register './integration/**/*.ts' && cd ../truffle/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' nyc mocha -r ts-node/register './integration/**/*.ts' && cd ../auth_store/keycloak_handler/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' nyc mocha -r ts-node/register './integration/**/*.ts'"
   },
-  "overrides": {
-    "@types/express-serve-static-core": "4.17.30",
-    "@types/express": "4.17.13"
-  },
   "dependencies": {
     "@types/bluebird": "3.5.36",
     "@types/configstore": "^4.0.0",
@@ -73,7 +69,6 @@
     "crypto-js": "^4.1.1",
     "crypto-random-string": "3.2.0",
     "dotenv": "^16.0.1",
-    "polka": "^0.5.2",
     "prompts": "^2.3.2",
     "request-promise": "^4.2.6",
     "tslog": "^3.3.3",
