@@ -26,7 +26,7 @@ export async function pullContractFromDesignId(
     designID: string,
     useSimbaPath: boolean = true,
     absPaths?: Record<any, any>,
-): Promise<void> {
+): Promise<null | ContractDesignWithCode> {
     SimbaConfig.log.debug(`:: ENTER : ${designID}`);
     let contractDesign: ContractDesignWithCode;
     const authStore = await SimbaConfig.authStore();
@@ -48,12 +48,14 @@ export async function pullContractFromDesignId(
             SimbaConfig.log.info(`${chalk.cyanBright(`\nsimba: pulling file ${chalk.greenBright(`${contractDesign.name}`)} ---> ${chalk.greenBright(`${contractFileName}`)}`)}`);
             fs.writeFileSync(contractFileName, Buffer.from(contractDesign.code, 'base64').toString());
             SimbaConfig.log.info(`${chalk.cyanBright(`simba: finished pulling ${chalk.greenBright(`${contractDesign.name}`)} ---> ${chalk.greenBright(`${contractFileName}`)}`)}`);
+            return contractDesign;
         } else {
-            SimbaConfig.log.error(`${chalk.redBright(`\nsimba: error acquiring contract design for ${chalk.greenBright(`${designID}`)}`)}`)
+            SimbaConfig.log.error(`${chalk.redBright(`\nsimba: error acquiring contract design for ${chalk.greenBright(`${designID}`)}`)}`);
+            return null;
         }
-        SimbaConfig.log.debug(`:: EXIT :`);
     } else {
         SimbaConfig.log.error(authErrors.badAuthProviderInfo);
+        return null;
     }
 }
 
